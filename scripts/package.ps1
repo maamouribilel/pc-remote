@@ -6,7 +6,8 @@ if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Use a three-component release
 $taskReleaseDirectory = Join-Path $taskRoot ('artifacts/release-' + $Version + '-' + [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss'))
 $taskPublishDirectory = Join-Path $taskReleaseDirectory 'PCRemote-win-x64'
 [IO.Directory]::CreateDirectory($taskPublishDirectory) | Out-Null
-& $taskDotnet publish (Join-Path $taskRoot 'src/PcController.App') -c Release -r win-x64 --self-contained true -p:PublishTrimmed=false -p:PublishSingleFile=false -p:Version=$Version -o $taskPublishDirectory
+# Public downloads omit developer debug symbols and their local build paths.
+& $taskDotnet publish (Join-Path $taskRoot 'src/PcController.App') -c Release -r win-x64 --self-contained true -p:PublishTrimmed=false -p:PublishSingleFile=false -p:DebugType=None -p:DebugSymbols=false -p:Version=$Version -o $taskPublishDirectory
 Assert-TaskExit
 Copy-Item -LiteralPath (Join-Path $taskRoot 'LICENSE') -Destination (Join-Path $taskPublishDirectory 'LICENSE')
 Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/setup.md') -Destination (Join-Path $taskPublishDirectory 'SETUP.md')

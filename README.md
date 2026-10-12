@@ -9,14 +9,15 @@
 A touchpad, keyboard, media remote, and app launcher in Safari.<br>
 Pair on your PC, connect over your home network, and keep control within reach.
 
-[![Windows](https://img.shields.io/badge/Windows-x64-0078D4?style=flat-square)](#getting-started)
+[![Download](https://img.shields.io/badge/Download-v0.2.0_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.2.0)
+[![Windows](https://img.shields.io/badge/Windows-x64-0078D4?style=flat-square)](#download)
 [![.NET](https://img.shields.io/badge/.NET-10-512BD4?style=flat-square)](#tech-stack)
 [![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?style=flat-square)](#tech-stack)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square)](#tech-stack)
 [![Transport](https://img.shields.io/badge/Transport-HTTPS_%2B_WSS-5EE8BE?style=flat-square)](docs/protocol.md)
 [![License](https://img.shields.io/badge/License-MIT-5EE8BE?style=flat-square)](LICENSE)
 
-**[Try it on your LAN](#live-demo)** · **[Watch the walkthrough](#walkthrough)** · **[Build from source](#getting-started)** · **[Setup guide](docs/setup.md)**
+**[Download for Windows](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.0/PCRemote-0.2.0-win-x64-setup.exe)** · **[All versions](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)** · **[Watch the walkthrough](#walkthrough)** · **[Build from source](#getting-started)**
 
 <img src="docs/assets/desktop-controls.jpg" alt="The actual Windows companion showing power, pointer, and media preferences" width="900">
 
@@ -32,9 +33,25 @@ Watch your PC screen while your phone handles the controls. Move the pointer, se
 
 PC Remote runs as a Windows notification-tray companion and serves its own browser interface. All application assets are bundled locally. Normal packaged operation needs no cloud account, subscription, Node.js installation, or separate .NET runtime.
 
+## Download
+
+**[Download PC Remote v0.2.0 for Windows x64 →](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.0/PCRemote-0.2.0-win-x64-setup.exe)**
+
+| Download | Choose this for |
+| :--- | :--- |
+| **[Windows installer](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.0/PCRemote-0.2.0-win-x64-setup.exe)** | Recommended: Start menu shortcuts and an uninstall entry |
+| **[Portable ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.0/PCRemote-0.2.0-win-x64.zip)** | Extract the complete archive, then run `PCRemote-win-x64/PcController.App.exe` |
+| **[SHA-256 checksums](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.0/SHA256SUMS.txt)** | Verify the installer or portable archive |
+
+**[Release notes for v0.2.0](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.2.0)** · **[Browse every published version](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)**
+
+On GitHub, open **Releases**, select the version you want, and expand **Assets**. Choose the installer or portable ZIP; GitHub's automatic **Source code** archives are for developers. See [download and version instructions](docs/releases.md).
+
+Version 0.2.0 is a public preview. It targets Windows 10 1809 or later, x64; Windows 11 is the tested desktop OS. The app and installer are unsigned, and the remaining manual checks are documented in the [release checklist](docs/release-checklist.md). After installation, follow the [iPhone setup guide](docs/setup.md).
+
 ## Live demo
 
-**[Run the live remote on your own network →](#getting-started)**
+**[Install PC Remote, then connect on your own network →](#download)**
 
 This application is hosted by your Windows PC on a trusted Private LAN. There is **no public hosted demo URL** in this project. Start the companion, open **the HTTPS address it displays** in iPhone Safari, complete certificate setup, and approve the pairing request on the PC. Follow the [complete onboarding guide](docs/setup.md).
 
@@ -262,6 +279,6 @@ PC Remote source is available under the **[MIT License](LICENSE)**. Dependencies
 
 **Control stays on your PC. Convenience stays in your hand.**
 
-[Get started](#getting-started) · [Setup](docs/setup.md) · [Protocol](docs/protocol.md) · [Limitations](docs/limitations.md)
+[Download](#download) · [All versions](https://github.com/maamouribilel/windows-pc-mobile-controller/releases) · [Setup](docs/setup.md) · [Protocol](docs/protocol.md) · [Limitations](docs/limitations.md)
 
 </div>
