@@ -1,6 +1,7 @@
 param([string]$Version = '0.2.0')
 . "$PSScriptRoot/toolchain.ps1"
 if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Use a three-component release version.' }
+& "$PSScriptRoot/check-release-docs.ps1" -Version $Version
 & "$PSScriptRoot/install-packaging-tool.ps1"
 & "$PSScriptRoot/build.ps1" -Configuration Release
 $taskReleaseDirectory = Join-Path $taskRoot ('artifacts/release-' + $Version + '-' + [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss'))

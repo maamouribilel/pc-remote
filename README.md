@@ -246,6 +246,12 @@ Native tests abort on lost target focus. The browser fixture uses an explicit lo
 
 </details>
 
+## Contributing and releasing
+
+Coding agents must read [AGENTS.md](AGENTS.md); Claude also reads [CLAUDE.md](CLAUDE.md). Every new version must update the README, both agent files, download documentation, validation evidence, and affected `.github/` files before publishing matching source, tag, and release assets. Follow the [release publishing procedure](docs/releases.md#publishing-the-next-version) and [acceptance checklist](docs/release-checklist.md).
+
+Run `./scripts/check-release-docs.ps1` before packaging. The GitHub **Release documentation** check also catches version/link mismatches and missing release documentation updates. Runtime checks, secret scans, and public asset verification remain part of the release procedure.
+
 ## Build and deploy
 
 Deploy the companion to the Windows PC you want to control. Its web app is bundled with it rather than hosted separately in the cloud.

@@ -1,0 +1,34 @@
+name: Release documentation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-docs:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check versions and release documentation
+        shell: pwsh
+        env:
+          RELEASE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          $taskArguments = @{}
+          if ($env:RELEASE_BASE_SHA -and $env:RELEASE_BASE_SHA -notmatch '^0+$') {
+            $taskArguments.BaseRef = $env:RELEASE_BASE_SHA
+          }
+          if ($env:RELEASE_TAG) {
+            if ($env:RELEASE_TAG -notmatch '^v\d+\.\d+\.\d+$') { throw 'Expected a vX.Y.Z release tag.' }
+            $taskArguments.Version = $env:RELEASE_TAG.Substring(1)
+          }
+          ./scripts/check-release-docs.ps1 @taskArguments
