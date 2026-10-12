@@ -1,0 +1,13 @@
+# Milestone 3 — keyboard/navigation verification
+
+Implemented explicit text Send with composition protection, server acknowledgement and no offline replay; Unicode accents/surrogate pairs/multiline handling; special keys; visible Ctrl/Alt/Shift/Windows state; large navigation pad; bounded hold repeat; declarative Ctrl+C/V/A/Z and Alt+Tab; shared key/button cleanup.
+
+Release build passes with zero warnings/errors and strict TypeScript. `scripts/test.ps1 -KeyboardSmoke` passes 83 checks. A deliberately focused disposable WPF text field receives real Unicode accents and emoji exactly once, Ctrl+A, arrow/Home, Shift+End, Backspace and multiline text. GetAsyncKeyState verifies actual Control/Shift hold and release, including the real timer watchdog. No user text is logged and no arbitrary focused app receives automated typing. Clipboard and Alt+Tab are not exercised by that smoke because they would affect state outside the disposable target.
+
+Keyboard protocol tests cover text length/control bounds, key/shortcut allowlist, replay rejection, modifier idempotence, repeat bounds, ordering, text rate and key cleanup. The test recording adapter stores only text length. Browser gesture suite now also verifies composition suppression, one acknowledged send/clear, modifier display/reset, declared shortcut, bounded arrow repeat and network loss with both drag and Shift held. Real WSS is used with the same loopback-only recording fixture; browser TLS bypass remains UI evidence only. Separate .NET transport checks validate TLS certificates.
+
+PC registry and actual smoke thread identify only US QWERTY (0409). AZERTY is part of the initial matrix but unavailable/unverified here; no layout was silently installed or user configuration changed. Unicode packet insertion bypasses character layout mapping; the real test establishes current QWERTY behavior, not all layouts.
+
+Physical iPhone acceptance passes by user report: both Notepad and browser field work with one-time accented/emoji Send, keys/navigation and tested shortcuts. Interrupted key/modifier release and reconnect reset work under US QWERTY. Clipboard/Alt+Tab details and AZERTY remain further release matrix checks; no universal application support is inferred.
+
+Current build: `scripts/build.ps1 -Configuration Release`, `scripts/run.ps1 -Configuration Release`; app in `src/PcController.App/bin/Release/net10.0-windows/`, mobile in `src/remote/dist/` and bundled `wwwroot/`. Final four-tab ergonomics, media, tray and installer remain later milestones. Native input cannot target elevated apps or secure desktop. Live typing is intentionally deferred; edits/autocorrect stay in the phone field until Send.

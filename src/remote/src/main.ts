@@ -1,0 +1,182 @@
+import './style.css';
+import { setupTouchpad } from './touchpad';
+import { setupKeyboard } from './keyboard';
+import { setupMedia } from './media';
+import { setupTabs } from './tabs';
+import { setupIcons } from './icons';
+import { setupConnectionPanel } from './connection-panel';
+import { setupPc } from './pc';
+setupIcons();
+function element<T extends HTMLElement>(id: string): T {
+  const value = document.getElementById(id);
+  if (!value) throw new Error(`Missing UI element: ${id}`);
+  return value as T;
+}
+const state = element('state'), dot = element('dot'), error = element('error');
+const button = element<HTMLButtonElement>('test');
+const latency = element('latency'), transport = element('transport');
+const description = element('description');
+const form = element<HTMLFormElement>('pair-form');
+const link = element<HTMLInputElement>('pair-link'), name = element<HTMLInputElement>('device-name');
+const submit = element<HTMLButtonElement>('pair-submit');
+const takeover = element<HTMLButtonElement>('takeover'), forget = element<HTMLButtonElement>('forget');
+const supplied = new URLSearchParams(location.hash.slice(1)).get('pair');
+if (supplied) link.value = supplied;
+if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+let socket: WebSocket | undefined;
+let reconnect: ReturnType<typeof setTimeout> | undefined;
+let heartbeat: ReturnType<typeof setInterval> | undefined;
+let deadline: ReturnType<typeof setTimeout> | undefined;
+let poll: ReturnType<typeof setTimeout> | undefined;
+let attempts = 0, seq = 0, generation = 0;
+let authenticated = false, pairing = false;
+let controlReady = false, lastPing = 0;
+function sendControl(type: string, payload: object): number | false {
+  if (!controlReady || socket?.readyState !== WebSocket.OPEN) return false;
+  if (socket.bufferedAmount > 16384) { socket.close(); return false; }
+  socket.send(JSON.stringify({ v: 1, seq: ++seq, type, payload }));
+  if (type === 'input.releaseAll') keyboard.reset();
+  return seq;
+}
+const controls = setupTouchpad((type, payload) => Boolean(sendControl(type, payload)), () => (socket?.bufferedAmount ?? 0) > 16384);
+const keyboard = setupKeyboard((type, payload) => controls.flush() ? sendControl(type, payload) : false, controls.release);
+const media = setupMedia((type, payload) => controls.flush() ? sendControl(type, payload) : false, controls.release);
+const tabs = setupTabs(controls.release);
+const pc = setupPc(api, controls.release, media.profile, tabs.select);
+const connectionPanel = setupConnectionPanel(controls.release);
+const releaseButton = element<HTMLButtonElement>('release');
+let pending: { sequence: number; started: number } | undefined;
+function display(message: string, connected = false, explanation?: string) {
+  state.textContent = message; dot.classList.toggle('connected', connected);
+  button.disabled = !connected || pending !== undefined;
+  error.hidden = !explanation; error.textContent = explanation ?? '';
+  releaseButton.disabled = !controlReady;
+  if (explanation) connectionPanel.open(true);
+  else if (controlReady) connectionPanel.closeAutomatic();
+}
+function clearTimers() { clearTimeout(reconnect); clearTimeout(deadline); clearInterval(heartbeat); clearTimeout(poll); }
+async function api(path: string, body?: object) {
+  const response = await fetch(path, { method: body === undefined ? 'GET' : 'POST',
+    headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body), cache: 'no-store', signal: AbortSignal.timeout(5000) });
+  if (response.status === 429) throw new Error('Too many requests. Wait one minute and try again.');
+  const result = await response.json();
+  return { ...result, ok: response.ok };
+}
+function retry() {
+  if (!document.hidden) reconnect = setTimeout(connect, Math.min(1000 * 2 ** attempts++, 15000) + Math.random() * 300);
+}
+function ping() {
+  if (socket?.readyState !== WebSocket.OPEN || pending) return;
+  pending = { sequence: ++seq, started: performance.now() }; button.disabled = true;
+  lastPing = performance.now();
+  socket.send(JSON.stringify({ v: 1, seq, type: 'ping', payload: {} }));
+  deadline = setTimeout(() => { display('Connection timed out', false, 'Check the PC and Wi-Fi.'); socket?.close(); }, 5000);
+}
+function openSocket(auth: boolean, version: number) {
+  const current = new WebSocket(`wss://${location.host}/${auth ? 'control' : 'diagnostics'}/ws`);
+  socket = current; seq = 0; pending = undefined;
+  current.onopen = () => {
+    if (socket !== current || version !== generation) { current.close(); return; }
+    transport.textContent = 'HTTPS + WSS'; ping(); heartbeat = setInterval(() => {
+      if (performance.now() - lastPing >= (controls.held() || keyboard.held() ? 250 : 5000)) ping();
+    }, 250);
+  };
+  current.onmessage = (event: MessageEvent<string>) => {
+    if (socket !== current || version !== generation) return;
+    try {
+      const reply = JSON.parse(event.data);
+      if (reply.v === 1 && reply.type === 'ack' && typeof reply.session === 'string' && keyboard.acknowledge(reply.seq)) return;
+      if (!pending || reply.v !== 1 || reply.type !== 'pong' || reply.seq !== pending.sequence || typeof reply.session !== 'string') throw new Error();
+      latency.textContent = `${Math.round(performance.now() - pending.started)} ms`;
+      pending = undefined; clearTimeout(deadline); attempts = 0;
+      if (typeof reply.payload?.mediaProfile === 'string') media.profile(reply.payload.mediaProfile);
+      pc.setConnection(auth, reply.session); if (auth) pc.sync(reply.payload ?? {});
+      controlReady = auth; controls.setEnabled(auth); keyboard.setEnabled(auth); media.setEnabled(auth);
+      if (pairing) display('Waiting for PC approval', true);
+      else display(auth ? 'Connected securely' : 'Secure transport · unpaired', true);
+    } catch { display('Invalid server reply'); current.close(); }
+  };
+  current.onerror = () => { if (socket === current) display('Connection failed', false, 'Check certificate trust, the Private firewall rule, and Wi-Fi client isolation.'); };
+  current.onclose = event => {
+    if (socket !== current || version !== generation) return;
+    clearTimeout(deadline); clearInterval(heartbeat); pending = undefined;
+    controlReady = false; controls.setEnabled(false); keyboard.setEnabled(false); media.setEnabled(false); pc.setConnection(false);
+    transport.textContent = 'Disconnected';
+    display(document.hidden ? 'Suspended' : 'Disconnected · retrying', false,
+      event.reason === 'input_failed' ? 'Windows input failed. Focus a normal application; elevated apps and secure desktops are unsupported.' : undefined);
+    retry();
+  };
+}
+async function pollApproval(version: number) {
+  try {
+    const result = await api('/api/pair/poll', {});
+    if (version !== generation || document.hidden) return;
+    if (result.state === 'approved') { pairing = false; submit.disabled = false; connect(); return; }
+    if (result.state === 'pending') {
+      pairing = true; form.hidden = true; display('Waiting for PC approval', socket?.readyState === WebSocket.OPEN);
+      poll = setTimeout(() => pollApproval(version), 2000); return;
+    }
+    pairing = false; form.hidden = false; submit.disabled = false;
+    if (!['pair_invalid', 'none', 'claimed'].includes(result.state))
+      display('Pairing unsuccessful', false, `${result.state}. Create a new link on the PC and try again.`);
+  } catch (reason) {
+    if (version !== generation) return;
+    display('Approval connection lost', false, String(reason)); retry();
+  }
+}
+async function connect(take = false) {
+  controls.release(); controlReady = false; controls.setEnabled(false); keyboard.setEnabled(false); media.setEnabled(false); pc.setConnection(false);
+  const version = ++generation; clearTimers(); socket?.close(); socket = undefined; pending = undefined;
+  takeover.hidden = true;
+  if (document.hidden) return;
+  if (location.protocol !== 'https:') { display('HTTPS required', false, 'Use the trusted HTTPS address displayed on the PC.'); return; }
+  display('Connecting…');
+  try {
+    const status = await api('/api/status');
+    if (version !== generation || document.hidden) return;
+    const wasAuthenticated = authenticated;
+    authenticated = status.authenticated; form.hidden = authenticated; forget.hidden = !authenticated;
+    if (authenticated && !wasAuthenticated) { (document.getElementById('connection-details') as HTMLDetailsElement).open = false; connectionPanel.close(); }
+    if (!authenticated) connectionPanel.open(true);
+    media.profile(status.mediaProfile);
+    description.textContent = authenticated ? 'Watch your PC screen. Choose a tab to control it.' : 'Pair this browser and approve it on the PC to control it.';
+    if (authenticated) {
+      pairing = false;
+      const claim = await api('/api/session/claim', { takeover: take });
+      if (version !== generation || document.hidden) return;
+      if (!claim.ok) {
+        if (claim.error === 'unauthenticated') { display('Pairing expired or revoked'); retry(); return; }
+        takeover.hidden = claim.error !== 'controller_busy';
+        display(claim.error === 'paused' ? 'Paused on PC' : 'Another controller is active', false,
+          claim.error === 'paused' ? 'Resume control on the PC.' : 'Take over only when you intend to replace the current controller.');
+        retry(); return;
+      }
+      openSocket(true, version);
+    } else { openSocket(false, version); await pollApproval(version); }
+  } catch (reason) {
+    if (version !== generation) return;
+    display('Connection failed', false, String(reason)); retry();
+  }
+}
+form.addEventListener('submit', async event => {
+  event.preventDefault(); submit.disabled = true; clearTimeout(poll);
+  try {
+    let challenge = link.value.trim();
+    if (challenge.includes('#')) challenge = new URLSearchParams(challenge.split('#')[1]).get('pair') ?? '';
+    const result = await api('/api/pair/request', { challenge, name: name.value.trim() });
+    link.value = '';
+    if (!result.ok) throw new Error(`${result.error}. Create a new pairing link on the PC.`);
+    pairing = true; form.hidden = true; display('Waiting for PC approval', socket?.readyState === WebSocket.OPEN);
+    await pollApproval(generation);
+  } catch (reason) { submit.disabled = false; form.hidden = false; display('Could not pair', false, String(reason)); }
+});
+button.addEventListener('click', ping);
+takeover.addEventListener('click', () => connect(true));
+forget.addEventListener('click', async () => { try { await api('/api/logout', {}); connect(); } catch { display('Could not forget browser', false, 'Reconnect and try again.'); } });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { controls.release(); controlReady = false; controls.setEnabled(false); keyboard.setEnabled(false); media.setEnabled(false); pc.setConnection(false); generation++; clearTimers(); socket?.close(); display('Suspended'); } else connect();
+});
+window.addEventListener('pagehide', () => { controls.release(); controlReady = false; controls.setEnabled(false); keyboard.setEnabled(false); media.setEnabled(false); pc.setConnection(false); generation++; clearTimers(); socket?.close(); });
+window.addEventListener('pageshow', event => { if (event.persisted) connect(); });
+connect();

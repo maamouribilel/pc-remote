@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="PC Remote" />
+  <title>PC Remote · secure pairing</title>
+  <link rel="icon" href="/pc-remote-v2-32.png" type="image/png" sizes="32x32" />
+  <link rel="icon" href="/pc-remote-v2.ico" type="image/x-icon" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/pc-remote-v2-180.png" />
+</head>
+<body data-panel="mouse-controls">
+  <header class="remote-header">
+    <div class="brand"><div class="brand-identity"><img class="brand-logo" src="/pc-remote-v2-128.png" width="44" height="44" alt="" /><div><h1>PC Remote</h1><p class="status" role="status" aria-live="polite"><span id="dot" class="dot"></span><span id="state">Connecting…</span></p></div></div><button id="open-settings" class="icon-button" type="button" aria-label="Connection settings" aria-haspopup="dialog"><span data-icon="settings"></span></button></div>
+    <div class="quick-actions" aria-label="Quick controls">
+      <button data-media="playPause" type="button" disabled aria-label="Quick play or pause"><span data-icon="playPause"></span></button>
+      <div class="quick-volume"><button data-media="volumeDown" type="button" disabled aria-label="Quick volume down"><span data-icon="minus"></span></button><span data-icon="volume" aria-hidden="true"></span><button data-media="volumeUp" type="button" disabled aria-label="Quick volume up"><span data-icon="plus"></span></button></div>
+      <button id="quick-keyboard" type="button" disabled aria-label="Open keyboard"><span data-icon="keyboard"></span></button>
+    </div>
+  </header>
+  <main id="remote-content">
+    <section id="mouse-controls" class="control-panel disabled" inert role="tabpanel" aria-labelledby="tab-touchpad">
+      <h2 class="sr-only">Touchpad</h2>
+      <div id="touchpad" aria-label="Touchpad gesture surface"><span id="pad-hint">Move · tap · two-finger scroll</span></div>
+      <div class="button-row"><button id="left-click" type="button"><span data-icon="leftClick"></span><span>Left click</span></button><button id="right-click" type="button"><span data-icon="rightClick"></span><span>Right click</span></button></div>
+      <div class="button-row compact-row"><button id="double-click" type="button"><span data-icon="doubleClick"></span><span>Double click</span></button><button id="drag" type="button" aria-pressed="false"><span data-icon="drag"></span><span class="button-label">Start drag</span></button></div>
+    </section>
+    <section id="keyboard-controls" class="control-panel disabled" inert hidden role="tabpanel" aria-labelledby="tab-keyboard">
+      <h2>Keyboard</h2>
+      <form id="text-form"><label for="remote-text" class="sr-only">Text to send (up to 256 characters)</label><textarea id="remote-text" maxlength="256" rows="3" placeholder="Type here, then Send text"></textarea><button id="send-text" class="primary" type="submit" disabled><span data-icon="send"></span><span>Send text</span></button><p id="text-feedback" class="feedback" role="status" aria-live="polite"></p></form>
+      <div class="key-grid special-keys"><button data-key="Enter" type="button"><span data-icon="enter"></span><span>Enter</span></button><button data-key="Backspace" data-repeat="true" type="button"><span data-icon="backspace"></span><span>Backspace</span></button><button data-key="Escape" type="button">Esc</button><button data-key="Tab" type="button"><span data-icon="tab"></span><span>Tab</span></button></div>
+      <div class="modifier-grid"><button data-modifier="Control" aria-pressed="false" type="button">Ctrl</button><button data-modifier="Alt" aria-pressed="false" type="button">Alt</button><button data-modifier="Shift" aria-pressed="false" type="button"><span data-icon="shift"></span><span>Shift</span></button><button data-modifier="Windows" aria-pressed="false" type="button"><span data-icon="windows"></span><span>Win</span></button></div>
+      <div class="section-caption"><span>Shortcuts</span><span>Hold to repeat</span></div>
+      <div class="key-grid shortcuts"><button data-shortcut="selectAll" type="button"><span data-icon="selectAll"></span><span>Ctrl + A</span></button><button data-shortcut="undo" type="button"><span data-icon="undo"></span><span>Ctrl + Z</span></button></div>
+      <details class="more-shortcuts"><summary>More shortcuts</summary><div class="key-grid"><button data-shortcut="copy" type="button">Ctrl + C</button><button data-shortcut="paste" type="button">Ctrl + V</button><button data-shortcut="switchApp" type="button">Alt + Tab</button></div><p class="description">Ctrl+V uses the PC's existing clipboard.</p></details>
+    </section>
+    <section id="navigation-controls" class="control-panel disabled" inert hidden role="tabpanel" aria-labelledby="tab-navigation">
+      <h2>Navigation</h2>
+      <div class="arrow-grid"><button class="arrow-up" data-key="ArrowUp" data-repeat="true" type="button" aria-label="Up arrow"><span data-icon="up"></span></button><button data-key="ArrowLeft" data-repeat="true" type="button" aria-label="Left arrow"><span data-icon="left"></span></button><button class="enter-key" data-key="Enter" type="button">Enter</button><button data-key="ArrowRight" data-repeat="true" type="button" aria-label="Right arrow"><span data-icon="right"></span></button><button class="arrow-down" data-key="ArrowDown" data-repeat="true" type="button" aria-label="Down arrow"><span data-icon="down"></span></button></div>
+      <div class="key-grid navigation-keys"><button data-key="Home" type="button"><span data-icon="home"></span><span>Home</span></button><button data-key="End" type="button"><span data-icon="end"></span><span>End</span></button><button data-key="PageUp" data-repeat="true" type="button"><span data-icon="pageUp"></span><span>Page up</span></button><button data-key="PageDown" data-repeat="true" type="button"><span data-icon="pageDown"></span><span>Page down</span></button></div>
+    </section>
+    <section id="media-controls" class="control-panel disabled" inert hidden role="tabpanel" aria-labelledby="tab-media">
+      <h2>Media</h2>
+      <label for="media-profile" class="sr-only">Profile</label><div class="profile-picker"><span id="profile-icon" data-icon="media"></span><select id="media-profile"><option value="General">General · Windows media</option><option value="YouTube">YouTube / browser</option><option value="VLC">VLC</option><option value="Stremio">Stremio</option></select><span data-icon="chevronRight"></span></div>
+      <p id="media-note" class="description media-note"></p><p id="media-feedback" class="feedback" role="status" aria-live="polite"></p>
+      <div class="system-volume-card"><div class="volume-heading"><label for="system-volume">Windows volume</label><output id="system-volume-value" for="system-volume">—</output></div><input id="system-volume" type="range" min="0" max="100" step="1" value="0" disabled aria-describedby="system-volume-note" /><p id="system-volume-note" class="description">Checking Windows audio…</p><p id="volume-feedback" class="feedback" role="status" aria-live="polite"></p></div>
+      <div class="playback-row"><button data-media="seekBack" type="button" hidden aria-label="Seek back"><span data-icon="seekBack"></span></button><button class="primary play-button" data-media="playPause" type="button"><span data-icon="playPause"></span><span>Play / pause</span></button><button data-media="seekForward" type="button" hidden aria-label="Seek forward"><span data-icon="seekForward"></span></button></div>
+      <div class="volume-row"><button data-media="volumeDown" type="button" aria-label="Volume down"><span data-icon="volumeDown"></span></button><button data-media="mute" type="button"><span data-icon="mute"></span><span>Mute</span></button><button data-media="volumeUp" type="button" aria-label="Volume up"><span data-icon="volumeUp"></span></button></div>
+      <div class="key-grid media-extras"><button data-media="previous" type="button"><span data-icon="previous"></span><span class="button-label">Previous</span></button><button data-media="fullscreen" type="button" hidden><span data-icon="fullscreen"></span><span>Fullscreen</span></button><button data-media="next" type="button"><span data-icon="next"></span><span class="button-label">Next</span></button></div>
+    </section>
+    <section id="pc-controls" class="control-panel disabled" inert hidden role="tabpanel" aria-labelledby="tab-pc">
+      <h2>Your PC</h2><p class="description">Open an app on your PC, then use its controls.</p>
+      <div id="launcher-apps" class="launcher-list" aria-label="PC apps"></div><p id="launcher-empty" class="description" hidden>Add apps in the Windows companion’s Apps &amp; power settings.</p>
+      <div class="section-caption"><span>Power</span><span>Confirmation required</span></div>
+      <div class="power-actions"><button data-power="sleep" type="button" disabled><span data-icon="sleep"></span><span>Sleep</span></button><button data-power="restart" type="button" disabled><span data-icon="restart"></span><span>Restart</span></button><button data-power="shutdown" type="button" disabled><span data-icon="power"></span><span>Shut down</span></button></div>
+      <div id="power-countdown" class="power-countdown" hidden><p id="power-countdown-text" role="status" aria-live="polite"></p><button id="cancel-power" type="button" disabled>Cancel power action</button></div>
+      <p id="pc-feedback" class="feedback" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+  <footer class="control-dock"><button id="release" type="button" disabled><span data-icon="release"></span><span>Release input</span></button></footer>
+  <nav class="tab-bar" role="tablist" aria-label="Remote controls"><button id="tab-touchpad" data-panel="mouse-controls" role="tab" aria-controls="mouse-controls" aria-selected="true" type="button"><span data-icon="touchpad"></span><span>Touchpad</span></button><button id="tab-keyboard" data-panel="keyboard-controls" role="tab" aria-controls="keyboard-controls" aria-selected="false" tabindex="-1" type="button"><span data-icon="keyboard"></span><span>Keyboard</span></button><button id="tab-navigation" data-panel="navigation-controls" role="tab" aria-controls="navigation-controls" aria-selected="false" tabindex="-1" type="button"><span data-icon="navigation"></span><span>Navigation</span></button><button id="tab-media" data-panel="media-controls" role="tab" aria-controls="media-controls" aria-selected="false" tabindex="-1" type="button"><span data-icon="media"></span><span>Media</span></button><button id="tab-pc" data-panel="pc-controls" role="tab" aria-controls="pc-controls" aria-selected="false" tabindex="-1" type="button"><span data-icon="pc"></span><span>PC</span></button></nav>
+  <dialog id="connection-dialog" aria-labelledby="connection-title"><div class="dialog-heading"><h2 id="connection-title">Connection settings</h2><button id="close-settings" class="icon-button" type="button" aria-label="Close connection settings"><span data-icon="close"></span></button></div>
+    <p id="error" class="error" role="alert" hidden></p>
+    <details id="connection-details" open><summary>Connection &amp; Home Screen setup</summary><section aria-label="Connection">
+      <p id="description" class="description">Pair this browser and approve it on the PC to control it.</p>
+      <form id="pair-form" hidden><label for="pair-link">Pairing link or challenge from the PC</label><input id="pair-link" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required /><label for="device-name">Device name</label><input id="device-name" type="text" maxlength="64" value="My iPhone" autocomplete="off" required /><button id="pair-submit" class="primary" type="submit">Request PC approval</button></form>
+      <button id="takeover" class="primary" type="button" hidden>Take over control</button><button id="forget" type="button" hidden>Forget this browser</button>
+      <dl><div><dt>Transport</dt><dd id="transport">Checking…</dd></div><div><dt>Round-trip time</dt><dd id="latency">—</dd></div></dl><button id="test" type="button" disabled>Test connection</button>
+      <p class="description">In Safari, tap Share → Add to Home Screen, enable Open as Web App if shown, then launch the icon. Approve that browser on the PC if prompted. Keep this trusted certificate installed and the PC tray app running on the same private LAN.</p><p class="description">Control suspends when iOS locks or backgrounds the app. Reopen it to reconnect; commands are never replayed.</p>
+    </section></details>
+    <details><summary>Control help</summary><p class="description">Touchpad: tap to click, tap twice for a double click, and use two fingers to scroll. Start drag holds the left button; End drag releases it.</p><p class="description">Keyboard: focus the target field on your PC. Text sends only when you tap Send text. Lit modifiers stay held until tapped again or released. Text and shortcuts release held input first.</p><p id="media-help" class="description"></p></details>
+  </dialog>
+  <dialog id="power-dialog" aria-labelledby="power-title" aria-describedby="power-explanation"><h2 id="power-title">Power action</h2><p id="power-explanation" class="description"></p><button id="confirm-power" class="danger" type="button" disabled>Confirm power action</button><button id="dismiss-power" type="button">Keep PC running</button></dialog>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# Third-party components and build tooling
+
+The self-contained Windows build bundles Microsoft .NET 10.0.12, ASP.NET Core and Windows Desktop runtime components. The release's licenses directory contains DOTNET-LICENSE.txt, DOTNET-ThirdPartyNotices.txt and QRCODER-LICENSE.txt copied from the pinned toolchain/package. QRCoder 1.8.0 uses the MIT license: https://github.com/codebude/QRCoder/blob/master/LICENSE.txt. The mobile build uses pinned Vite/TypeScript tooling; those tools are not required on the installed PC. Exact dependencies are recorded in lockfiles.
+
+Installer compiler: Inno Setup 7.1.0 x64, official immutable release https://github.com/jrsoftware/issrc/releases/tag/is-7_1_0. Download SHA-256 `0362a383ed217d4c4239b5933866dd96d3eb2102737da92f80f6057a4b40df2f`, checked against its official `.issig` and valid Pyrsys B.V. Authenticode signature. Compiler is kept in ignored `.tools/`; no global development tool is replaced. This project's local personal build uses Inno Setup's noncommercial terms. Commercial build/distribution use requires checking/purchasing the appropriate compiler license: https://jrsoftware.org/isdl.php. The generated installer is unsigned; the compiler's signature does not sign the application.
+
+NSIS 3.13 was considered; its download returned HTML rather than a checksum-verifiable ZIP on this host, so it was not extracted or executed. Release tooling uses the verified Inno compiler instead.

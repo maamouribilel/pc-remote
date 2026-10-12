@@ -1,0 +1,11 @@
+{
+  "id": "/", "name": "PC Remote", "short_name": "PC Remote",
+  "description": "Control your paired Windows PC on your private LAN.",
+  "start_url": "/", "scope": "/", "display": "standalone",
+  "background_color": "#0b0f14", "theme_color": "#0b0f14",
+  "icons": [
+    { "src": "/pc-remote-v2-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pc-remote-v2-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/pc-remote-v2-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

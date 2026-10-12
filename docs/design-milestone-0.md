@@ -1,0 +1,11 @@
+# Connection page design specification
+
+Generated concept: `assets/design/milestone-0-concept.png`. Built-in Image Gen, ui-mockup mode, full portrait connection page. It is a design reference, not a runtime image asset. The interface is implemented as local HTML, CSS and TypeScript.
+
+Tokens: background `#10141c`, text `#f6f8fc`, secondary `#aab4c6`, divider `#303b4d`, connected/button accent `#22ddb0`. Native Apple system font with an Arial sans-serif fallback, 40px primary title, 21px subtitle, 22px status, 18px body and diagnostics, 23px instruction heading, 14px footer. 26px side gutters, 440px maximum content width, 50px primary target, 7px button radius. Open sections with one divider; no cards, imagery, control placeholders or simulated connection data.
+
+Inventory: PC Remote / Connection check; real connection status; explanatory paragraph; Transport and Last round trip rows; Test connection button; Before you continue with three prerequisites; Milestone 0 footer. Status colors/text, disabled state, an actionable error block and reduced-height layout are functional variants. Success text only appears after a real server pong. RTT is measured with `performance.now()`.
+
+Intentional copy adjustment: “Same private local network” replaces the concept's “Same Wi-Fi network”, because the plan permits Ethernet on the PC. State values reflect observed transport. Safe-area padding, body scrolling and a compact landscape variant follow the same visual system.
+
+Prompt: “Create one readable flat screenshot of an iPhone-width mobile web connection diagnostic page for a Windows PC remote, Milestone 0. Plain near-black navy background #10141c, native system sans typography, generous 24px gutters. PC Remote / Connection check. Connected securely; local connection explanatory paragraph. Transport / HTTPS + WSS, Last round trip / 12 ms. Test connection. Before you continue with network, certificate, PC-app prerequisites. Milestone 0 · connection only. High contrast precise text, 48px minimum targets, practical HTML/CSS, no illustrations, fake controller buttons, tabs or marketing.” The complete generation prompt was provided through the built-in tool during this implementation.
