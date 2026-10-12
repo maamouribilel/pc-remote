@@ -15,5 +15,5 @@ For a new app version, complete every item before publication. For other changes
 - [ ] Both AGENTS.md and CLAUDE.md have the new version and current instructions.
 - [ ] docs/releases.md and dated docs/release-evidence.md results are updated; affected setup, limitations, and acceptance docs are current.
 - [ ] .github workflows/templates/release configuration have been reviewed and affected files updated.
-- [ ] Release documentation check, relevant runtime checks, package/license/hash checks, and source/package secret scans pass.
+- [ ] Release documentation check, security/regression suites, dependency/runtime advisory checks, package/license/hash checks, and source/package secret scans pass.
 - [ ] The release plan includes the matching main commit, annotated tag, installer, portable ZIP, checksum file, accurate notes/status, and public download/digest verification.

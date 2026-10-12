@@ -1,4 +1,4 @@
-param([string]$Version = '0.2.0')
+param([string]$Version = '0.2.1')
 . "$PSScriptRoot/toolchain.ps1"
 if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Use a three-component release version.' }
 & "$PSScriptRoot/check-release-docs.ps1" -Version $Version
@@ -11,13 +11,32 @@ $taskPublishDirectory = Join-Path $taskReleaseDirectory 'PCRemote-win-x64'
 & $taskDotnet publish (Join-Path $taskRoot 'src/PcController.App') -c Release -r win-x64 --self-contained true -p:PublishTrimmed=false -p:PublishSingleFile=false -p:DebugType=None -p:DebugSymbols=false -p:Version=$Version -o $taskPublishDirectory
 Assert-TaskExit
 Copy-Item -LiteralPath (Join-Path $taskRoot 'LICENSE') -Destination (Join-Path $taskPublishDirectory 'LICENSE')
-Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/setup.md') -Destination (Join-Path $taskPublishDirectory 'SETUP.md')
-Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/pc-features.md') -Destination (Join-Path $taskPublishDirectory 'PC-CONTROLS.md')
-Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/limitations.md') -Destination (Join-Path $taskPublishDirectory 'LIMITATIONS.md')
-Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/certificates.md') -Destination (Join-Path $taskPublishDirectory 'CERTIFICATES.md')
-Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/third-party.md') -Destination (Join-Path $taskPublishDirectory 'THIRD-PARTY.md')
-Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/troubleshooting.md') -Destination (Join-Path $taskPublishDirectory 'TROUBLESHOOTING.md')
-Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/release-checklist.md') -Destination (Join-Path $taskPublishDirectory 'MANUAL-TESTS.md')
+function Copy-ReleaseGuide([string]$Source, [string]$Name) {
+    $taskSourcePath = Join-Path $taskRoot $Source
+    $taskGuide = [IO.File]::ReadAllText($taskSourcePath)
+    # Guides are flattened/renamed in the distribution. Point source-relative
+    # Markdown links to the exact release tag instead of shipping broken paths.
+    $taskGuide = [regex]::Replace($taskGuide, '(\[[^\]]*\]\()([^\s)]+)(\))', {
+        param($taskMatch)
+        $taskTarget = $taskMatch.Groups[2].Value
+        if ($taskTarget -match '^[a-zA-Z][a-zA-Z0-9+.-]*:|^#') { return $taskMatch.Value }
+        $taskParts = $taskTarget -split '#', 2
+        $taskTargetPath = [IO.Path]::GetFullPath((Join-Path (Split-Path $taskSourcePath -Parent) $taskParts[0]))
+        $taskRootPrefix = [IO.Path]::GetFullPath($taskRoot).TrimEnd('\') + '\'
+        if (!$taskTargetPath.StartsWith($taskRootPrefix, [StringComparison]::OrdinalIgnoreCase)) { throw 'Release guide link leaves the source repository.' }
+        $taskRelative = $taskTargetPath.Substring($taskRootPrefix.Length).Replace('\', '/')
+        $taskAnchor = if ($taskParts.Length -eq 2) { '#' + $taskParts[1] } else { '' }
+        return $taskMatch.Groups[1].Value + "https://github.com/maamouribilel/windows-pc-mobile-controller/blob/v$Version/$taskRelative$taskAnchor" + $taskMatch.Groups[3].Value
+    })
+    [IO.File]::WriteAllText((Join-Path $taskPublishDirectory $Name), $taskGuide)
+}
+Copy-ReleaseGuide 'docs/setup.md' 'SETUP.md'
+Copy-ReleaseGuide 'docs/pc-features.md' 'PC-CONTROLS.md'
+Copy-ReleaseGuide 'docs/limitations.md' 'LIMITATIONS.md'
+Copy-ReleaseGuide 'docs/certificates.md' 'CERTIFICATES.md'
+Copy-ReleaseGuide 'docs/third-party.md' 'THIRD-PARTY.md'
+Copy-ReleaseGuide 'docs/troubleshooting.md' 'TROUBLESHOOTING.md'
+Copy-ReleaseGuide 'docs/release-checklist.md' 'MANUAL-TESTS.md'
 $taskLicenses = Join-Path $taskPublishDirectory 'licenses'
 [IO.Directory]::CreateDirectory($taskLicenses) | Out-Null
 Copy-Item -LiteralPath (Join-Path (Split-Path $taskDotnet -Parent) 'LICENSE.txt') -Destination (Join-Path $taskLicenses 'DOTNET-LICENSE.txt')

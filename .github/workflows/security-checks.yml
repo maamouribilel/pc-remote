@@ -1,0 +1,42 @@
+name: Security and regression checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validation:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/remote/.nvmrc
+          cache: npm
+          cache-dependency-path: src/remote/package-lock.json
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Build Release
+        shell: pwsh
+        run: ./scripts/build.ps1 -Configuration Release
+      - name: Audit dependencies
+        shell: pwsh
+        run: ./scripts/audit-dependencies.ps1
+      - name: Core, security, pairing, lifecycle, and PC feature checks
+        shell: pwsh
+        run: |
+          ./scripts/test.ps1
+          ./scripts/test.ps1 -Security
+          ./scripts/test.ps1 -Pairing
+          ./scripts/test.ps1 -Lifecycle
+          ./scripts/test.ps1 -PcFeatures
+      - name: Browser interaction and responsive checks
+        shell: pwsh
+        run: ./scripts/test-browser-mouse.ps1

@@ -9,7 +9,7 @@
 A touchpad, keyboard, media remote, and app launcher in Safari.<br>
 Pair on your PC, connect over your home network, and keep control within reach.
 
-[![Download](https://img.shields.io/badge/Download-v0.2.0_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.2.0)
+[![Download](https://img.shields.io/badge/Download-v0.2.1_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.2.1)
 [![Windows](https://img.shields.io/badge/Windows-x64-0078D4?style=flat-square)](#download)
 [![.NET](https://img.shields.io/badge/.NET-10-512BD4?style=flat-square)](#tech-stack)
 [![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?style=flat-square)](#tech-stack)
@@ -17,7 +17,7 @@ Pair on your PC, connect over your home network, and keep control within reach.
 [![Transport](https://img.shields.io/badge/Transport-HTTPS_%2B_WSS-5EE8BE?style=flat-square)](docs/protocol.md)
 [![License](https://img.shields.io/badge/License-MIT-5EE8BE?style=flat-square)](LICENSE)
 
-**[Download for Windows](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.0/PCRemote-0.2.0-win-x64-setup.exe)** · **[All versions](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)** · **[Watch the walkthrough](#walkthrough)** · **[Build from source](#getting-started)**
+**[Download for Windows](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.1/PCRemote-0.2.1-win-x64-setup.exe)** · **[All versions](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)** · **[Watch the walkthrough](#walkthrough)** · **[Build from source](#getting-started)**
 
 <img src="docs/assets/desktop-controls.jpg" alt="The actual Windows companion showing power, pointer, and media preferences" width="900">
 
@@ -35,19 +35,21 @@ PC Remote runs as a Windows notification-tray companion and serves its own brows
 
 ## Download
 
-**[Download PC Remote v0.2.0 for Windows x64 →](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.0/PCRemote-0.2.0-win-x64-setup.exe)**
+**[Download PC Remote v0.2.1 for Windows x64 →](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.1/PCRemote-0.2.1-win-x64-setup.exe)**
 
 | Download | Choose this for |
 | :--- | :--- |
-| **[Windows installer](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.0/PCRemote-0.2.0-win-x64-setup.exe)** | Recommended: Start menu shortcuts and an uninstall entry |
-| **[Portable ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.0/PCRemote-0.2.0-win-x64.zip)** | Extract the complete archive, then run `PCRemote-win-x64/PcController.App.exe` |
-| **[SHA-256 checksums](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.0/SHA256SUMS.txt)** | Verify the installer or portable archive |
+| **[Windows installer](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.1/PCRemote-0.2.1-win-x64-setup.exe)** | Recommended: Start menu shortcuts and an uninstall entry |
+| **[Portable ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.1/PCRemote-0.2.1-win-x64.zip)** | Extract the complete archive, then run `PCRemote-win-x64/PcController.App.exe` |
+| **[SHA-256 checksums](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.1/SHA256SUMS.txt)** | Verify the installer or portable archive |
 
-**[Release notes for v0.2.0](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.2.0)** · **[Browse every published version](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)**
+**[Release notes for v0.2.1](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.2.1)** · **[Browse every published version](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)**
 
 On GitHub, open **Releases**, select the version you want, and expand **Assets**. Choose the installer or portable ZIP; GitHub's automatic **Source code** archives are for developers. See [download and version instructions](docs/releases.md).
 
-Version 0.2.0 is a public preview. It targets Windows 10 1809 or later, x64; Windows 11 is the tested desktop OS. The app and installer are unsigned, and the remaining manual checks are documented in the [release checklist](docs/release-checklist.md). After installation, follow the [iPhone setup guide](docs/setup.md).
+Version 0.2.1 is a public preview. It targets Windows 10 1809 or later, x64; Windows 11 is the tested desktop OS. The app and installer are unsigned, and the remaining manual checks are documented in the [release checklist](docs/release-checklist.md). After installation, follow the [iPhone setup guide](docs/setup.md).
+
+**Security update:** v0.2.1 isolates paired users from unpaired HTTP request floods, reserves capacity for power cancellation, and prevents media settings changes from an expired or replaced controlling session. Users of v0.2.0 should update.
 
 ## Live demo
 
@@ -216,15 +218,19 @@ With all companions closed:
 
 ```powershell
 ./scripts/test.ps1
+./scripts/test.ps1 -Security
 ./scripts/test.ps1 -Pairing
 ./scripts/test.ps1 -Lifecycle
 ./scripts/test.ps1 -PcFeatures
 ./scripts/test-browser-mouse.ps1
+./scripts/audit-dependencies.ps1
 ```
 
 The browser script starts a temporary loopback fixture and cleans it up afterward. Checks cover pairing, gestures, Unicode text, navigation, media, launcher/profile selection, volume read-back, cancelled power actions, reconnects, and portrait/landscape/desktop viewports.
 
 See the [initial publication validation results](docs/publication-checks.md) for build, browser, transport, desktop, packaging, documentation, and secret-scan evidence.
+
+The [v0.2.1 release evidence](docs/release-evidence.md#version-021--security-hardening-2026-10-12) records the security fixes and current validation. GitHub's **Security and regression checks** workflow runs the build, dependency audits, security/ownership checks, and browser tests for future changes.
 
 <details>
 <summary><strong>Native and installed-app checks</strong></summary>
@@ -252,13 +258,15 @@ Coding agents must read [AGENTS.md](AGENTS.md); Claude also reads [CLAUDE.md](CL
 
 Run `./scripts/check-release-docs.ps1` before packaging. The GitHub **Release documentation** check also catches version/link mismatches and missing release documentation updates. Runtime checks, secret scans, and public asset verification remain part of the release procedure.
 
+Read the [security policy](.github/SECURITY.md) for private vulnerability reporting and trust boundaries. Approve only your own trusted browser: keyboard control grants broad access to your signed-in Windows session. Keep the app on a trusted Private LAN and verify certificate trust.
+
 ## Build and deploy
 
 Deploy the companion to the Windows PC you want to control. Its web app is bundled with it rather than hosted separately in the cloud.
 
 ```powershell
 ./scripts/stop.ps1 -Configuration Release
-./scripts/package.ps1 -Version 0.2.0
+./scripts/package.ps1 -Version 0.2.1
 Get-Content ./artifacts/latest-release.txt
 ```
 
@@ -266,8 +274,8 @@ Packaging obtains the verified local Inno Setup compiler if needed, rebuilds Rel
 
 | Output | Use |
 | :--- | :--- |
-| `PCRemote-0.2.0-win-x64-setup.exe` | Per-user installation, Start menu shortcut, uninstall entry |
-| `PCRemote-0.2.0-win-x64.zip` | Portable distribution; keep the executable and adjacent files together |
+| `PCRemote-0.2.1-win-x64-setup.exe` | Per-user installation, Start menu shortcut, uninstall entry |
+| `PCRemote-0.2.1-win-x64.zip` | Portable distribution; keep the executable and adjacent files together |
 | `PCRemote-win-x64/` | App, bundled runtime, web assets, documentation, license notices |
 | `SHA256SUMS.txt` | Installer and archive hashes |
 

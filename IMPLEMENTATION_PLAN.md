@@ -511,3 +511,7 @@ Physical pairing and Home Screen follow-up — 2026-10-11:
 - User confirms actual iPhone QR/request/PC approval succeeds and refreshing Safari reconnects without another approval.
 - User confirms the Home Screen web app connects without a certificate warning. This is actual-device trust/connectivity evidence; it does not complete the entire Milestone 5 usability/keyboard/lock-unlock matrix.
 - Milestone 1 acceptance is now supplemented by actual PC approval and remembered-browser reconnection. Continue Milestone 2 real mouse work. Real mouse, multi-monitor drag, lock/disconnect cleanup and responsiveness remain untested.
+
+Security maintenance — 2026-10-12, version 0.2.1:
+- Reproduced and fixed shared HTTP-budget exhaustion and media authorization across disconnected/replaced sessions. Added reserved power-cancel/logout capacity, bounded connections, and 28 security checks beyond the repeated core suite.
+- Release build and local core/security/pairing/lifecycle/PC-feature suites passed. Added dependency audits, GitHub regression automation, private reporting, and synchronized README/AGENTS/CLAUDE/release instructions. See the dated 0.2.1 entry in docs/release-evidence.md for final browser/package/transport results and remaining manual gates.

@@ -16,3 +16,7 @@ The walkthrough exercises actual touch gestures, drag/release, Unicode text subm
 Browser plugin was not available; captures used the project's pinned Playwright/Edge tooling. Only the isolated loopback browser context ignores the fixture certificate warning, matching the existing browser tests. This is UI evidence; production certificate validation and iPhone trust are unchanged. The separate .NET integration/LAN checks validate certificate chains and names.
 
 For a fresh capture, close all companions, run the project's isolated fixture, pair an isolated browser with its temporary challenge, navigate the real tabs, and save screenshots without exposing the pairing form or connection details. Shut down the fixture and remove its unique temporary storage when finished. Do not publish private fixture metadata or reuse screenshots containing live pairing links.
+
+## Version note
+
+These real captures were made from version 0.2.0. Version 0.2.1 changes server request limits and authorization; the pictured controls and layout are unchanged. They are visual evidence, not proof of the newer security checks.

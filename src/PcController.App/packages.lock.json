@@ -14,7 +14,7 @@
       "pccontroller.windows": {
         "type": "Project",
         "dependencies": {
-          "PcController.Core": "[0.2.0, )"
+          "PcController.Core": "[0.2.1, )"
         }
       }
     },

@@ -34,6 +34,7 @@ if (args.Contains("--pc-native-smoke")) PcActionChecks.Native(Check);
 LifecycleChecks.Local(Check);
 if (args.Contains("--lifecycle")) await LifecycleChecks.Network(Check);
 if (args.Contains("--pc-features")) await PcEndpointChecks.Run(Check);
+if (args.Contains("--security")) await SecurityChecks.Run(Check);
 var desktopArgument = Array.IndexOf(args, "--desktop");
 if (desktopArgument >= 0) await DesktopChecks.Run(Check, args[desktopArgument + 1]);
 if (args.Contains("--mouse-smoke")) await MouseSmoke.Run(Check);

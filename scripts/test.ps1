@@ -1,8 +1,9 @@
-param([switch]$Integration, [switch]$Browser, [switch]$Lan, [switch]$Pairing, [switch]$MouseSmoke, [switch]$KeyboardSmoke, [switch]$Lifecycle, [switch]$PcFeatures)
+param([switch]$Integration, [switch]$Browser, [switch]$Lan, [switch]$Pairing, [switch]$MouseSmoke, [switch]$KeyboardSmoke, [switch]$Lifecycle, [switch]$PcFeatures, [switch]$Security)
 . "$PSScriptRoot/toolchain.ps1"
 Push-Location $taskRoot
 try {
-    if ($PcFeatures) { & $taskDotnet run --project tests/PcController.Tests -- --pc-features }
+    if ($Security) { & $taskDotnet run --project tests/PcController.Tests -- --security }
+    elseif ($PcFeatures) { & $taskDotnet run --project tests/PcController.Tests -- --pc-features }
     elseif ($Lifecycle) { & $taskDotnet run --project tests/PcController.Tests -- --lifecycle }
     elseif ($KeyboardSmoke) { & $taskDotnet run --project tests/PcController.Tests -- --keyboard-smoke }
     elseif ($MouseSmoke) { & $taskDotnet run --project tests/PcController.Tests -- --mouse-smoke }

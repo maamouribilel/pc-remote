@@ -108,12 +108,24 @@ public sealed partial class CompanionServer
         {
             var device = Authenticate(context);
             if (device == null) return Error("unauthenticated", 401);
-            if (Sessions.OwnerDeviceId != device.Id || Sessions.Paused) return Error("controller_busy_or_paused", 409);
+            var session = Sessions.ActiveSessionId;
+            if (session == null) return Error("controller_busy_or_paused", 409);
             using var body = await JsonBody(context, ["profile"]);
             if (body == null || body.RootElement.GetProperty("profile").ValueKind != JsonValueKind.String) return Error("invalid_request", 400);
             var profile = body.RootElement.GetProperty("profile").GetString()!;
             if (!MediaProfiles.Mappings.ContainsKey(profile)) return Error("invalid_profile", 400);
-            try { MediaSettings.Save(profile); return Results.Json(new { profile }); }
+            try
+            {
+                IResult result = Error("controller_busy_or_paused", 409);
+                // Body reads can outlive a pause, revoke, or reconnect. Authorize the
+                // original live session again while holding the ownership lock.
+                Sessions.ExecuteDevice(device.Id, session, () =>
+                {
+                    if (Authenticate(context)?.Id != device.Id) { result = Error("unauthenticated", 401); return; }
+                    MediaSettings.Save(profile); result = Results.Json(new { profile });
+                });
+                return result;
+            }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { return Error("settings_failed", 503); }
         });
         app.MapMethods("/control/ws", ["GET", "CONNECT"], async (HttpContext context) =>

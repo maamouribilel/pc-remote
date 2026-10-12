@@ -61,6 +61,8 @@ public sealed partial class CompanionServer : IAsyncDisposable
         {
             options.AddServerHeader = false;
             options.Limits.MaxRequestBodySize = DiagnosticProtocol.MaxBytes;
+            options.Limits.MaxConcurrentConnections = 64;
+            options.Limits.MaxConcurrentUpgradedConnections = 8;
             foreach (var address in addresses) options.Listen(address, Port, listen => listen.UseHttps(tls =>
             {
                 tls.ServerCertificate = Certificates.Server;
@@ -70,8 +72,23 @@ public sealed partial class CompanionServer : IAsyncDisposable
         builder.Services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = 429;
-            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(_ => RateLimitPartition.GetFixedWindowLimiter("global", _ =>
-                new FixedWindowRateLimiterOptions { PermitLimit = 120, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            {
+                // Authenticate the cookie, not a caller-supplied identifier. Unpaired
+                // peers cannot consume a device's budget, even from the same address.
+                var device = Authenticate(context);
+                var path = context.Request.Path;
+                var safety = device != null && context.Request.Method == "POST" &&
+                    (path == "/api/pc/power/cancel" || path == "/api/logout");
+                var key = device == null ? $"unpaired:{context.Connection.RemoteIpAddress}" : $"device:{device.Id}:{(safety ? "safety" : "normal")}";
+                return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+                { PermitLimit = safety ? 30 : 120, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 });
+            });
+            options.OnRejected = async (context, token) =>
+            {
+                context.HttpContext.Response.Headers.RetryAfter = "60";
+                await context.HttpContext.Response.WriteAsJsonAsync(new { error = "rate_limit" }, cancellationToken: token);
+            };
         });
         app = builder.Build();
         app.Use(async (context, next) =>
