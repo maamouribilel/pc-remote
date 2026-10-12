@@ -43,3 +43,7 @@ No Windows certificate store trust is automatically added by the companion. Veri
 ## Windows TLS finding
 
 The initial server used ephemeral imported private keys: its process listened, but the TLS handshake closed. Loading into a temporary user key container fixed the live handshake. This is consistent with [Microsoft's Schannel/SslStream troubleshooting documentation](https://learn.microsoft.com/en-us/dotnet/core/extensions/sslstream-troubleshooting). DPAPI remains the persistent file protection mechanism.
+
+## Version 0.2.1 certificate compatibility
+
+Version 0.2.1 adds server authority and subject key identifiers for strict X.509 validators. On upgrade, a legacy server certificate is renewed automatically with the same trusted root and current address names. Existing root trust and remembered devices are retained; this migration does not require reinstalling the iPhone profile. Always verify the displayed fingerprint and certificate trust as described in this guide. The `scripts/test-certificate.ps1` fixture checks strict trust plus wrong-host and untrusted-root rejection.

@@ -49,7 +49,7 @@ On GitHub, open **Releases**, select the version you want, and expand **Assets**
 
 Version 0.2.1 is a public preview. It targets Windows 10 1809 or later, x64; Windows 11 is the tested desktop OS. The app and installer are unsigned, and the remaining manual checks are documented in the [release checklist](docs/release-checklist.md). After installation, follow the [iPhone setup guide](docs/setup.md).
 
-**Security update:** v0.2.1 isolates paired users from unpaired HTTP request floods, reserves capacity for power cancellation, and prevents media settings changes from an expired or replaced controlling session. Users of v0.2.0 should update.
+**Security update:** v0.2.1 isolates paired users from unpaired HTTP request floods, reserves capacity for power cancellation, prevents late media settings changes, and fixes strict TLS certificate compatibility while retaining the trusted root. Users of v0.2.0 should update.
 
 ## Live demo
 
@@ -231,6 +231,8 @@ The browser script starts a temporary loopback fixture and cleans it up afterwar
 See the [initial publication validation results](docs/publication-checks.md) for build, browser, transport, desktop, packaging, documentation, and secret-scan evidence.
 
 The [v0.2.1 release evidence](docs/release-evidence.md#version-021--security-hardening-2026-10-12) records the security fixes and current validation. GitHub's **Security and regression checks** workflow runs the build, dependency audits, security/ownership checks, and browser tests for future changes.
+
+For strict certificate interoperability, run `./scripts/test-certificate.ps1` with **Python 3.13+** available. It uses only Python's standard library and checks valid trust, incorrect-host rejection, and untrusted-certificate rejection. CI includes this check; Python is a validation tool and is not needed to run the packaged app.
 
 <details>
 <summary><strong>Native and installed-app checks</strong></summary>

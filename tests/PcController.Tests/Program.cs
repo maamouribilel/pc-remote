@@ -59,8 +59,28 @@ var testDirectory = Path.Combine(Path.GetTempPath(), "PcControllerTests", Guid.N
 using (var first = new LocalCertificates(testDirectory, [IPAddress.Loopback]))
 {
     Check(first.Renewed && first.Root.HasPrivateKey && first.Server.HasPrivateKey, "initial certificate generation");
+    Check(first.Server.Extensions["2.5.29.35"]?.RawData.SequenceEqual(X509AuthorityKeyIdentifierExtension.CreateFromCertificate(first.Root, true, false).RawData) == true, "server authority key identifier matches the trusted root");
+    Check(first.Server.Extensions["2.5.29.14"] != null, "server certificate has a subject key identifier for strict validators");
     using var next = new LocalCertificates(testDirectory, [IPAddress.Loopback]);
     Check(!next.Renewed && next.Fingerprint == first.Fingerprint && next.Server.Thumbprint == first.Server.Thumbprint, "protected persistence");
+    // Model an existing 0.2.0 installation whose valid leaf omitted AKI/SKI.
+    // Matching addresses/expiry must not suppress its safe leaf-only migration.
+    using (var legacyKey = RSA.Create(2048))
+    {
+        var legacyRequest = new CertificateRequest("CN=PC Remote", legacyKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        legacyRequest.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, true));
+        legacyRequest.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment, true));
+        legacyRequest.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(new OidCollection { new("1.3.6.1.5.5.7.3.1") }, false));
+        var legacySan = new SubjectAlternativeNameBuilder(); legacySan.AddDnsName("localhost"); legacySan.AddIpAddress(IPAddress.Loopback);
+        legacyRequest.CertificateExtensions.Add(legacySan.Build());
+        using var legacyPublic = legacyRequest.Create(first.Root, DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddDays(90), RandomNumberGenerator.GetBytes(16));
+        using var legacy = legacyPublic.CopyWithPrivateKey(legacyKey); var bytes = legacy.Export(X509ContentType.Pfx);
+        try { File.WriteAllBytes(Path.Combine(testDirectory, "server.protected"), UserProtection.Protect(bytes)); }
+        finally { CryptographicOperations.ZeroMemory(bytes); }
+        using var migrated = new LocalCertificates(testDirectory, [IPAddress.Loopback]);
+        Check(migrated.Renewed && migrated.Fingerprint == first.Fingerprint && migrated.Server.Thumbprint != legacy.Thumbprint && migrated.Server.Extensions["2.5.29.35"] != null,
+            "legacy server certificate renews without replacing the trusted root");
+    }
     using var changed = new LocalCertificates(testDirectory, [IPAddress.Loopback, IPAddress.Parse("192.0.2.10")]);
     Check(changed.Renewed && changed.Fingerprint == first.Fingerprint && changed.Server.Thumbprint != first.Server.Thumbprint, "SAN regeneration preserves root");
     var profile = XDocument.Load(first.ProfilePath);

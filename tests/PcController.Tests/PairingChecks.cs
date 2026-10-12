@@ -101,7 +101,9 @@ internal static class PairingChecks
         using (var pending = await Json(await Post("/api/pair/poll", "{}"))) check(pending.RootElement.GetProperty("state").GetString() == "pending", "poll cannot bypass PC approval");
         check((await Post("/api/pair/request", JsonSerializer.Serialize(new { challenge, name = "Replay" }))).StatusCode == HttpStatusCode.BadRequest, "HTTPS challenge replay rejected");
         decision.SetResult(true);
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        // This deadline covers many separate TLS/WebSocket connections. Fresh
+        // Windows runners need more than ten seconds for the complete suite.
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
         while (server.Devices.List().Length == 0) await Task.Delay(20, timeout.Token);
         response = await Post("/api/pair/poll", "{}");
         using (var approved = await Json(response)) check(approved.RootElement.GetProperty("state").GetString() == "approved" && !approved.RootElement.TryGetProperty("credential", out _), "credential issued only in HttpOnly cookie after approval");

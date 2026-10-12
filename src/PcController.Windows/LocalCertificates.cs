@@ -36,6 +36,7 @@ public sealed class LocalCertificates : IDisposable
         var leafPath = Path.Combine(directory, "server.protected");
         X509Certificate2? leaf = File.Exists(leafPath) ? Load(leafPath) : null;
         if (leaf == null || leaf.NotAfter.ToUniversalTime() < DateTime.UtcNow.AddDays(14) ||
+            leaf.Extensions["2.5.29.35"] == null || leaf.Extensions["2.5.29.14"] == null ||
             !File.Exists(namesPath) || !File.ReadAllLines(namesPath).SequenceEqual(names))
         {
             leaf?.Dispose();
@@ -69,6 +70,8 @@ public sealed class LocalCertificates : IDisposable
         request.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, true));
         request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment, true));
         request.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(new OidCollection { new("1.3.6.1.5.5.7.3.1") }, false));
+        request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
+        request.CertificateExtensions.Add(X509AuthorityKeyIdentifierExtension.CreateFromCertificate(root, true, false));
         var san = new SubjectAlternativeNameBuilder();
         san.AddDnsName("localhost");
         foreach (var address in addresses.Distinct()) san.AddIpAddress(address);
