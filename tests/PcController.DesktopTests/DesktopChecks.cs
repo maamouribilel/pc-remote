@@ -121,7 +121,8 @@ internal static class DesktopChecks
             check(first.Sessions.Paused, "native lifecycle callback pauses synchronously before async refresh");
             environment.State = new(true, false, true, "Permission lost"); await controller.RefreshAsync();
             check(first != controller.Server && controller.Server!.Sessions.Paused && !controller.InputReady && !controller.Server.Capabilities.InputEnabled, "permission loss replaces host paused and invalidates network approval");
-            controller.PauseResume(); check(controller.Server!.Sessions.Paused, "missing permission cannot Resume");
+            // PauseResume schedules an un-awaited refresh that may replace the host; let it settle first.
+            controller.PauseResume(); await controller.RefreshAsync(); check(controller.Server?.Sessions.Paused == true, "missing permission cannot Resume");
             environment.State = new(true, true, false, "Keychain locked"); await controller.RefreshAsync();
             check(controller.Server == null && controller.Message == "Keychain locked", "locked storage stops all listeners with actionable state");
             check(!controller.StorageReady && controller.HasStorageAuthorization && environment.Authorizations == 0, "storage failure offers explicit local Keychain consent without requesting it automatically");

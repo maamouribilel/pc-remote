@@ -22,6 +22,8 @@ internal static class NativeChecks
         {
             Program.Check(pc_linux_test_x11(xid) == 1 && LinuxNative.pc_linux_arm(LinuxNative.pc_linux_generation()) == 1, "isolated X11 guard and XTEST initialized");
             async Task<string[]> Read() { await Task.Delay(300); return File.ReadAllLines(report); }
+            // Hosted Xvfb can deliver events after one sample; poll a bounded time for the expected state.
+            async Task<string[]> Until(Func<string[], bool> expected) { var deadline = DateTime.UtcNow.AddSeconds(5); var value = await Read(); while (!expected(value) && DateTime.UtcNow < deadline) value = await Read(); return value; }
             string Text(string[] receipt) => Encoding.UTF8.GetString(Convert.FromBase64String(receipt[0]));
             input.Text("é😀 Linux");
             var textDeadline = DateTime.UtcNow.AddSeconds(5); var receipt = await Read();
@@ -72,7 +74,7 @@ internal static class NativeChecks
                 var reservation = ownership.Reserve("native-disposable", false);
                 var session = ownership.Connect("native-disposable", reservation.Ticket)!;
                 controller.Execute(new(1, "pointer.button", Button:"left", Action:"down")); controller.Execute(new(2,"key.down",Key:"Shift"));
-                state = await Read(); Program.Check(int.Parse(state[1]) != 0 && int.Parse(state[2]) != 0, reason + " precondition native hold");
+                state = await Until(s => int.Parse(s[1]) != 0 && int.Parse(s[2]) != 0); Program.Check(int.Parse(state[1]) != 0 && int.Parse(state[2]) != 0, reason + " precondition native hold");
                 switch (reason)
                 {
                     case "pause": ownership.Pause(true); break;
@@ -81,7 +83,7 @@ internal static class NativeChecks
                     case "takeover": ownership.Reserve("replacement-disposable", true); ownership.EndCurrent(); break;
                     default: ownership.Shutdown(); break;
                 }
-                state = await Read(); Program.Check(session.Stop.IsCancellationRequested && int.Parse(state[1]) == 0 && int.Parse(state[2]) == 0, reason + " Core ownership interruption native cleanup");
+                state = await Until(s => int.Parse(s[1]) == 0 && int.Parse(s[2]) == 0); Program.Check(session.Stop.IsCancellationRequested && int.Parse(state[1]) == 0 && int.Parse(state[2]) == 0, reason + " Core ownership interruption native cleanup");
             }
             controller.Execute(new(3,"key.down",Key:"Control")); now += TimeSpan.FromMilliseconds(1300);
             Program.Check(controller.CheckWatchdog(), "watchdog expired"); state = await Read(); Program.Check(int.Parse(state[2]) == 0, "native watchdog key release");
