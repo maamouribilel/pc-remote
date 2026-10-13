@@ -15,6 +15,11 @@ if ($taskAppVersion -notmatch '^\d+\.\d+\.\d+$') { throw 'The app must declare a
 if ($Version -and $Version -cne $taskAppVersion) { throw "Requested version $Version differs from app version $taskAppVersion. Update release files first." }
 $Version = $taskAppVersion
 $taskVersionPattern = [regex]::Escape($Version)
+$taskSharedProject = [xml](Read-ReleaseFile 'Directory.Build.props')
+if ([string]$taskSharedProject.Project.PropertyGroup.PcRemoteVersion -cne $Version) { throw 'Shared PcRemoteVersion must match the Windows app.' }
+$taskDesktopProject = [xml](Read-ReleaseFile 'src/PcController.Desktop/PcController.Desktop.csproj')
+if ([string]$taskDesktopProject.Project.PropertyGroup.Version -cne '$(PcRemoteVersion)') { throw 'Desktop must inherit the shared product version.' }
+
 
 $taskPackage = Read-ReleaseFile 'scripts/package.ps1'
 if ($taskPackage -notmatch ('param\(\[string\]\$Version = ''' + $taskVersionPattern + '''\)')) {

@@ -195,7 +195,9 @@ The recording follows the real browser interface through a secure connection, to
 windows-pc-mobile-controller/
 ├── src/
 │   ├── PcController.App/       # WPF companion and Windows production composition
-│   ├── PcController.Desktop/   # Avalonia development shell (native adapters pending)
+│   ├── PcController.Desktop/   # Shared Avalonia shell, real macOS development composition
+│   ├── PcController.Linux/     # XCB/XTEST, consented portal, GNOME login keyring candidate
+│   ├── PcController.MacOS/     # Quartz/Accessibility, Keychain storage and lifecycle
 │   ├── PcController.Host/      # Portable HTTPS/WSS, endpoints, lifecycle, preferences
 │   ├── PcController.Core/      # Protocol, pairing, ownership, media/power logic
 │   ├── PcController.Windows/   # Native adapters, DPAPI/ACLs, key storage, discovery
@@ -218,7 +220,7 @@ The browser sends bounded, allowlisted commands over WSS. The companion authenti
 
 ### Shared backend development on macOS/Linux
 
-Phases 1–2 provide the portable backend, Avalonia desktop shell, and platform-aware browser. The published companion remains Windows-only. Normal Mac/Linux shell startup shows setup-required and starts no listener until secure storage and native adapters are implemented. See [desktop setup and fixture workflow](docs/desktop-shell.md). Use the same pinned SDK/Node/npm versions with native tool archives on PATH or in `.tools/`, plus Python 3.9+ (3.13+ for strict TLS):
+Phases 1–5 provide the portable backend, Avalonia shell, platform-aware browser and a source-built macOS MVP with real Quartz/Accessibility input and Keychain storage. The published companion remains Windows-only. Linux now has source X11/consented Wayland portal and encrypted GNOME keyring adapters. **Phase 4 remains in progress**: real Ubuntu x64/GNOME X11 and Wayland text/cleanup plus phone/LAN acceptance are pending; text is optional GTK Unicode mode. See [Linux prerequisites, commands, recovery and gates](docs/linux-setup.md). macOS starts paused with loopback HTTPS after secure storage setup; LAN needs explicit session approval and native input needs Accessibility. Native/phone/LAN acceptance is separate. See [macOS build, permissions, recovery and limits](docs/macos-setup.md). See [desktop setup and fixture workflow](docs/desktop-shell.md). Use the same pinned SDK/Node/npm versions with native tool archives on PATH or in `.tools/`, plus Python 3.9+ (3.13+ for strict TLS):
 
 ```sh
 python3 scripts/portable.py build
@@ -226,9 +228,19 @@ python3 scripts/portable.py test
 python3 scripts/portable.py desktop-test
 python3 scripts/portable.py browser-capabilities
 python3 scripts/portable.py desktop
+# Local Apple Silicon candidate on a Mac with Xcode Command Line Tools:
+python3 scripts/package-macos.py
+# Open the .app path printed by packaging; candidates use fresh timestamped directories.
+python3 scripts/check-package.py --rid osx-arm64
+# On a Linux x64 build host:
+python3 scripts/package-linux.py
+python3 scripts/check-package.py --rid linux-x64
+python3 scripts/portable.py mac-test
 python3 scripts/portable.py tls
 python3 scripts/portable.py audit
 ```
+
+Phase 5 adds native supported audio/media/launcher/login/power adapters and version-aware provisional archives. Mac power supports sleep only; Linux actions require logind permission without prompting. The source candidates retain manual/native gaps and have no new public downloads or distribution signatures. See the [feature matrix, package checks and exact release handoff](docs/release-readiness.md).
 
 PowerShell 7 `build.ps1`/`test.ps1` select portable projects automatically on macOS/Linux; pass `-Portable` on Windows. `install-tools.ps1` remains a Windows archive installer. See [portable architecture, adapters and fixture rules](docs/portable-host.md) and [dated Phase 1 evidence](MULTIPLATFORM_PLAN.md#execution-log).
 

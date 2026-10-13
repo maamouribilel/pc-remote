@@ -201,7 +201,12 @@ public sealed partial class CompanionServer
             previous = command!.Sequence;
             try { if (!Sessions.Execute(session, () => { Input.Execute(command); if (command.Type != "ping") InputProblem = false; })) return; }
             catch (InputFailureException)
-            { InputProblem = true; await socket.CloseOutputAsync(WebSocketCloseStatus.PolicyViolation, "input_failed", lifetime.Token); return; }
+            {
+                InputProblem = true; Sessions.Pause(true);
+                using var close = CancellationTokenSource.CreateLinkedTokenSource(disconnected, shutdown.Token);
+                close.CancelAfter(TimeSpan.FromSeconds(5));
+                await socket.CloseOutputAsync(WebSocketCloseStatus.PolicyViolation, "input_failed", close.Token); return;
+            }
             if (command.Type == "ping")
                 await SendControlReply(socket, new { v = 1, seq = previous, type = "pong", session = session.Id, payload = new { capabilities = Capabilities, readiness = Readiness, mediaProfile = MediaSettings.Profile, volume = Capabilities.Volume ? PcActions.GetVolume() : new VolumeState(false), power = PublicPower(), powerMessage = PowerMessage } }, lifetime.Token);
             else if (command.Type == "text.insert")

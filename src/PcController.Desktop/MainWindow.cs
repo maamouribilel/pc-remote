@@ -18,6 +18,13 @@ public sealed class MainWindow : Window
     private readonly TextBox address = new() { IsReadOnly = true }, pairing = new() { IsReadOnly = true };
     private readonly Image qr = new() { Width = 180, Height = 180 };
     private readonly ComboBox networks = new() { HorizontalAlignment = HorizontalAlignment.Stretch };
+    private readonly StackPanel launcher = new() { Spacing = 8 };
+    private readonly NumericUpDown volume = new() { Minimum = 0, Maximum = 100, Increment = 1, Value = 0 };
+    private readonly TextBlock audioState = Text(""), powerState = Text("");
+    private readonly CheckBox startup = new() { Content = "Start PC Remote at sign-in (starts paused; LAN approval stays session-only)" };
+    private readonly Button addApp, setVolume, cancelPower;
+    private readonly Button? authorizeStorage;
+    private readonly Dictionary<string, Button> powerButtons = [];
     private readonly StackPanel devices = new() { Spacing = 8 };
     private readonly Button newPair, pause, release, save, export, approveNetwork;
     private readonly TextBox fingerprint = new() { IsReadOnly = true };
@@ -30,6 +37,7 @@ public sealed class MainWindow : Window
     private string? renderedPair;
     private Bitmap? qrBitmap;
     private bool exiting, refreshing;
+    private VolumeState lastVolume = new(false);
     private PcController.Host.CompanionServer? renderedServer;
     public event Action? ExitRequested;
     public MainWindow(DesktopController controller)
@@ -71,13 +79,42 @@ public sealed class MainWindow : Window
         networks.SelectionChanged += (_, _) => approveNetwork.IsEnabled = networks.SelectedItem is NetworkCandidate;
         setup.Children.Add(approveNetwork);
         setup.Children.Add(Button("Block LAN access", () => _ = controller.BlockLanAsync(), "block-network")); setup.Children.Add(networkNote);
-        setup.Children.Add(Text(controller.Platform == "macos" ? "Accessibility: native control is unavailable until the macOS adapter is implemented. Keychain storage is also required." : "Desktop permission: X11/Wayland control and secure keyring storage are unavailable until the Linux adapters are implemented.", secondary: true));
+        setup.Children.Add(Text(controller.Platform == "macos" ? "Accessibility is required for pointer and keyboard control. Enable this PC Remote.app in System Settings → Privacy & Security → Accessibility, quit and reopen it, then choose Resume. After rebuilding, remove stale entries and add the same candidate again. Secure Input/password fields block control. Review the selected player before media control. System audio requires a writable output. Restart/shutdown are unavailable on Mac." : "Linux requires a local unlocked GNOME session and password-encrypted login keyring. Wayland needs explicit Remote Desktop portal consent; XWayland is not input permission. GTK Unicode text is optional and target-specific. General playback uses MPRIS; player shortcuts require focus. Audio needs PulseAudio/PipeWire-Pulse. Power is gated by logind permission.", secondary: true));
+        if (controller.HasPermissionOnboarding) setup.Children.Add(Button(controller.Platform == "macos" ? "Open Accessibility settings" : "Request Wayland Remote Desktop consent", controller.OpenPermissionSettings, "accessibility"));
+        if (controller.HasStorageAuthorization)
+        {
+            authorizeStorage = Button("Allow Keychain access after update…", () => _ = AuthorizeStorage(), "authorize-keychain");
+            setup.Children.Add(authorizeStorage);
+            setup.Children.Add(Text("An updated or rebuilt unsigned app has a new code identity. Use this only for the PC Remote.app you installed; macOS asks for your login Keychain password. Deny keeps storage locked; nothing is reset.", secondary: true));
+        }
+        if (controller.HasLinuxTextMode)
+        {
+            var gtk = new CheckBox { Content = "Enable Unicode text for a verified GTK target only (Ctrl+Shift+U)" };
+            SetAccessibleName(gtk, "GTK Unicode text mode", "linux-gtk-text");
+            gtk.IsCheckedChanged += (_, _) => controller.EnableLinuxGtkText(gtk.IsChecked == true);
+            setup.Children.Add(gtk);
+            setup.Children.Add(Button("Recover ended input session…", () => _ = RecoverEndedBackend(), "linux-backend-recovery"));
+            setup.Children.Add(Button("Recover interrupted GTK text…", () => _ = RecoverGtk(), "linux-gtk-recovery"));
+            setup.Children.Add(Text("Verify a disposable GTK editor first. Other apps/IMEs may execute these chords instead. Interrupted composition must be cancelled locally; then confirm recovery here before Resume or Exit.", secondary: true));
+        }
         body.Children.Add(new Expander { Header = "Trusted network & permissions", Content = setup, IsExpanded = true });
         var preferences = new StackPanel { Spacing = 12 };
         preferences.Children.Add(Text("Pointer sensitivity")); preferences.Children.Add(sensitivity); SetAccessibleName(sensitivity, "Pointer sensitivity", "sensitivity");
         preferences.Children.Add(natural); preferences.Children.Add(Text("Media profile")); preferences.Children.Add(profile); SetAccessibleName(profile, "Media profile", "profile");
         save = Button("Save preferences", () => controller.SavePreferences(new((double)(sensitivity.Value ?? 1), natural.IsChecked == true), profile.SelectedItem as string ?? "General"), "save-preferences");
         preferences.Children.Add(save); preferences.Children.Add(hide);
+        startup.IsChecked = controller.StartupEnabled; startup.IsEnabled = controller.HasStartup;
+        SetAccessibleName(startup, "Start at sign-in", "startup"); preferences.Children.Add(startup);
+        var startupSave = Button("Save sign-in preference", () => controller.SetStartup(startup.IsChecked == true), "save-startup");
+        startupSave.IsEnabled = controller.HasStartup; preferences.Children.Add(startupSave);
+        preferences.Children.Add(Text("Configured apps")); preferences.Children.Add(launcher);
+        addApp = Button(controller.Platform == "macos" ? "Add local .app…" : "Add local .desktop app…", () => _ = AddApp(), "add-app"); preferences.Children.Add(addApp);
+        preferences.Children.Add(Text("System output volume (0–100)")); preferences.Children.Add(volume); SetAccessibleName(volume, "System output volume", "system-volume");
+        setVolume = Button("Set volume", () => controller.SetVolume((int)(volume.Value ?? 0)), "set-volume"); preferences.Children.Add(setVolume); preferences.Children.Add(audioState);
+        var power = new WrapPanel();
+        foreach (var (action, label) in new[] { ("sleep", "Sleep…"), ("restart", "Restart…"), ("shutdown", "Shut down…") })
+        { var button = Button(label, () => _ = ConfirmPower(action), "power-" + action); powerButtons[action] = button; power.Children.Add(button); }
+        cancelPower = Button("Cancel power action", controller.CancelPower, "cancel-power"); power.Children.Add(cancelPower); preferences.Children.Add(power); preferences.Children.Add(powerState);
         preferencesExpander = new Expander { Header = "Preferences", Content = preferences };
         body.Children.Add(preferencesExpander);
         body.Children.Add(Text("Development shell · public release remains Windows 0.2.1. Native control is reported separately from pairing and transport.", secondary: true));
@@ -99,9 +136,43 @@ public sealed class MainWindow : Window
         timer.Tick += async (_, _) =>
         {
             Render(); if (refreshing) return; refreshing = true;
-            try { await controller.RefreshAsync(); } finally { refreshing = false; }
+            try
+            {
+                await controller.RefreshAsync();
+                var audioServer = controller.Server;
+                try { lastVolume = audioServer?.Capabilities.Volume == true ? await Task.Run(audioServer.PcActions.GetVolume) : new(false); }
+                catch (Exception e) when (e is IOException or InvalidOperationException) { lastVolume = new(false); }
+                Render();
+            }
+            finally { refreshing = false; }
         };
         timer.Start(); Opened += async (_, _) => await controller.RefreshAsync(); Render();
+    }
+    private async Task AddApp()
+    {
+        var server = controller.Server; if (server == null) return;
+        var mac = controller.Platform == "macos";
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = mac ? "Choose a local application bundle" : "Choose an installed application entry", AllowMultiple = false,
+            FileTypeFilter = [new FilePickerFileType(mac ? "macOS application" : "Desktop application") { Patterns = [mac ? "*.app" : "*.desktop"], AppleUniformTypeIdentifiers = mac ? ["com.apple.application-bundle"] : null }] });
+        var path = files.FirstOrDefault()?.TryGetLocalPath(); if (path == null || controller.Server != server) return;
+        var dialog = new Window { Title = "Configure launcher app", Width = 460, SizeToContent = SizeToContent.Height, CanResize = false };
+        var body = new StackPanel { Spacing = 12, Margin = new Thickness(24) };
+        var name = new TextBox { Text = Path.GetFileNameWithoutExtension(path), MaxLength = 64 };
+        var media = new ComboBox { ItemsSource = new[] { "General", "YouTube", "VLC", "Stremio" }, SelectedIndex = 0 };
+        body.Children.Add(Text("Display name")); body.Children.Add(name); body.Children.Add(Text("Media profile")); body.Children.Add(media);
+        body.Children.Add(Text("The phone receives a configured ID/name, never this local path. Opening requests activation; focus and playback still require local review.", secondary: true));
+        body.Children.Add(Button("Add app", () => dialog.Close(true), "confirm-app")); body.Children.Add(Button("Cancel", () => dialog.Close(false), "cancel-app")); dialog.Content = body;
+        if (await dialog.ShowDialog<bool>(this) && controller.Server == server) controller.AddLauncher(path, name.Text ?? "", media.SelectedItem as string ?? "General");
+    }
+    private async Task ConfirmPower(string action)
+    {
+        var server = controller.Server; if (server == null) return;
+        controller.ReleaseInput();
+        var dialog = new Window { Title = "Confirm " + action, Width = 460, SizeToContent = SizeToContent.Height, CanResize = false };
+        var body = new StackPanel { Spacing = 12, Margin = new Thickness(24) };
+        body.Children.Add(Text($"Request {action} on this computer after a cancellable 30-second countdown? Save work first. OS permissions/inhibitors can refuse execution. Once dispatched, cancellation is local to the OS.", secondary: true));
+        body.Children.Add(Button("Start countdown", () => dialog.Close(true), "confirm-power")); body.Children.Add(Button("Cancel", () => dialog.Close(false), "dismiss-power")); dialog.Content = body;
+        if (await dialog.ShowDialog<bool>(this) && controller.Server == server) controller.SchedulePower(action);
     }
     private async Task ExportProfile()
     {
@@ -121,6 +192,33 @@ public sealed class MainWindow : Window
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { readiness.Text = "Public profile could not be saved. Check the destination and retry."; }
     }
     private void Changed() => Dispatcher.UIThread.Post(Render);
+    private async Task RecoverEndedBackend()
+    {
+        var dialog = new Window { Title = "Verify ended-session cleanup locally", Width = 480, SizeToContent = SizeToContent.Height, CanResize = false };
+        var content = new StackPanel { Spacing = 12, Margin = new Thickness(24) };
+        content.Children.Add(Text("Use this only after the portal/display connection ended and Release input cannot reach it. Verify on this computer that every held key/button and GTK composition is cleared, using local input as needed. Confirmation retires unreachable tracking; it does not establish successful automatic cleanup. Wayland requires fresh consent; X11 requires app restart. Control remains paused.", secondary: true));
+        content.Children.Add(Button("I verified all input is released locally", () => dialog.Close(true), "confirm-backend-recovery"));
+        content.Children.Add(Button("Cancel", () => dialog.Close(false), "cancel-backend-recovery")); dialog.Content = content;
+        if (await dialog.ShowDialog<bool>(this)) controller.ConfirmLinuxEndedBackendRecovery();
+    }
+    private async Task AuthorizeStorage()
+    {
+        var dialog = new Window { Title = "Allow existing Keychain storage key", Width = 480, SizeToContent = SizeToContent.Height, CanResize = false };
+        var content = new StackPanel { Spacing = 12, Margin = new Thickness(24) };
+        content.Children.Add(Text("macOS will show its own Keychain dialog for this PC Remote.app and the existing local.pc-remote.storage.v1 key. Continue only if you installed this app from the official release and placed it in its stable location. Choose Always Allow to keep the current certificate root and remembered devices; Deny keeps storage locked. PC Remote never resets the key, root or devices here.", secondary: true));
+        content.Children.Add(Button("Continue to macOS dialog", () => dialog.Close(true), "confirm-keychain"));
+        content.Children.Add(Button("Cancel", () => dialog.Close(false), "cancel-keychain")); dialog.Content = content;
+        if (await dialog.ShowDialog<bool>(this)) await controller.AuthorizeStorageAsync();
+    }
+    private async Task RecoverGtk()
+    {
+        var dialog = new Window { Title = "Confirm local text recovery", Width = 460, SizeToContent = SizeToContent.Height, CanResize = false };
+        var content = new StackPanel { Spacing = 12, Margin = new Thickness(24) };
+        content.Children.Add(Text("Cancel Unicode composition in the original GTK target locally (Escape), restore the original backend and choose Release input. Confirm only after checking the target; control will remain paused.", secondary: true));
+        content.Children.Add(Button("I cancelled composition locally", () => dialog.Close(true), "confirm-gtk-recovery"));
+        content.Children.Add(Button("Cancel", () => dialog.Close(false), "cancel-gtk-recovery")); dialog.Content = content;
+        if (await dialog.ShowDialog<bool>(this)) controller.ConfirmLinuxTextRecovery();
+    }
     private async Task ApproveNetwork()
     {
         if (networks.SelectedItem is not NetworkCandidate candidate) return;
@@ -143,6 +241,7 @@ public sealed class MainWindow : Window
     public void Open() { if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal; Show(); Activate(); }
     public void ShowPreferences() { Open(); controller.ReleaseInput(); preferencesExpander.IsExpanded = true; if (Content is ScrollViewer scroll) scroll.ScrollToEnd(); }
     public void RequestExit() { if (exiting) return; exiting = true; timer.Stop(); hide.IsChecked = false; ExitRequested?.Invoke(); }
+    public void CancelExit() { exiting = false; timer.Start(); Open(); Render(); }
     private void Render()
     {
         if (exiting) return;
@@ -165,13 +264,30 @@ public sealed class MainWindow : Window
         }
         pairingNote.Text = server?.Pairing.CurrentChallenge is { } challenge ? $"Link expires in {Math.Max(0, (int)(challenge.Expires - DateTimeOffset.UtcNow).TotalSeconds)} seconds." : "Pairing links and pending requests expire after two minutes.";
         newPair.IsEnabled = export.IsEnabled = pause.IsEnabled = release.IsEnabled = save.IsEnabled = server != null;
-        sensitivity.IsEnabled = natural.IsEnabled = profile.IsEnabled = server != null;
+        sensitivity.IsEnabled = natural.IsEnabled = server?.Capabilities.Pointer == true;
+        profile.IsEnabled = server?.Capabilities.MediaActions.Count > 0;
+        addApp.IsEnabled = server?.Capabilities.Launcher == true;
+        volume.IsEnabled = setVolume.IsEnabled = server?.Capabilities.Volume == true && !server.Sessions.Paused;
+        var audio = server?.Capabilities.Volume == true ? lastVolume : new VolumeState(false);
+        audioState.Text = audio.Available ? $"Actual output: {audio.Level}%{(audio.Muted ? " · muted" : "")}" : "Writable audio output unavailable";
+        foreach (var (action, button) in powerButtons) button.IsEnabled = server?.Capabilities.PowerActions.Contains(action) == true && !server.Sessions.Paused;
+        cancelPower.IsEnabled = server?.Power.Pending != null;
+        powerState.Text = server?.Power.Pending is { } pending ? $"{pending.Action} in {Math.Max(0, (int)(pending.ExecuteAt - DateTimeOffset.UtcNow).TotalSeconds)} seconds" : server?.PowerMessage ?? "";
+        var apps = server?.Launcher.List() ?? [];
+        var appSignature = string.Join("|", apps.Select(a => a.Id + a.Name + a.Profile));
+        if (!Equals(launcher.Tag, appSignature))
+        {
+            launcher.Tag = appSignature; launcher.Children.Clear();
+            foreach (var app in apps) { var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 }; row.Children.Add(Text(app.Name + " · " + app.Profile)); row.Children.Add(Button("Remove " + app.Name, () => controller.RemoveLauncher(app.Id), "remove-app-" + app.Id)); launcher.Children.Add(row); }
+            if (apps.Length == 0) launcher.Children.Add(Text("No configured apps", secondary: true));
+        }
         pause.Content = server?.Sessions.Paused == true ? "Resume control" : "Pause control";
         var selected = networks.SelectedItem as NetworkCandidate;
         var candidates = controller.Networks.Candidates;
         if (!((networks.ItemsSource as NetworkCandidate[]) ?? []).Select(c => c.Identity).SequenceEqual(candidates.Select(c => c.Identity)))
         { networks.ItemsSource = candidates; networks.SelectedItem = candidates.FirstOrDefault(c => c.Identity == selected?.Identity); }
         approveNetwork.IsEnabled = networks.SelectedItem is NetworkCandidate;
+        if (authorizeStorage != null) authorizeStorage.IsEnabled = !controller.StorageReady;
         networkNote.Text = server?.Network.Notice ?? "No listener is running. Network approval alone cannot enable missing secure storage/native adapters.";
         // Rebuild only when device content changes to preserve keyboard focus.
         var records = server?.Devices.List() ?? [];

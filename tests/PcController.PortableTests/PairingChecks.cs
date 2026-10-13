@@ -180,6 +180,16 @@ internal static class PairingChecks
             while (server.Sessions.OwnerDeviceId != null) await Task.Delay(10, timeout.Token);
             check(mouse.Events.Count(e => e == "release") > releases && limited.CloseStatusDescription == "rate_limit", "authenticated socket rate excess closes and releases held input");
         }
+        check((await Post("/api/session/claim", "{\"takeover\":false}")).IsSuccessStatusCode, "native failure regression reserves owner");
+        using (var faulty = Socket())
+        {
+            await Connect(faulty); mouse.FailNext = true;
+            await faulty.SendAsync(Encoding.UTF8.GetBytes("{\"v\":1,\"seq\":1,\"type\":\"pointer.button\",\"payload\":{\"button\":\"left\",\"action\":\"down\"}}"), WebSocketMessageType.Text, true, timeout.Token);
+            var result = await faulty.ReceiveAsync(new byte[2048], timeout.Token);
+            check(result.MessageType == WebSocketMessageType.Close && faulty.CloseStatusDescription == "input_failed" && server.Sessions.Paused && server.Sessions.OwnerDeviceId == null && mouse.Events.Last() == "release", "synchronous native failure closes WSS and pauses even after successful cleanup");
+        }
+        check((await Post("/api/session/claim", "{\"takeover\":false}")).StatusCode == HttpStatusCode.Forbidden, "native failure cannot reconnect until local Resume");
+        server.Sessions.Pause(false); // Test-only deliberate local Resume after successful cleanup.
         check((await Post("/api/session/claim", "{\"takeover\":false}")).IsSuccessStatusCode, "remembered device reconnects after disconnect");
         using (var socket = Socket())
         {

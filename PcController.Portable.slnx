@@ -1,4 +1,8 @@
 <Solution>
+  <Project Path="src/PcController.Linux/PcController.Linux.csproj" />
+  <Project Path="tests/PcController.LinuxTests/PcController.LinuxTests.csproj" />
+  <Project Path="tests/PcController.MacOSTests/PcController.MacOSTests.csproj" />
+  <Project Path="src/PcController.MacOS/PcController.MacOS.csproj" />
   <Project Path="src/PcController.Desktop/PcController.Desktop.csproj" />
   <Project Path="tests/PcController.DesktopTests/PcController.DesktopTests.csproj" />
   <Project Path="src/PcController.Core/PcController.Core.csproj" />

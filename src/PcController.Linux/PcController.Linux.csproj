@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../PcController.Host/PcController.Host.csproj" /></ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <Content Include="$(IntermediateOutputPath)native/libPcControllerLinux.so" Link="libPcControllerLinux.so" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="BuildLinuxBridge" BeforeTargets="PrepareForBuild" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <MakeDir Directories="$(IntermediateOutputPath)native" />
+    <Exec Command="sh &quot;$(MSBuildProjectDirectory)/native/build.sh&quot; &quot;$(MSBuildProjectDirectory)/native/bridge.c&quot; &quot;$(IntermediateOutputPath)native/libPcControllerLinux.so&quot;" />
+  </Target>
+</Project>

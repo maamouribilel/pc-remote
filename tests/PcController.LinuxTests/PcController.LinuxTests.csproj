@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../src/PcController.Linux/PcController.Linux.csproj" /></ItemGroup>
+  <ItemGroup><Content Include="../../src/remote/dist/**" Link="wwwroot/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <Target Name="BuildTestLinuxBridge" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <Exec Command="sh &quot;$(MSBuildProjectDirectory)/../../src/PcController.Linux/native/build.sh&quot; &quot;$(MSBuildProjectDirectory)/../../src/PcController.Linux/native/bridge.c&quot; &quot;$(TargetDir)libPcControllerLinux.so&quot; test" />
+  </Target>
+</Project>

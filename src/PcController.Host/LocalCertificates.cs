@@ -21,27 +21,32 @@ public class LocalCertificates : ILocalCertificates
         storage.InitializeDirectory(directory);
         var rootPath = Path.Combine(directory, "root.protected");
         Root = File.Exists(rootPath) ? Load(rootPath) : Generate(() => CertificateIssuer.CreateRoot());
-        if (Root.NotAfter.ToUniversalTime() <= DateTime.UtcNow.AddDays(100))
-            throw new InvalidOperationException("Local CA expires soon. Replace it and reinstall trust on the phone; see docs/certificates.md.");
-        if (!File.Exists(rootPath)) Save(rootPath, Root);
-        var names = addresses.Select(ip => ip.ToString()).Order().ToArray();
-        var namesPath = Path.Combine(directory, "addresses.txt");
-        var leafPath = Path.Combine(directory, "server.protected");
-        X509Certificate2? leaf = File.Exists(leafPath) ? Load(leafPath) : null;
-        if (leaf == null || leaf.NotAfter.ToUniversalTime() < DateTime.UtcNow.AddDays(14) ||
-            leaf.Extensions["2.5.29.35"] == null || leaf.Extensions["2.5.29.14"] == null ||
-            !File.Exists(namesPath) || !File.ReadAllLines(namesPath).SequenceEqual(names))
+        X509Certificate2? leaf = null;
+        try
         {
-            leaf?.Dispose();
-            leaf = Generate(() => CertificateIssuer.CreateServer(Root, addresses));
-            Save(leafPath, leaf);
-            File.WriteAllLines(namesPath, names);
-            Renewed = true;
+            if (Root.NotAfter.ToUniversalTime() <= DateTime.UtcNow.AddDays(100))
+                throw new InvalidOperationException("Local CA expires soon. Replace it and reinstall trust on the phone; see docs/certificates.md.");
+            if (!File.Exists(rootPath)) Save(rootPath, Root);
+            var names = addresses.Select(ip => ip.ToString()).Order().ToArray();
+            var namesPath = Path.Combine(directory, "addresses.txt");
+            var leafPath = Path.Combine(directory, "server.protected");
+            leaf = File.Exists(leafPath) ? Load(leafPath) : null;
+            if (leaf == null || leaf.NotAfter.ToUniversalTime() < DateTime.UtcNow.AddDays(14) ||
+                leaf.Extensions["2.5.29.35"] == null || leaf.Extensions["2.5.29.14"] == null ||
+                !File.Exists(namesPath) || !File.ReadAllLines(namesPath).SequenceEqual(names))
+            {
+                leaf?.Dispose();
+                leaf = Generate(() => CertificateIssuer.CreateServer(Root, addresses));
+                Save(leafPath, leaf);
+                File.WriteAllLines(namesPath, names);
+                Renewed = true;
+            }
+            Server = leaf;
+            File.WriteAllBytes(Path.Combine(directory, "pc-remote-root.cer"), Root.Export(X509ContentType.Cert));
+            ProfilePath = Path.Combine(directory, "pc-remote.mobileconfig");
+            ExportProfile(ProfilePath);
         }
-        Server = leaf;
-        File.WriteAllBytes(Path.Combine(directory, "pc-remote-root.cer"), Root.Export(X509ContentType.Cert));
-        ProfilePath = Path.Combine(directory, "pc-remote.mobileconfig");
-        ExportProfile(ProfilePath);
+        catch { leaf?.Dispose(); Root.Dispose(); throw; }
     }
 
     private X509Certificate2 Generate(Func<X509Certificate2> create)

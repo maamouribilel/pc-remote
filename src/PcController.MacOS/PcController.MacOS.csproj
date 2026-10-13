@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../PcController.Host/PcController.Host.csproj" GlobalPropertiesToRemove="MacBridgeArchitecture" /></ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <Content Include="$(IntermediateOutputPath)native/$(MacBridgeArchitecture)/libPcControllerMac.dylib" Link="libPcControllerMac.dylib" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="BuildMacBridge" BeforeTargets="PrepareForBuild" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <PropertyGroup>
+      <MacBridgeArchitecture Condition="'$(RuntimeIdentifier)' == 'osx-x64'">x86_64</MacBridgeArchitecture>
+      <MacBridgeArchitecture Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">arm64</MacBridgeArchitecture>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(MacBridgeArchitecture)' != ''"><MacArchFlag>-arch $(MacBridgeArchitecture)</MacArchFlag></PropertyGroup>
+    <MakeDir Directories="$(IntermediateOutputPath)native/$(MacBridgeArchitecture)" />
+    <Exec Command="/usr/bin/clang $(MacArchFlag) -dynamiclib -fobjc-arc -Wall -Wextra -Werror -Wno-deprecated-declarations -mmacosx-version-min=14.0 -framework AppKit -framework ApplicationServices -framework Carbon -framework Security -framework SystemConfiguration -framework CoreAudio -framework IOKit -framework ServiceManagement &quot;$(MSBuildProjectDirectory)/native/bridge.m&quot; -o &quot;$(IntermediateOutputPath)native/$(MacBridgeArchitecture)/libPcControllerMac.dylib&quot;" />
+  </Target>
+</Project>

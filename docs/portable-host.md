@@ -1,6 +1,6 @@
 # Portable host foundation (Phase 1)
 
-Development architecture as of 2026-10-13. The public app remains the Windows **0.2.1 preview**. An Avalonia development shell now exists; there is no macOS/Linux production input/secure-store composition yet; the recording fixture is a test executable, not native control.
+Development architecture as of 2026-10-13. The public app remains the Windows **0.2.1 preview**. An Avalonia development shell now exists; macOS and Linux now have explicit real platform source composition with independent acceptance gaps; the recording fixture is a test executable, not native control.
 
 ## Boundaries and composition
 
@@ -68,4 +68,20 @@ Windows can use `python` for the same commands. PowerShell 7 on macOS/Linux also
 
 Browser QA alone uses the existing explicit loopback TLS bypass. The separate Python strict TLS fixture checks trusted localhost plus wrong-host and untrusted-root rejection without bypass. Browser selection retains Edge on Windows and uses Playwright Chromium elsewhere.
 
-CI now defines shared Release/build, full portable checks, strict TLS and audits on Windows/macOS/Linux, alongside the existing Windows regression/browser job. A configured job is not evidence of a successful run. Actual results and remaining Windows/native/LAN gaps are in [the roadmap execution log](../MULTIPLATFORM_PLAN.md#execution-log). The shared Desktop shell and test runner are included in both solutions. Native Mac/Linux control and secure storage remain pending; see [Phase 2 shell composition, network trust and tests](desktop-shell.md).
+CI now defines shared Release/build, full portable checks, strict TLS and audits on Windows/macOS/Linux, alongside the existing Windows regression/browser job. A configured job is not evidence of a successful run. Actual results and remaining Windows/native/LAN gaps are in [the roadmap execution log](../MULTIPLATFORM_PLAN.md#execution-log). The shared Desktop shell and test runner are included in both solutions. Mac/Linux native adapters and secure stores now exist, while native platform acceptance remains pending; see [Phase 2 shell composition, network trust and tests](desktop-shell.md).
+
+
+## Phase 3 adapter/handoff
+
+`PcController.MacOS` supplies production Quartz input, public Accessibility/session checks, a Keychain-backed envelope store, temporary macOS certificate-key loading, supported Phase 5 feature adapters, a per-user instance lock and native lifecycle/network notifications. Desktop's optional `IDesktopEnvironment` drives permission/storage gating and synchronous safety notifications. Linux now supplies its own Phase 4 source factory; see the current Linux section below. Shared lifecycle preserves an adapter's startup pause and builds platform hosts off the UI context; synchronous socket input failure pauses ownership. Certificate construction disposes loaded keys if later storage/export fails. No Windows format/adapter or v1 command changes are introduced. [Mac setup](macos-setup.md) specifies persistence, recovery, commands and unaccepted native/LAN cases for the Phase 4 handoff.
+
+## Phase 4 Linux candidate
+
+`PcController.Linux` supplies XCB/XTEST and explicit RemoteDesktop Notify transport, a reviewed GNOME login keyring-backed AES-GCM store, ephemeral PFX loading, instance lock and generation-gated logind/GNOME lock/NetworkManager monitoring. Desktop wires only real platform services. Text capability is optional GTK Unicode mode, default false; supported Phase 5 actions and their independent permission gates are described below. Production builds exclude the native test seam; LinuxTests compiles a separate bridge for guarded Xvfb/private-portal checks. Native Ubuntu x64/GNOME X11 and Wayland text/cleanup acceptance remains pending; Phase 4 is In progress. [Linux prerequisites and limits](linux-setup.md) define the remaining gates. Mac bridge builds remove their architecture-only property before traversing shared Host references, preventing duplicate shared-project output races without changing native behavior.
+
+
+## Phase 5 source candidates (2026-10-13)
+
+Supported native feature adapters and provisional packages are described in [the release-readiness handoff](release-readiness.md). Public support/downloads remain Windows 0.2.1. Mac Core Audio/native system media/player shortcuts/LaunchServices/login registration/sleep and Linux libpulse/MPRIS/player shortcuts/restricted GIO/XDG/logind use real platform services with backend denial and final native readiness/permission checks. Mac restart/shutdown stay unavailable; Linux power requires `Can* == yes`, `interactive=false`, no inhibitor override. Launcher wire input is still configured IDs only; no remote path/arguments/shell. Native dependencies/signing/login eligibility/actual player and physical power acceptance remain separate from recording/source-table/protocol/package checks.
+
+Readiness transitions now force replacement of the capability snapshot even on unchanged loopback bindings; old ownership/listeners stop and replacement starts paused. v1 fields, budgets/reserved cancellation, original-session authentication checks, device-bound confirmation/countdown/cancellation and failed cleanup retention remain. Optional login start never preserves LAN approval/Wayland consent or resumes control. Provisional manifests record version/base revision/dirty source/file hashes; no tag/public release is created. Windows adapters, DPAPI and packaging remain intact. Real GNOME/phone/LAN/installed/Intel/CI gates stay visible.

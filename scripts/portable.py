@@ -64,11 +64,14 @@ PROJECT = 'tests/PcController.PortableTests'
 
 
 @contextlib.contextmanager
-def fixture(configuration, platform_name="recording"):
+def fixture(configuration, platform_name="recording", mac=False):
     with tempfile.TemporaryDirectory(prefix='PcControllerPortable-') as directory:
-        run([DOTNET, 'build', PROJECT, '-c', configuration])
-        dll = ROOT / PROJECT / 'bin' / configuration / 'net10.0/PcController.PortableTests.dll'
-        process = subprocess.Popen([DOTNET, str(dll), '--serve-mouse-fixture', directory, platform_name], cwd=ROOT)
+        project = 'tests/PcController.MacOSTests' if mac else PROJECT
+        run([DOTNET, 'build', project, '-c', configuration])
+        dll = ROOT / project / 'bin' / configuration / ('net10.0/PcController.MacOSTests.dll' if mac else 'net10.0/PcController.PortableTests.dll')
+        directory = str(Path(directory).resolve())
+        arguments = ['--serve-tls', directory] if mac else ['--serve-mouse-fixture', directory, platform_name]
+        process = subprocess.Popen([DOTNET, str(dll), *arguments], cwd=ROOT)
         try:
             metadata = Path(directory) / 'certificates/fixture.json'
             deadline = time.monotonic() + 30
@@ -92,7 +95,7 @@ def fixture(configuration, platform_name="recording"):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['build', 'test', 'tls', 'browser', 'browser-capabilities', 'desktop-test', 'desktop', 'desktop-fixture', 'audit'])
+    parser.add_argument('action', choices=['build', 'test', 'tls', 'browser', 'browser-capabilities', 'desktop-test', 'desktop', 'desktop-fixture', 'linux-test', 'linux-x11', 'linux-portal', 'linux-storage', 'mac-test', 'mac-storage', 'mac-smoke', 'mac-onboard', 'mac-tls', 'audit'])
     parser.add_argument('--configuration', default='Release', choices=['Debug', 'Release'])
     args = parser.parse_args()
     if args.action == 'build':
@@ -102,6 +105,17 @@ def main():
         run([DOTNET, 'build', 'PcController.Portable.slnx', '-c', args.configuration])
     elif args.action == 'test':
         run([DOTNET, 'run', '--project', PROJECT, '-c', args.configuration])
+    elif args.action in ('mac-smoke', 'mac-onboard'):
+        run([sys.executable, 'scripts/mac-smoke.py', *(['--onboard'] if args.action == 'mac-onboard' else [])])
+    elif args.action == 'linux-test':
+        run([DOTNET, 'run', '--project', 'tests/PcController.LinuxTests', '-c', args.configuration])
+    elif args.action in ('linux-x11', 'linux-portal', 'linux-storage'):
+        if sys.platform != 'linux':
+            raise RuntimeError('This check requires Linux; native Wayland acceptance is a separate supervised GNOME check.')
+        run([sys.executable, 'scripts/linux-checks.py', args.action, '--configuration', args.configuration])
+    elif args.action in ('mac-test', 'mac-storage'):
+        extra = [] if args.action == 'mac-test' else ['--', '--storage']
+        run([DOTNET, 'run', '--project', 'tests/PcController.MacOSTests', '-c', args.configuration, *extra])
     elif args.action == 'desktop-test':
         run([DOTNET, 'run', '--project', 'tests/PcController.DesktopTests', '-c', args.configuration])
     elif args.action == 'desktop':
@@ -116,10 +130,10 @@ def main():
                 os.environ['PC_CONTROLLER_TEST_PLATFORM'] = platform_name
                 os.environ['PC_CONTROLLER_BROWSER_TLS_BYPASS'] = '1'
                 run([NPM, 'test', '--', 'capability-compatibility.spec.ts' if platform_name == 'recording' else 'capabilities.spec.ts'], ROOT / 'src/remote')
-    elif args.action == 'tls':
+    elif args.action in ('tls', 'mac-tls'):
         if sys.version_info < (3, 13):
             raise RuntimeError('Strict TLS acceptance requires Python 3.13+; older Python is not equivalent evidence.')
-        with fixture(args.configuration) as directory:
+        with fixture(args.configuration, mac=args.action == 'mac-tls') as directory:
             run([sys.executable, 'tests/certificate-trust.py', str(directory / 'certificates/pc-remote-root.cer')])
     elif args.action == 'browser':
         frontend()

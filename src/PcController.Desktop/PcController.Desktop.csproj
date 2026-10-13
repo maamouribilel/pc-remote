@@ -2,13 +2,19 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType><TargetFramework>net10.0</TargetFramework>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-    <Version>0.2.1</Version><Product>PC Remote development shell</Product>
+    <MacBridgeArchitecture Condition="'$(RuntimeIdentifier)' == 'osx-x64'">x86_64</MacBridgeArchitecture>
+    <MacBridgeArchitecture Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">arm64</MacBridgeArchitecture>
+    <Version>$(PcRemoteVersion)</Version><Product>PC Remote development shell</Product>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
     <PackageReference Include="QRCoder" Version="1.8.0" />
+    <ProjectReference Include="../PcController.Linux/PcController.Linux.csproj" />
     <ProjectReference Include="../PcController.Host/PcController.Host.csproj" />
+    <!-- An empty global property would create a second parallel MacOS build writing the same outputs. -->
+    <ProjectReference Include="../PcController.MacOS/PcController.MacOS.csproj" Condition="'$(MacBridgeArchitecture)' == ''" />
+    <ProjectReference Include="../PcController.MacOS/PcController.MacOS.csproj" Condition="'$(MacBridgeArchitecture)' != ''" AdditionalProperties="MacBridgeArchitecture=$(MacBridgeArchitecture)" />
     <AvaloniaResource Include="../remote/public/pc-remote-v2-128.png" Link="Assets/logo.png" />
     <AvaloniaResource Include="../remote/public/pc-remote-v2.ico" Link="Assets/tray.ico" />
     <Content Include="../remote/dist/**" Link="wwwroot/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

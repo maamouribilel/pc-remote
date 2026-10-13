@@ -27,7 +27,7 @@ Each published release uses its own Git tag and versioned asset filenames. Do no
 
 Read [AGENTS.md](../AGENTS.md), [CLAUDE.md](../CLAUDE.md), and the [release checklist](release-checklist.md). A version is complete only when its source, README, both agent files, GitHub files, and public assets are synchronized.
 
-1. Update the product version in `src/PcController.App/PcController.App.csproj`, the packaging default in `scripts/package.ps1`, and the installer fallback in `installer/PCRemote.iss`.
+1. Update shared `PcRemoteVersion` in `Directory.Build.props` (Desktop inherits it), the matching product version in `src/PcController.App/PcController.App.csproj`, the packaging default in `scripts/package.ps1`, and the installer fallback in `installer/PCRemote.iss`.
 2. Update README version/status/download links, commands, outputs, and affected features/media. Update both `AGENTS.md` and `CLAUDE.md` version/release links and changed instructions. Update this download guide and add dated actual results/remaining gaps in `docs/release-evidence.md`; review affected setup, limitations, and acceptance docs. Preserve historical evidence. Review `.github/` workflows/templates/configuration and update affected files.
 3. Run `./scripts/check-release-docs.ps1` and the checks required by `AGENTS.md` and the [README](../README.md#validation). Provisional package tests may run before committing; do not publish those provisional artifacts.
 4. Commit the corresponding source and all release documentation. Build the final package from that commit so the DLL's informational source revision matches the future tag. Packaging also checks documentation synchronization before building:
@@ -53,3 +53,10 @@ The `0.2.2` commands above illustrate a future release; they do not claim that v
 The GitHub **Release documentation** workflow checks version/link agreement on pull requests, `main` pushes, and version tag pushes. For a version bump it also requires changes to README, both agent files, this guide, and release evidence. Run `./scripts/check-release-docs.ps1 -BaseRef <previous-commit>` locally to perform that comparison. This check does not prove runtime behavior, absence of secrets, or availability of draft assets; complete those checks separately.
 
 Documentation-only maintenance keeps the existing app version, tag, and published binaries. Update and push `main` without replacing release assets.
+
+
+## Multi-platform candidates and future downloads
+
+Only the Windows v0.2.1 links above are published. [Phase 5 release readiness](release-readiness.md) contains the source-candidate support matrix, packaging commands, signing status and exact remaining manual steps. Mac ARM64/Intel ZIP and Ubuntu x64 TAR.GZ scripts create self-contained **candidate** outputs under ignored timestamped directories, with manifest/source digest and checksums; no public links are invented. Native OS services remain required.
+
+For a subsequently authorized preview, synchronize the shared/Windows version and all required documentation first, commit all source/docs, then build all final platforms from that exact clean commit. Review each platform's actual runtime, native architecture, notices, secrets, startup, informational revision, and pending acceptance. Final filenames should identify version/RID; merge every actual Windows installer/ZIP, Mac architecture archive and Ubuntu archive digest into one `SHA256SUMS.txt`. Do not publish a platform/backend/architecture that lacks the required gate without explicit preview limits. Signing/notarization may stay unavailable only if truthfully disclosed. The provisional scripts deliberately label outputs as candidates; `--final` (packaging and `check-package.py`, or the CI `final` dispatch input) produces release names only from a clean committed tree. The annotated tag, assets, support matrix and public checks must agree. Existing Windows releases are preserved.

@@ -5,6 +5,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      final:
+        description: 'Build final-named Mac/Linux archives from this exact clean commit (workflow artifacts only; never tags or publishes)'
+        type: boolean
+        default: false
 
 env:
   AVALONIA_TELEMETRY_OPTOUT: '1'
@@ -18,9 +23,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [windows-latest, macos-latest, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,10 +39,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
+      - name: Linux native build prerequisites (unprivileged runtime)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libsecret-1-dev libxcb-xtest0-dev libxkbcommon-x11-dev libpulse-dev
       - name: Portable Release build
         run: python scripts/portable.py build
       - name: Portable pairing, ownership, transport, lifecycle, capabilities and security
         run: python scripts/portable.py test
+      - name: macOS adapter fault and semantic checks (no native input)
+        run: python scripts/portable.py mac-test
+      - name: Linux adapter fault and semantic checks (no native input)
+        run: python scripts/portable.py linux-test
       - name: Desktop shell host and headless UI workflows
         run: python scripts/portable.py desktop-test
       - name: Platform-aware browser checks
@@ -51,10 +63,36 @@ jobs:
         run: python scripts/portable.py tls
       - name: Portable dependency audit
         run: python scripts/portable.py audit
+      - name: Bundled runtime advisory feed
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/audit-runtime.py
+
+  linux-isolated:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Xvfb GTK and encrypted disposable GNOME keyring prerequisites
+        run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libsecret-1-dev libxcb-xtest0-dev libxkbcommon-x11-dev libpulse-dev dbus-x11 gnome-keyring xvfb libgtk-3-dev x11-xkb-utils python3-gi pulseaudio
+      - name: Guarded X11 input on private Xvfb, US and French layouts
+        run: python scripts/portable.py linux-x11
+      - name: Private D-Bus portal protocol denial, grants and closure (no Wayland input)
+        run: python scripts/portable.py linux-portal
+      - name: Real encrypted disposable keyring persistence and TLS
+        run: python scripts/portable.py linux-storage
+      # No GNOME Shell/compositor/portal consent/physical phone on this runner.
+      # Xvfb is explicitly not native GNOME X11 or Wayland acceptance.
 
   validation:
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -88,3 +126,77 @@ jobs:
       - name: Strict certificate interoperability
         shell: pwsh
         run: ./scripts/test-certificate.ps1
+      - name: Windows provisional installer and archive (no install/uninstall)
+        shell: pwsh
+        run: |
+          [xml]$taskProject = Get-Content src/PcController.App/PcController.App.csproj
+          ./scripts/package.ps1 -Version $taskProject.Project.PropertyGroup.Version
+      - name: Windows content, license, checksum and source revision checks
+        shell: pwsh
+        run: |
+          python scripts/check-windows-package.py
+          $taskDirectory = Get-Content artifacts/latest-release.txt -Raw
+          $taskProduct = (Get-Item (Join-Path $taskDirectory 'PCRemote-win-x64/PcController.App.dll')).VersionInfo.ProductVersion
+          if (!$taskProduct.EndsWith('+' + $env:GITHUB_SHA)) { throw 'Windows DLL source revision differs from the checked-out commit.' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.final && 'release' || 'provisional' }}-win-x64-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            artifacts/release-*/*.exe
+            artifacts/release-*/*.zip
+            artifacts/release-*/SHA256SUMS.txt
+
+  provisional-packaging:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            rid: osx-arm64
+          - os: macos-latest
+            rid: osx-x64
+          - os: ubuntu-24.04
+            rid: linux-x64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/remote/.nvmrc
+          cache: npm
+          cache-dependency-path: src/remote/package-lock.json
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Ubuntu native package prerequisites
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libsecret-1-dev libxcb-xtest0-dev libxkbcommon-x11-dev libpulse-dev file
+      - name: Check synchronized product/public documentation
+        shell: pwsh
+        run: ./scripts/check-release-docs.ps1
+      - name: macOS archive and content checks
+        if: runner.os == 'macOS'
+        run: python scripts/package-macos.py --rid ${{ matrix.rid }} ${{ inputs.final && '--final' || '' }}
+      - name: Ubuntu archive and content checks
+        if: runner.os == 'Linux'
+        run: python scripts/package-linux.py ${{ inputs.final && '--final' || '' }}
+      - name: Read package version/runtime (native architecture only; no input/listener)
+        shell: bash
+        run: |
+          python scripts/check-package.py --rid '${{ matrix.rid }}' ${{ inputs.final && '--final' || '' }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.final && 'release' || 'provisional' }}-${{ matrix.rid }}-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            artifacts/${{ inputs.final && 'release' || 'candidate' }}-*/*.zip
+            artifacts/${{ inputs.final && 'release' || 'candidate' }}-*/*.tar.gz
+            artifacts/${{ inputs.final && 'release' || 'candidate' }}-*/SHA256SUMS.txt
+            artifacts/${{ inputs.final && 'release' || 'candidate' }}-*/*manifest.json
+      # Workflow artifacts only: no tag, release, installation or power execution.
+      # Final mode refuses dirty source; publication is a separate authorized local step.

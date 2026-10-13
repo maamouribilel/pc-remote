@@ -90,12 +90,13 @@ public sealed class TrustedNetworks(Func<NetworkCandidate[]>? inspect = null) : 
                 .OrderBy(a => a.ToString()).ToArray();
             var gateways = properties.GatewayAddresses.Select(g => g.Address.ToString()).Order();
             var networkName = ReadNetworkIdentity(n);
-            // Wi-Fi without an observable network name cannot receive approval. Do not
-            // request Location permission or invent an identity from its private address.
-            if (n.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 && networkName == null)
+            // macOS additionally watches SystemConfiguration association/configuration changes.
+            // Redacted Wi-Fi names use explicit interface/connectivity-session approval;
+            // no Location permission or inferred trust from private IP addresses.
+            if (n.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 && networkName == null && !OperatingSystem.IsMacOS())
                 return new NetworkCandidate(n.Id, n.Name, "", []);
             var identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
-                n.Id + "|" + networkName + "|" + n.GetPhysicalAddress() + "|" + string.Join(",", gateways) + "|" + string.Join(",", addresses.Select(a => a.ToString())))));
+                n.Id + "|" + (networkName ?? "macos-wifi-connectivity-session") + "|" + n.GetPhysicalAddress() + "|" + string.Join(",", gateways) + "|" + string.Join(",", addresses.Select(a => a.ToString())))));
             return new NetworkCandidate(n.Id, n.Name, identity, addresses);
         }).Where(c => c.Addresses.Length > 0).ToArray();
 }

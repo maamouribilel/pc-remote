@@ -70,12 +70,17 @@ public sealed partial class CompanionServer
     {
         var device = Authenticate(context);
         if (device == null) return Error("unauthenticated", 401);
+        var originalSession = Sessions.ActiveSessionId;
+        if (originalSession == null) return Error("controller_busy_or_paused", 409);
         using var body = await JsonBody(context, fields);
         if (body == null || !StringField(body.RootElement, "session", out var session) || session.Length != 32) return Error("invalid_request", 400);
+        // A client can finish a chunked body with a newer session ID. The body must
+        // still belong to the live session captured before reading any of it.
+        if (session != originalSession) return Error("controller_busy_or_paused", 409);
         IResult result = Error("controller_busy_or_paused", 409);
         try
         {
-            Sessions.ExecuteDevice(device.Id, session, () => result = Authenticate(context)?.Id == device.Id ? execute(body.RootElement, device.Id) : Error("unauthenticated", 401));
+            Sessions.ExecuteDevice(device.Id, originalSession, () => result = Authenticate(context)?.Id == device.Id ? execute(body.RootElement, device.Id) : Error("unauthenticated", 401));
             return result;
         }
         catch (InputFailureException) { InputProblem = true; Sessions.Pause(true); return Error("input_failed", 503); }

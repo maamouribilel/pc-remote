@@ -85,6 +85,33 @@ internal static class SecurityChecks
                 check(response.StatusCode == HttpStatusCode.Conflict && server.MediaSettings.Profile == "VLC", "reconnection cannot authorize a previous session's delayed media request");
             }
 
+            if (server.Launcher.List().Length == 0) server.Launcher.Add(PortableFixture.TestExecutable(directory), "Security no-op", "General");
+            var configuredId = server.Launcher.List()[0].Id;
+            foreach (var route in new[] { "volume", "launch", "power/prepare", "power/confirm", "power/cancel" })
+            {
+                var nextToken = "";
+                var initialEvents = pc.Events.Length;
+                using var delayedPc = new GatedJson("{\"session\":", () => JsonSerializer.Serialize(session.Id) + (route switch
+                {
+                    "volume" => ",\"level\":19}", "launch" => ",\"id\":" + JsonSerializer.Serialize(configuredId) + "}",
+                    "power/prepare" => ",\"action\":\"sleep\"}", "power/confirm" => ",\"token\":" + JsonSerializer.Serialize(nextToken) + "}",
+                    _ => "}"
+                }));
+                using var messagePc = new HttpRequestMessage(HttpMethod.Post, "/api/pc/" + route) { Content = delayedPc };
+                messagePc.Headers.Add("Origin", origin); var resultPc = paired.SendAsync(messagePc);
+                await delayedPc.Started.Task.WaitAsync(TimeSpan.FromSeconds(3)); await Task.Delay(250);
+                server.Sessions.End(session); reservation = server.Sessions.Reserve(claim.Device.Id, false); session = server.Sessions.Connect(claim.Device.Id, reservation.Ticket)!;
+                if (route is "power/confirm" or "power/cancel")
+                {
+                    var preparedPc = server.Power.Prepare("sleep", claim.Device.Id, session.Id); nextToken = preparedPc.Token;
+                    if (route == "power/cancel") server.Power.Confirm(nextToken, claim.Device.Id, session.Id);
+                }
+                delayedPc.Finish.TrySetResult(); using var responsePc = await resultPc;
+                check(responsePc.StatusCode == HttpStatusCode.Conflict && pc.Events.Length == initialEvents && (route != "power/cancel" || server.Power.Pending != null),
+                    "delayed PC body cannot adopt a replacement session or its power ticket: " + route);
+                server.Power.Cancel();
+            }
+
             using (var delayed = new GatedJson("{\"profile\":", "\"Stremio\"}"))
             using (var message = new HttpRequestMessage(HttpMethod.Post, "/api/settings/media") { Content = delayed })
             {
@@ -143,8 +170,10 @@ internal static class SecurityChecks
 
     private sealed class GatedJson : HttpContent
     {
-        private readonly string prefix, suffix;
-        public GatedJson(string prefix, string suffix)
+        private readonly string prefix;
+        private readonly Func<string> suffix;
+        public GatedJson(string prefix, string suffix) : this(prefix, () => suffix) { }
+        public GatedJson(string prefix, Func<string> suffix)
         {
             this.prefix = prefix; this.suffix = suffix;
             Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -155,7 +184,7 @@ internal static class SecurityChecks
         protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
         {
             await stream.WriteAsync(Encoding.UTF8.GetBytes(prefix)); await stream.FlushAsync(); Started.TrySetResult();
-            await Finish.Task.WaitAsync(TimeSpan.FromSeconds(5)); await stream.WriteAsync(Encoding.UTF8.GetBytes(suffix));
+            await Finish.Task.WaitAsync(TimeSpan.FromSeconds(5)); await stream.WriteAsync(Encoding.UTF8.GetBytes(suffix()));
         }
     }
 }

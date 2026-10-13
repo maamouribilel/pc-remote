@@ -37,7 +37,12 @@ internal sealed class UiChecks : IDisposable
         Button Find(Window owner, string id) => owner.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == id);
         check(window.IsVisible && window.Title!.Contains("development"), "headless shell opens with development identity");
         check(!Find(window, "new-pairing").IsEnabled && !Find(window, "release").IsEnabled && !Find(window, "pause").IsEnabled, "setup-required shell disables unavailable host actions");
+        var featurePreferences = window.GetVisualDescendants().OfType<Expander>().Single(e => Equals(e.Header, "Preferences"));
+        featurePreferences.IsExpanded = true; Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+        check(!Find(window, "add-app").IsEnabled && !Find(window, "set-volume").IsEnabled && !Find(window, "save-startup").IsEnabled && new[] { "sleep", "restart", "shutdown" }.All(a => !Find(window, "power-" + a).IsEnabled), "uncomposed shell disables feature and login integrations");
+        featurePreferences.IsExpanded = false; Dispatcher.UIThread.RunJobs();
         check(!Find(window, "approve-network").IsEnabled, "network approval requires an explicitly selected observable candidate");
+        check(!window.GetVisualDescendants().OfType<Button>().Any(b => AutomationProperties.GetAutomationId(b) == "authorize-keychain"), "Keychain consent is offered only by a real Mac storage environment");
         check(window.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text?.Contains("Keychain") == true), "shell explains secure storage/native setup requirement");
         var allowed = new ApprovalPrompt(new("test", "Disposable browser", DateTimeOffset.UtcNow.AddMinutes(1)), "loopback fixture");
         var approve = new ApprovalWindow(allowed); approve.Show(); Dispatcher.UIThread.RunJobs();
@@ -114,6 +119,7 @@ internal static class FixtureRuntime
 // Starts the real platform backend and normal setup-required shell, never a recording host.
 public sealed class NativeStartupCheckApp : DesktopApp
 {
+    protected override DesktopController CreateController() => new(OperatingSystem.IsMacOS() ? "macos" : "linux", new TrustedNetworks());
     public override void OnFrameworkInitializationCompleted()
     {
         base.OnFrameworkInitializationCompleted();

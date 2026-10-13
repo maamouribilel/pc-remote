@@ -20,6 +20,7 @@ internal static class DesktopChecks
         check(networks.Read().PrivateAddresses.Length == 0 && !networks.Approve(candidate), "same-IP identity change and stale selection require new approval");
         networks.Approve(candidates[0]); networks.Invalidate();
         check(networks.Read().PrivateAddresses.Length == 0, "connectivity event removes session approval even with unchanged identity");
+        await EnvironmentChecks(check);
         await using (var blocked = new DesktopController("macos", networks, observeNetworks: false))
         { await blocked.ApproveNetworkAsync(candidates[0]); check(blocked.Server == null && blocked.Message.Contains("Keychain"), "normal startup cannot replace secure storage with recording/plaintext services"); }
         var now = DateTimeOffset.UtcNow;
@@ -100,4 +101,57 @@ internal static class DesktopChecks
         }
         finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
     }
+    private static async Task EnvironmentChecks(Action<bool, string> check)
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "PcDesktopEnvironment-" + Guid.NewGuid().ToString("N"));
+        var environment = new FakeEnvironment();
+        try
+        {
+            await using var controller = new DesktopController("macos", new TrustedNetworks(() => []), snapshot =>
+            {
+                var server = PortableFixture.Create(directory, new RecordingMouse(), network: snapshot, capabilities: environment.State.InputReady ? PlatformCapabilities.ProtocolV1 : PlatformCapabilities.Unavailable("macos"));
+                server.Sessions.Pause(true); return server;
+            }, observeNetworks: false, environment: environment);
+            await controller.RefreshAsync(); var first = controller.Server!; var root = first.Certificates.Fingerprint;
+            check(first.Sessions.Paused, "lifecycle preserves platform startup pause");
+            controller.PauseResume(); check(!first.Sessions.Paused && environment.Armed == 1, "Resume validates and arms the current native environment");
+            first.Sessions.Pause(true); environment.FailArm = true; controller.PauseResume();
+            check(first.Sessions.Paused, "native generation change racing Resume cannot enable ownership"); environment.FailArm = false;
+            environment.NotifyUnsafe();
+            check(first.Sessions.Paused, "native lifecycle callback pauses synchronously before async refresh");
+            environment.State = new(true, false, true, "Permission lost"); await controller.RefreshAsync();
+            check(first != controller.Server && controller.Server!.Sessions.Paused && !controller.InputReady && !controller.Server.Capabilities.InputEnabled, "permission loss replaces host paused and invalidates network approval");
+            controller.PauseResume(); check(controller.Server!.Sessions.Paused, "missing permission cannot Resume");
+            environment.State = new(true, true, false, "Keychain locked"); await controller.RefreshAsync();
+            check(controller.Server == null && controller.Message == "Keychain locked", "locked storage stops all listeners with actionable state");
+            check(!controller.StorageReady && controller.HasStorageAuthorization && environment.Authorizations == 0, "storage failure offers explicit local Keychain consent without requesting it automatically");
+            environment.DenyAuthorization = true; await controller.AuthorizeStorageAsync();
+            check(controller.Server == null && environment.Authorizations == 1 && controller.Message.Contains("not granted"), "denied OS storage consent keeps listeners stopped and resets nothing");
+            environment.DenyAuthorization = false; environment.State = new(true, true, true, "Storage restored"); await controller.AuthorizeStorageAsync();
+            check(environment.Authorizations == 2 && controller.StorageReady && controller.Server!.Certificates.Fingerprint == root && controller.Server.Sessions.Paused, "approved OS storage consent rechecks storage, retains root and stays paused");
+            environment.State = new(true, true, true, "Storage restored"); await controller.RefreshAsync();
+            check(controller.Server!.Certificates.Fingerprint == root && controller.Server.Sessions.Paused, "storage recovery retains root and requires deliberate Resume");
+            environment.FailCleanup = true;
+            try { await controller.DisposeAsync(); throw new Exception("Exit accepted failed cleanup"); }
+            catch (InputFailureException) { check(controller.Server != null && controller.Server.Sessions.Paused, "failed native cleanup keeps graceful Exit open and paused"); }
+            environment.FailCleanup = false;
+        }
+        finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+    }
+    private sealed class FakeEnvironment : IDesktopEnvironment
+    {
+        public DesktopEnvironmentState State = new(false, true, true, "Ready");
+        public int Armed, Authorizations;
+        public bool FailCleanup, FailArm, DenyAuthorization;
+        public bool CanAuthorizeStorage => true;
+        public void AuthorizeStorage() { Authorizations++; if (DenyAuthorization) throw new IOException("Keychain access was not granted (fixture)."); }
+        public event Action? UnsafeChanged;
+        public void NotifyUnsafe() => UnsafeChanged?.Invoke();
+        public DesktopEnvironmentState Inspect() { var value = State; State = State with { Changed = false }; return value; }
+        public void Arm(DesktopEnvironmentState inspected) { if (FailArm) throw new InputFailureException(); Armed++; }
+        public void ReleaseInput() { if (FailCleanup) throw new InputFailureException(); }
+        public void Onboard() { }
+        public void Dispose() { }
+    }
+
 }

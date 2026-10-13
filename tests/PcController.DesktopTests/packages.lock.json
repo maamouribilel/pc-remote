@@ -234,14 +234,28 @@
         "dependencies": {
           "Avalonia.Desktop": "[12.1.4, )",
           "Avalonia.Themes.Fluent": "[12.1.4, )",
-          "PcController.Host": "[1.0.0, )",
+          "PcController.Host": "[0.2.1, )",
+          "PcController.Linux": "[0.2.1, )",
+          "PcController.MacOS": "[0.2.1, )",
           "QRCoder": "[1.8.0, )"
         }
       },
       "pccontroller.host": {
         "type": "Project",
         "dependencies": {
-          "PcController.Core": "[1.0.0, )"
+          "PcController.Core": "[0.2.1, )"
+        }
+      },
+      "pccontroller.linux": {
+        "type": "Project",
+        "dependencies": {
+          "PcController.Host": "[0.2.1, )"
+        }
+      },
+      "pccontroller.macos": {
+        "type": "Project",
+        "dependencies": {
+          "PcController.Host": "[0.2.1, )"
         }
       }
     }

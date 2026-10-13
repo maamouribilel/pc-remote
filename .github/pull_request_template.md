@@ -10,10 +10,12 @@ List the checks actually run, their results, and remaining limitations.
 
 For a new app version, complete every item before publication. For other changes, mark this section as not applicable.
 
-- [ ] App, packaging, and installer versions agree.
+- [ ] Shared product/Windows app/Desktop inheritance, packaging and installer versions agree.
 - [ ] README version, status, download links, commands, features, and media are current.
 - [ ] Both AGENTS.md and CLAUDE.md have the new version and current instructions.
 - [ ] docs/releases.md and dated docs/release-evidence.md results are updated; affected setup, limitations, and acceptance docs are current.
 - [ ] .github workflows/templates/release configuration have been reviewed and affected files updated.
 - [ ] Release documentation check, security/regression suites, dependency/runtime advisory checks, package/license/hash checks, and source/package secret scans pass.
-- [ ] The release plan includes the matching main commit, annotated tag, installer, portable ZIP, checksum file, accurate notes/status, and public download/digest verification.
+- [ ] The release plan includes the matching main commit, annotated tag, actual per-platform installer/archives, combined checksum file, accurate notes/status, and public download/digest verification.
+
+For multi-platform candidates, link the support matrix and distinguish implementation, provisional package verification, native/manual pending acceptance and public release status. Do not claim CI, recording power, emulation, Xvfb or private portal protocols prove native GNOME/phone/installed acceptance. See `docs/release-readiness.md`.

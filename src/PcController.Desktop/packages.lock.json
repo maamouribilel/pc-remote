@@ -216,7 +216,19 @@
       "pccontroller.host": {
         "type": "Project",
         "dependencies": {
-          "PcController.Core": "[1.0.0, )"
+          "PcController.Core": "[0.2.1, )"
+        }
+      },
+      "pccontroller.linux": {
+        "type": "Project",
+        "dependencies": {
+          "PcController.Host": "[0.2.1, )"
+        }
+      },
+      "pccontroller.macos": {
+        "type": "Project",
+        "dependencies": {
+          "PcController.Host": "[0.2.1, )"
         }
       }
     }

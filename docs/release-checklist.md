@@ -4,7 +4,7 @@
 
 For every new version, complete [AGENTS.md](https://github.com/maamouribilel/windows-pc-mobile-controller/blob/main/AGENTS.md)'s mandatory release synchronization and the [publishing procedure](https://github.com/maamouribilel/windows-pc-mobile-controller/blob/main/docs/releases.md#publishing-the-next-version):
 
-- [ ] App project, packaging default, installer fallback, and annotated tag use the same version.
+- [ ] Shared version, Windows app project, Desktop inheritance, packaging default, installer fallback, and annotated tag use the same version.
 - [ ] README current version/status/downloads/commands and affected features/media are updated.
 - [ ] Both AGENTS.md and CLAUDE.md version links and instructions are updated.
 - [ ] Download documentation and dated release evidence are updated; affected guides and limitations are current.
@@ -27,3 +27,17 @@ Use the installer in the directory named by `artifacts/latest-release.txt`. Save
 8. Windows Settings → Apps → PC Remote → Uninstall; approve its firewall removal prompt. Verify process, executable, Start shortcuts, uninstall entry and matching startup entry are gone, and the `PcRemote-Private-*` rule for THAT executable is removed. Other/developer rules survive. Protected `%LOCALAPPDATA%\PcController` data remains; untracked files must not be recursively deleted. Reinstall/launch and confirm retained trust/devices reconnect. Re-enable optional startup if wanted. Permanent retirement also requires phone/Windows trust removal per CERTIFICATES.md.
 
 Automated recording tests cover bounds, expired/single-use approval, Origin/auth rejection, invalid/binary/oversized/replayed/rate-excess input, remembered reconnect and revoke over validated HTTPS/WSS. They do not establish physical input release. Earlier actual-device results remain separate from final packaged checks.
+
+
+## Multi-platform readiness
+
+- [ ] Distinguish implemented source, validated candidate, pending native/manual acceptance and unpublished public release per [release readiness](release-readiness.md).
+- [ ] Each final package bundles the remote/runtime/native bridge, exact version/source revision, actual managed/native licenses and safe contents; archive integrity, artifact secret scan and all aggregate SHA-256 sums pass.
+- [ ] Mac ARM64/real Intel and Ubuntu 24.04 x64/GNOME X11/Wayland are checked separately. Windows regression/DPAPI/Schannel/installer gates remain.
+- [ ] Native audio/read-back, actual matching player/default shortcuts/focus, real configured app launching and own login-start approval/sign-in/opt-out are accepted on authorized targets.
+- [ ] Phase 4 real Wayland text/cleanup, lock/suspend/provider/network/tray and physical Safari/Home Screen HTTPS/WSS acceptance are retained until actually passed.
+- [ ] Power recording/protocol tests remain separate from separately authorized disposable physical execution. Unsupported actions/backend/architectures stay UI/backend-denied.
+- [ ] Signing/notarization/repository signature status and native OS dependencies are accurate; clean-account runtime-free startup is separately observed.
+- [ ] CI jobs have actually been observed, source is clean/committed before final packaging, and every public URL/tag/size/digest is checked after authorized publication.
+
+Follow the numbered [exact platform manual steps](release-readiness.md#exact-pending-acceptance); neither a build nor an isolated/headless test closes them.

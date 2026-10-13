@@ -1,6 +1,6 @@
 # Shared desktop shell — Phase 2 development
 
-The published download remains Windows **0.2.1 preview**, with its existing WPF companion. `PcController.Desktop` is an Avalonia development shell for macOS/Linux; it does not yet provide native control or a production secure store. Phase 3/4 implement those adapters separately. No public Mac/Linux assets have been published.
+The published download remains Windows **0.2.1 preview**, with its existing WPF companion. `PcController.Desktop` is an Avalonia development shell for macOS/Linux; Phase 3 now composes real macOS Accessibility/Quartz input, Keychain storage and native lifecycle services. Linux source composition now exists; [Linux setup](linux-setup.md) records its pending native baseline and Wayland gates. [Mac setup](macos-setup.md) documents the development candidate and separate acceptance gaps. The Phase 2 sections below describe their original fixture/readiness baseline. No public Mac/Linux assets have been published.
 
 ## Dependency and baseline
 
@@ -63,3 +63,21 @@ Authenticated status and pong responses add capabilities/readiness with consiste
 Pointer, physical keyboard, text insertion and logical shortcuts are gated independently. Media options/actions reflect the advertised profile allowlist; unavailable volume, launcher and power controls remain disabled. Tabs remain reachable for help and setup, and Release input remains available on an authenticated session. Missing capabilities on an older v1 companion use its historical Windows contract; malformed present capabilities fail closed. Unsupported protocol status is rejected before session claim. Backend authorization and action checks remain authoritative even if browser controls are modified.
 
 Dated check results, real startup evidence and remaining native/manual gaps are in [the roadmap log](../MULTIPLATFORM_PLAN.md#execution-log).
+
+
+## Phase 3 composition changes
+
+Normal macOS startup now supplies `MacHostFactory` and `MacDesktopEnvironment`; it never references the test assembly. The native bridge builds on macOS and is copied/published with the shell. All starts/replacements preserve a platform safety pause. Environment notifications release/pause synchronously; permission/storage polling updates readiness, invalidates trust on transitions, and stops listeners for locked/unavailable storage. Resume validates/arms the inspected generation and cannot race a newer transition. Graceful Exit stays open on failed cleanup, and Release retries the same native tracker even when no listener exists. Keychain/certificate setup runs off the UI context; shared controller awaits avoid synchronous UI-test/startup deadlocks.
+
+The earlier no-listener statement describes the Phase 2 baseline and still applies to explicitly uncomposed controllers. Linux composition now requires reviewed storage and local session/network lifecycle observation. Mac LAN approval can use an explicitly selected Wi-Fi connectivity session when the OS redacts its name; native SystemConfiguration notifications watch association/route/configuration changes without requesting Location. Validate real roaming/lock/suspend behavior before relying on it. See [Mac commands and recovery](macos-setup.md), including provisional `.app` outputs and guarded tests. Native input, phone/LAN and signed distribution acceptance are independent of successful build/headless/Keychain checks.
+
+## Phase 4 Linux composition
+
+The shell now supplies `LinuxHostFactory`/`LinuxDesktopEnvironment`, a per-user lock, consent request off the UI thread, GTK-text opt-in and explicit local recovery dialogs. Startup/replacement is paused, missing/locked storage stops listeners, and network/lifecycle/provider changes invalidate trust and disarm input. SIGTERM/SIGINT/SIGHUP request graceful Linux Exit; failed cleanup keeps the window open. The taskbar window remains the fallback without a GNOME tray host. Portal/GTK mode changes cancel ownership and rebuild capability snapshots. No recording adapter or temporary store is wired into production. Native X11/Wayland UI/permission/lock/roaming/tray/phone acceptance remains pending; see [Linux setup and test boundaries](linux-setup.md).
+
+
+## Phase 5 source candidates (2026-10-13)
+
+Supported native feature adapters and provisional packages are described in [the release-readiness handoff](release-readiness.md). Public support/downloads remain Windows 0.2.1. Mac Core Audio/native system media/player shortcuts/LaunchServices/login registration/sleep and Linux libpulse/MPRIS/player shortcuts/restricted GIO/XDG/logind use real platform services with backend denial and final native readiness/permission checks. Mac restart/shutdown stay unavailable; Linux power requires `Can* == yes`, `interactive=false`, no inhibitor override. Launcher wire input is still configured IDs only; no remote path/arguments/shell. Native dependencies/signing/login eligibility/actual player and physical power acceptance remain separate from recording/source-table/protocol/package checks.
+
+Readiness transitions now force replacement of the capability snapshot even on unchanged loopback bindings; old ownership/listeners stop and replacement starts paused. v1 fields, budgets/reserved cancellation, original-session authentication checks, device-bound confirmation/countdown/cancellation and failed cleanup retention remain. Optional login start never preserves LAN approval/Wayland consent or resumes control. Provisional manifests record version/base revision/dirty source/file hashes; no tag/public release is created. Windows adapters, DPAPI and packaging remain intact. Real GNOME/phone/LAN/installed/Intel/CI gates stay visible.
