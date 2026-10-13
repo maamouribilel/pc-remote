@@ -15,6 +15,8 @@ internal static class MacNative
     [DllImport(Library)] internal static extern int pc_observe(UnsafeCallback callback);
     [DllImport(Library)] internal static extern void pc_unobserve();
     [DllImport(Library)] internal static extern ulong pc_generation();
+    [DllImport(Library)] internal static extern ulong pc_network_generation();
+    [DllImport(Library)] internal static extern int pc_test_notify(int network);
     [DllImport(Library)] internal static extern void pc_pointer(out double x, out double y);
     [DllImport(Library)] internal static extern int pc_move(int x, int y, int drag, ulong flags, int guard);
     [DllImport(Library)] internal static extern int pc_button(int right, int down, int count, ulong flags, int guard);

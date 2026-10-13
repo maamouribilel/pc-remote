@@ -16,6 +16,7 @@ public sealed class MainWindow : Window
     private readonly DesktopController controller;
     private readonly TextBlock status = Text("Setup required"), readiness = Text(""), networkNote = Text(""), pairingNote = Text("");
     private readonly TextBox address = new() { IsReadOnly = true }, pairing = new() { IsReadOnly = true };
+    private readonly TextBlock addressScope = Text("", secondary: true);
     private readonly Image qr = new() { Width = 180, Height = 180 };
     private readonly ComboBox networks = new() { HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly StackPanel launcher = new() { Spacing = 8 };
@@ -53,6 +54,7 @@ public sealed class MainWindow : Window
         var pairingCard = new StackPanel { Spacing = 12 };
         pairingCard.Children.Add(Heading("Connection & pairing"));
         pairingCard.Children.Add(address); SetAccessibleName(address, "Connection address", "address");
+        pairingCard.Children.Add(addressScope); SetAccessibleName(addressScope, "Connection scope", "address-scope");
         pairingCard.Children.Add(Text("Open this exact HTTPS address after certificate setup. Copy the link below if scanning is unavailable.", secondary: true));
         pairingCard.Children.Add(qr); AutomationProperties.SetName(qr, "Short-lived pairing QR code");
         pairingCard.Children.Add(pairing); SetAccessibleName(pairing, "Manual pairing link", "pairing-link"); pairingCard.Children.Add(pairingNote);
@@ -254,6 +256,9 @@ public sealed class MainWindow : Window
         status.Text = controller.Status; readiness.Text = controller.Message;
         fingerprint.Text = server?.Certificates.Fingerprint ?? "Available after secure certificate setup";
         address.Text = server?.ConnectionAddress ?? "Unavailable — secure storage setup required";
+        addressScope.Text = server == null ? "" : server.Network.PrivateAddresses.Length == 0
+            ? "Only this computer can connect (localhost). To use your phone, choose your Wi-Fi or Ethernet interface under Trusted network & permissions and approve it for this session."
+            : "Reachable on the approved network for this session. Network changes, sleep or switching users require approval again.";
         var nextPair = server?.PairingAddress;
         qr.IsVisible = nextPair != null;
         pairing.Text = nextPair ?? "Create a fresh link when HTTPS is ready.";

@@ -106,7 +106,10 @@ public sealed class DesktopController : IAsyncDisposable
     private void EnvironmentChanged()
     {
         if (disposed) return;
-        Networks.Invalidate(); Server?.Sessions.Pause(true); DenyPrompts();
+        // Every unsafe event pauses control. Only network-trust events (macOS: network keys, system
+        // sleep/wake, session switch) also revoke LAN approval; Space/display changes keep it.
+        if (environment?.NetworkChangedSinceInspect != false) Networks.Invalidate();
+        Server?.Sessions.Pause(true); DenyPrompts();
         _ = RefreshAsync(); Changed?.Invoke();
     }
     private void Notify() => Changed?.Invoke();
@@ -143,7 +146,8 @@ public sealed class DesktopController : IAsyncDisposable
             {
                 var state = await Task.Run(environment.Inspect).ConfigureAwait(false);
                 InputReady = state.InputReady; StorageReady = state.StorageReady; Message = state.Message; refreshCapabilities = state.Changed;
-                if (state.Changed) { Networks.Invalidate(); Server?.Sessions.Pause(true); DenyPrompts(); }
+                if (state.NetworkChanged) Networks.Invalidate();
+                if (state.Changed) { Server?.Sessions.Pause(true); DenyPrompts(); }
                 if (!state.InputReady) { Server?.Sessions.Pause(true); DenyPrompts(); }
                 if (!state.StorageReady)
                 { Networks.Invalidate(); if (lifecycle != null) await lifecycle.StopAsync().ConfigureAwait(false); Changed?.Invoke(); return; }
@@ -171,7 +175,7 @@ public sealed class DesktopController : IAsyncDisposable
         {
             var state = environment.Inspect(); inspected = state; InputReady = state.InputReady;
             if (!state.InputReady || !state.StorageReady || state.Changed)
-            { Networks.Invalidate(); s.Sessions.Pause(true); Message = state.Message; _ = RefreshAsync(); Changed?.Invoke(); return; }
+            { if (state.NetworkChanged || !state.StorageReady) Networks.Invalidate(); s.Sessions.Pause(true); Message = state.Message; _ = RefreshAsync(); Changed?.Invoke(); return; }
         }
         if (TryReleaseInput())
         {

@@ -21,6 +21,7 @@ internal static class DesktopChecks
         networks.Approve(candidates[0]); networks.Invalidate();
         check(networks.Read().PrivateAddresses.Length == 0, "connectivity event removes session approval even with unchanged identity");
         await EnvironmentChecks(check);
+        await NetworkTrustChecks(check);
         await using (var blocked = new DesktopController("macos", networks, observeNetworks: false))
         { await blocked.ApproveNetworkAsync(candidates[0]); check(blocked.Server == null && blocked.Message.Contains("Keychain"), "normal startup cannot replace secure storage with recording/plaintext services"); }
         var now = DateTimeOffset.UtcNow;
@@ -117,10 +118,10 @@ internal static class DesktopChecks
             controller.PauseResume(); check(!first.Sessions.Paused && environment.Armed == 1, "Resume validates and arms the current native environment");
             first.Sessions.Pause(true); environment.FailArm = true; controller.PauseResume();
             check(first.Sessions.Paused, "native generation change racing Resume cannot enable ownership"); environment.FailArm = false;
-            environment.NotifyUnsafe();
-            check(first.Sessions.Paused, "native lifecycle callback pauses synchronously before async refresh");
+            environment.NetworkEvent = false; environment.NotifyUnsafe(); environment.NetworkEvent = true;
+            check(first.Sessions.Paused, "pause-only native lifecycle callback (Space/display) still pauses synchronously before async refresh");
             environment.State = new(true, false, true, "Permission lost"); await controller.RefreshAsync();
-            check(first != controller.Server && controller.Server!.Sessions.Paused && !controller.InputReady && !controller.Server.Capabilities.InputEnabled, "permission loss replaces host paused and invalidates network approval");
+            check(first != controller.Server && controller.Server!.Sessions.Paused && !controller.InputReady && !controller.Server.Capabilities.InputEnabled, "permission loss replaces host paused without native input capability");
             // PauseResume schedules an un-awaited refresh that may replace the host; let it settle first.
             controller.PauseResume(); await controller.RefreshAsync(); check(controller.Server?.Sessions.Paused == true, "missing permission cannot Resume");
             environment.State = new(true, true, false, "Keychain locked"); await controller.RefreshAsync();
@@ -139,16 +140,55 @@ internal static class DesktopChecks
         }
         finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
     }
+    private static async Task NetworkTrustChecks(Action<bool, string> check)
+    {
+        var candidate = new NetworkCandidate("fixture", "Test Wi-Fi", "network-a", [IPAddress.Parse("192.168.40.10")]);
+        var networks = new TrustedNetworks(() => [candidate]);
+        var environment = new FakeEnvironment();
+        await using var controller = new DesktopController("macos", networks, observeNetworks: false, environment: environment);
+        await controller.RefreshAsync(); await controller.ApproveNetworkAsync(candidate);
+        bool Approved() => networks.Read().PrivateAddresses.SequenceEqual(candidate.Addresses);
+        check(Approved(), "explicit approval selects the LAN interface");
+        environment.NetworkEvent = false; environment.State = new(true, true, true, "Space changed") { NetworkChanged = false };
+        environment.NotifyUnsafe(); await controller.RefreshAsync();
+        check(Approved(), "Space/full-screen or display transition pauses but keeps the session's LAN approval");
+        environment.State = new(true, false, true, "Secure Input active") { NetworkChanged = false }; await controller.RefreshAsync();
+        check(Approved() && !controller.InputReady, "Secure Input/permission readiness change keeps LAN approval");
+        environment.State = new(true, true, true, "Ready") { NetworkChanged = false }; await controller.RefreshAsync();
+        environment.NetworkEvent = true; environment.NotifyUnsafe();
+        check(!Approved(), "network, sleep or session-switch event revokes LAN approval synchronously");
+        await controller.RefreshAsync(); await controller.ApproveNetworkAsync(candidate); check(Approved(), "LAN can be approved again explicitly");
+        environment.NetworkEvent = false; environment.State = new(true, true, true, "Woke on a network") { NetworkChanged = true }; await controller.RefreshAsync();
+        check(!Approved(), "network change found at inspection revokes LAN approval");
+        environment.State = new(true, true, false, "Keychain locked") { NetworkChanged = false }; await controller.ApproveNetworkAsync(candidate);
+        check(!Approved(), "storage failure still revokes LAN approval");
+        var legacy = new TrustedNetworks(() => [candidate]); var plain = new DefaultEnvironment();
+        await using var linux = new DesktopController("linux", legacy, observeNetworks: false, environment: plain);
+        await linux.RefreshAsync(); legacy.Approve(candidate); plain.Notify();
+        check(legacy.Read().PrivateAddresses.Length == 0, "environments without the distinction keep revoking LAN approval on every unsafe event");
+    }
+    private sealed class DefaultEnvironment : IDesktopEnvironment
+    {
+        public event Action? UnsafeChanged;
+        public void Notify() => UnsafeChanged?.Invoke();
+        public DesktopEnvironmentState Inspect() => new(false, true, true, "Ready");
+        public void Arm(DesktopEnvironmentState inspected) { }
+        public void ReleaseInput() { }
+        public void Onboard() { }
+        public void Dispose() { }
+    }
     private sealed class FakeEnvironment : IDesktopEnvironment
     {
         public DesktopEnvironmentState State = new(false, true, true, "Ready");
+        public bool NetworkEvent = true;
+        public bool NetworkChangedSinceInspect => NetworkEvent;
         public int Armed, Authorizations;
         public bool FailCleanup, FailArm, DenyAuthorization;
         public bool CanAuthorizeStorage => true;
         public void AuthorizeStorage() { Authorizations++; if (DenyAuthorization) throw new IOException("Keychain access was not granted (fixture)."); }
         public event Action? UnsafeChanged;
         public void NotifyUnsafe() => UnsafeChanged?.Invoke();
-        public DesktopEnvironmentState Inspect() { var value = State; State = State with { Changed = false }; return value; }
+        public DesktopEnvironmentState Inspect() { var value = State; State = State with { Changed = false, NetworkChanged = false }; return value; }
         public void Arm(DesktopEnvironmentState inspected) { if (FailArm) throw new InputFailureException(); Armed++; }
         public void ReleaseInput() { if (FailCleanup) throw new InputFailureException(); }
         public void Onboard() { }

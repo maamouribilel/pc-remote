@@ -45,7 +45,7 @@ public sealed class MacHostFactory
 public sealed class MacEnvironment : IDisposable
 {
     private readonly MacHostFactory factory;
-    private ulong generation;
+    private ulong generation, networkGeneration;
     private bool ready;
     private readonly object gate = new();
     private readonly MacNative.UnsafeCallback callback;
@@ -64,19 +64,22 @@ public sealed class MacEnvironment : IDisposable
             MacNative.pc_unobserve(); GC.KeepAlive(callback);
             throw new IOException("macOS network/lifecycle observation unavailable. No LAN startup allowed.");
         }
-        generation = MacNative.pc_generation();
+        generation = MacNative.pc_generation(); networkGeneration = MacNative.pc_network_generation();
     }
-    public (bool Changed, bool Ready, bool StorageReady, ulong Revision, string Message) Inspect()
+    // Synchronous check for the unsafe callback: did a network-trust event occur since the last Inspect?
+    public bool NetworkChangedSinceInspect { get { lock (gate) return MacNative.pc_network_generation() != networkGeneration; } }
+    public (bool Changed, bool NetworkChanged, bool Ready, bool StorageReady, ulong Revision, string Message) Inspect()
     {
         lock (gate)
         {
             var current = MacNative.pc_generation(); var changed = current != generation; generation = current;
+            var network = MacNative.pc_network_generation(); var networkChanged = network != networkGeneration; networkGeneration = network;
             var available = MacPermissions.Accessibility && MacPermissions.Interactive;
             string message; var storageReady = true;
             try { factory.Storage.Probe(); message = available ? "macOS input ready. Choose Resume after reviewing the target application." : MacPermissions.Recovery; }
             catch (IOException e) { available = false; storageReady = false; message = e.Message; }
             changed |= ready != available; ready = available;
-            return (changed, available, storageReady, current, message);
+            return (changed, networkChanged, available, storageReady, current, message);
         }
     }
     public void Arm(ulong inspectedRevision)

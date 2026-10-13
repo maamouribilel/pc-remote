@@ -2,7 +2,11 @@ using PcController.MacOS;
 using PcController.Linux;
 namespace PcController.Desktop;
 
-public sealed record DesktopEnvironmentState(bool Changed, bool InputReady, bool StorageReady, string Message, ulong Revision = 0);
+public sealed record DesktopEnvironmentState(bool Changed, bool InputReady, bool StorageReady, string Message, ulong Revision = 0)
+{
+    // Whether the trusted LAN may have changed. Platforms without the distinction treat every change as one.
+    public bool NetworkChanged { get; init; } = Changed;
+}
 public interface IDesktopEnvironment : IDisposable
 {
     event Action? UnsafeChanged;
@@ -11,6 +15,8 @@ public interface IDesktopEnvironment : IDisposable
     void CancelOnboarding() { }
     void Arm(DesktopEnvironmentState inspected);
     void ReleaseInput();
+    // Whether an unsafe callback since the last Inspect may have changed the network (default: yes).
+    bool NetworkChangedSinceInspect => true;
     // Explicit local OS consent for an existing storage key after an app update; never automatic.
     bool CanAuthorizeStorage => false;
     void AuthorizeStorage() => throw new NotSupportedException();
@@ -22,8 +28,9 @@ internal sealed class MacDesktopEnvironment(MacHostFactory factory) : IDesktopEn
     public DesktopEnvironmentState Inspect()
     {
         var state = environment.Inspect();
-        return new(state.Changed, state.Ready, state.StorageReady, state.Message, state.Revision);
+        return new(state.Changed, state.Ready, state.StorageReady, state.Message, state.Revision) { NetworkChanged = state.NetworkChanged };
     }
+    public bool NetworkChangedSinceInspect => environment.NetworkChangedSinceInspect;
     public void Arm(DesktopEnvironmentState inspected) => environment.Arm(inspected.Revision);
     public void ReleaseInput() => environment.ReleaseInput();
     public void Onboard() => MacPermissions.OpenAccessibilitySettings();

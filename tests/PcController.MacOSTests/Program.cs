@@ -64,6 +64,11 @@ if (OperatingSystem.IsMacOS())
     Check(MacNative.pc_test_layout_key("com.apple.keylayout.US", 'a') == 0 && MacNative.pc_test_layout_key("com.apple.keylayout.US", 'c') == 8, "ACTUAL US Command layout table resolution (no input source change)");
     Check(MacNative.pc_test_layout_key("com.apple.keylayout.French", 'a') == 12 && MacNative.pc_test_layout_key("com.apple.keylayout.French", 'c') == 8, "ACTUAL French AZERTY Command layout table resolution (no native app insertion claimed)");
     Check(new[] { 'c', 'v', 'a', 'z' }.All(c => MacNative.pc_command_key(c) >= 0), "ACTUAL current keyboard layout resolves common Command actions");
+    var (inputBefore, networkBefore) = (MacNative.pc_generation(), MacNative.pc_network_generation());
+    MacNative.pc_test_notify(0);
+    Check(MacNative.pc_generation() > inputBefore && MacNative.pc_network_generation() == networkBefore, "native Space/display event pauses input without network-trust change");
+    MacNative.pc_test_notify(1);
+    Check(MacNative.pc_generation() > inputBefore + 1 && MacNative.pc_network_generation() > networkBefore, "native network/sleep/session event advances both input and network-trust generations");
 }
 if (args.Contains("--storage") || args.Contains("--storage-only"))
 {
@@ -118,6 +123,15 @@ if (args.Contains("--storage") || args.Contains("--storage-only"))
         using var chain = new X509Chain(); chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust; chain.ChainPolicy.CustomTrustStore.Add(second.Root); chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
         Check(chain.Build(second.Server) && second.Server.MatchesHostname("localhost", false, false) && !second.Server.MatchesHostname("wrong.invalid", false, false), "real Mac certificate chain/name checks");
         if (!args.Contains("--storage-only")) await MacHostChecks.Run(directory, storage, first.Fingerprint, check: Check);
+        using (var lifecycle = new MacEnvironment(new MacHostFactory(directory, storage, new MacInput())))
+        {
+            lifecycle.Inspect(); MacNative.pc_test_notify(0);
+            var paused = lifecycle.NetworkChangedSinceInspect; var spaceState = lifecycle.Inspect();
+            Check(!paused && spaceState.Changed && !spaceState.NetworkChanged, "MacEnvironment reports Space/display change as pause-only (LAN approval kept)");
+            MacNative.pc_test_notify(1);
+            var revoked = lifecycle.NetworkChangedSinceInspect; var networkState = lifecycle.Inspect();
+            Check(revoked && networkState.Changed && networkState.NetworkChanged && !lifecycle.NetworkChangedSinceInspect, "MacEnvironment reports network-trust change synchronously and at inspection");
+        }
         var rootPath = Path.Combine(directory, "certificates", "root.protected"); File.Move(rootPath, rootPath + ".saved");
         try
         {

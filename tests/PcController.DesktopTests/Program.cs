@@ -71,6 +71,7 @@ internal sealed class UiChecks : IDisposable
             check(fixture.Server != null, "fixture dashboard host starts: " + fixture.Status);
             var dashboard = new MainWindow(fixture); dashboard.Show(); Dispatcher.UIThread.RunJobs(); dashboard.UpdateLayout();
             check(dashboard.GetVisualDescendants().OfType<Image>().Any(i => i.Source != null && i.IsVisible), "fixture dashboard renders actual short-lived pairing QR (visual images=" + string.Join(",", dashboard.GetVisualDescendants().OfType<Image>().Select(i => $"{i.IsVisible}/{i.Source != null}")) + "; active link=" + (fixture.Server!.PairingAddress != null) + ")");
+            check(dashboard.GetVisualDescendants().OfType<TextBlock>().Any(t => AutomationProperties.GetAutomationId(t) == "address-scope" && t.Text!.Contains("Only this computer")), "loopback-only address explains how to approve a network for the phone");
             var before = fixture.Server!.PairingAddress;
             Find(dashboard, "new-pairing").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Dispatcher.UIThread.RunJobs();
             check(fixture.Server.PairingAddress != before, "dashboard creates a fresh manual/QR link");

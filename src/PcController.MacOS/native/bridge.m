@@ -15,11 +15,18 @@
 #include <pthread.h>
 
 static atomic_ulong generation;
+// Advances only when the trusted LAN may have changed (network keys, system sleep/wake, session
+// switch, power-off). Space and display transitions pause input via generation only.
+static atomic_ulong networkGeneration;
 static atomic_int inactive;
 static atomic_ulong armedGeneration;
 static atomic_int enforceGeneration;
 static _Atomic(void (*)(void)) unsafeCallback;
 static void invalidate(void) { atomic_fetch_add(&generation, 1); void (*callback)(void)=atomic_load(&unsafeCallback); if(callback) callback(); }
+static void invalidate_network(void) { atomic_fetch_add(&networkGeneration, 1); invalidate(); }
+unsigned long pc_network_generation(void) { return atomic_load(&networkGeneration); }
+// Test hook: only ever adds a conservative pause (and, for network=1, LAN revocation).
+int pc_test_notify(int network) { if(network) invalidate_network(); else invalidate(); return 1; }
 int pc_arm(unsigned long expected) { if(atomic_load(&generation)!=expected) return 0; atomic_store(&armedGeneration, expected); return atomic_load(&generation)==expected; }
 static SCDynamicStoreRef networkStore;
 static NSMutableArray *observers;
@@ -61,7 +68,7 @@ int pc_diagnostics(void) {
     if(focused) CFRelease(focused); CFRelease(system); return bits;
 }
 static void networkChanged(SCDynamicStoreRef store, CFArrayRef keys, void *info) {
-    (void)store; (void)keys; (void)info; invalidate();
+    (void)store; (void)keys; (void)info; invalidate_network();
 }
 int pc_observe(void (*callback)(void)) {
     atomic_store(&unsafeCallback, callback);
@@ -69,17 +76,24 @@ int pc_observe(void (*callback)(void)) {
     observers = [NSMutableArray array];
     atomic_store(&enforceGeneration, 1);
     NSNotificationCenter *center = [NSWorkspace sharedWorkspace].notificationCenter;
-    NSArray *stop = @[NSWorkspaceWillSleepNotification, NSWorkspaceScreensDidSleepNotification,
-                      NSWorkspaceSessionDidResignActiveNotification, NSWorkspaceWillPowerOffNotification];
-    NSArray *wake = @[NSWorkspaceDidWakeNotification, NSWorkspaceScreensDidWakeNotification,
-                      NSWorkspaceSessionDidBecomeActiveNotification];
+    // System sleep/wake, session switches and power-off may change the network: revoke LAN approval.
+    NSArray *stop = @[NSWorkspaceWillSleepNotification, NSWorkspaceSessionDidResignActiveNotification, NSWorkspaceWillPowerOffNotification];
+    NSArray *wake = @[NSWorkspaceDidWakeNotification, NSWorkspaceSessionDidBecomeActiveNotification];
     for (NSString *name in stop) [observers addObject:[center addObserverForName:name object:nil queue:nil usingBlock:^(NSNotification *n) {
-        (void)n; atomic_store(&inactive, 1); invalidate();
+        (void)n; atomic_store(&inactive, 1); invalidate_network();
     }]];
     for (NSString *name in wake) [observers addObject:[center addObserverForName:name object:nil queue:nil usingBlock:^(NSNotification *n) {
+        (void)n; atomic_store(&inactive, 0); invalidate_network();
+    }]];
+    // Display sleep/wake pauses and releases input but keeps the session's LAN approval.
+    [observers addObject:[center addObserverForName:NSWorkspaceScreensDidSleepNotification object:nil queue:nil usingBlock:^(NSNotification *n) {
+        (void)n; atomic_store(&inactive, 1); invalidate();
+    }]];
+    [observers addObject:[center addObserverForName:NSWorkspaceScreensDidWakeNotification object:nil queue:nil usingBlock:^(NSNotification *n) {
         (void)n; atomic_store(&inactive, 0); invalidate();
     }]];
-    // A Space transition conservatively cancels control, including lock-screen transitions.
+    // A Space/full-screen transition conservatively pauses control (including lock-screen transitions);
+    // it does not change the network, so LAN approval is kept.
     [observers addObject:[center addObserverForName:NSWorkspaceActiveSpaceDidChangeNotification object:nil queue:nil usingBlock:^(NSNotification *n) {
         (void)n; invalidate();
     }]];
