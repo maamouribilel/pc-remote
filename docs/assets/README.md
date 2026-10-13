@@ -19,4 +19,4 @@ For a fresh capture, close all companions, run the project's isolated fixture, p
 
 ## Version note
 
-These real captures were made from version 0.2.0. Version 0.2.1 changes server request limits and authorization; the pictured controls and layout are unchanged. They are visual evidence, not proof of the newer security checks.
+These real captures were made from version 0.2.0. Version 0.2.1 changes server request limits and authorization; the pictured controls and layout are unchanged. Version 0.3.0 keeps the Windows companion and phone layout; the experimental macOS/Ubuntu Avalonia shell is not pictured. They are visual evidence, not proof of the newer security checks.

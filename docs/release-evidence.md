@@ -124,3 +124,27 @@ Mac Release/shared **265**, desktop **61**, adapter/layout/media **57**, real di
 
 
 Final candidates and full SHA-256 digests are recorded in [the final provisional package table](../MULTIPLATFORM_PLAN.md#final-provisional-packages-and-handoff--2026-10-13). Mac ZIP extraction now preserves only inventoried public code-signature attributes and verifies the extracted seal; unrelated local xattrs and Linux build-account ownership are excluded. Packaging tests exposed and corrected the lost-signature-attribute defect; the earlier stripped-metadata attempt is not acceptance. The final source/evidence appendix follows the recorded dirty candidate snapshot and does not relabel it a clean committed release.
+
+
+## Version 0.3.0 — experimental macOS and Ubuntu preview (2026-10-13)
+
+Version 0.3.0 publishes the Windows companion on the shared portable host plus **experimental** macOS ARM64/Intel and Ubuntu 24.04 x64 archives of the Avalonia companion (Phases 1–5). Windows keeps its WPF companion, native adapters, DPAPI formats, trusted root and remembered devices. Historical evidence above is unchanged; nothing below relabels earlier development results.
+
+**Release-blocking findings fixed during preparation:**
+
+1. **Bundled runtime advisories.** On the release day, Microsoft's .NET security release (runtime 10.0.13, SDK 10.0.402) published CVE-2026-58280 / [GHSA-mc4q-93x5-f6hj](https://github.com/advisories/GHSA-mc4q-93x5-f6hj) (High) and other CVEs affecting the previously bundled 10.0.12. The hosted CI advisory step caught it. The SDK pin moved to 10.0.402; queries for 10.0.13 runtime packages return no matching advisories. Version 0.2.1 bundles the affected runtime.
+2. **macOS Keychain after updates.** The existing storage item's access/partition list names the creating build's `cdhash`; every ad-hoc-sealed rebuild or update has a new identity and was refused with no in-app recovery. Startup and background reads still never prompt; a new explicit **Allow Keychain access after update…** action lets macOS show its own Keychain dialog (login password, **Always Allow**) for the existing item. Nothing edits ACLs, unlocks the Keychain or resets keys/roots/devices. A real disposable-Keychain check confirms an item owned by another code identity is refused promptly without a dialog or new key. Approving the real dialog after an update is still a manual check.
+3. A parallel solution-build race (second MacOS project instance) and two CI prerequisites (missing `.tools/` for the verified Inno download; Linux keyring fixture without the built web remote) were fixed.
+
+**Local results, macOS 27 Apple Silicon (SDK 10.0.402 / runtime 10.0.13):** Release build zero warnings/errors; shared **265**, desktop **65**, Mac adapter **57**, real disposable Keychain/storage **78** checks; browser **6** interaction + **7** capability checks; portable and Keychain-backed strict TLS positives/negatives; npm, NuGet and runtime advisory feeds; full Windows solution Release cross-build; locked restore; Gitleaks 8.30.1 over all committed source files.
+
+**Hosted CI actually observed:**
+
+| Run / commit | Windows (`windows-latest`) | macOS (`macos-latest`, ARM64) | Ubuntu 24.04 x64 |
+| --- | --- | --- | --- |
+| 38459644695 / `d828db9` (runtime 10.0.12) | Release build, audits, default 147, security 181, pairing 187, lifecycle 154, PC feature 176, browser 6, strict TLS passed; **failed** runtime advisory and packaging (`.tools/` missing) | All suites passed; **failed** runtime advisory | Portable suites passed, **failed** runtime advisory; isolated X11 41 + 41 and portal 29 passed, keyring step **failed** (web remote not built) |
+| 38460878703 / `826e46c` (runtime 10.0.13) | **All passed:** Release build, audits, default 147 (incl. DPAPI legacy-device and leaf-renewal migration), security 181, pairing 187, lifecycle 154, PC feature 176, browser 6, strict TLS; shared 265, desktop 65, capability 7; candidate installer/ZIP content, license, checksum and source-revision checks | **All passed:** shared 265, Mac adapter 57, Linux faults 81, desktop 65, capability 7, strict TLS, advisories; ARM64 and Intel candidate packaging with ARM64 self-contained metadata startup | **All passed:** shared 265, Linux faults 88, desktop 65, capability 7, strict TLS, advisories; private Xvfb/GTK US 41 and French 41, private portal/MPRIS/logind 29, disposable encrypted keyring/TLS 24; candidate packaging with x64 metadata startup |
+
+The release commit's own runs and final asset digests are recorded in the GitHub release notes and a documentation-only follow-up entry, because they are produced after this commit. Final assets are built by the `final` workflow dispatch from that exact clean commit, never from renamed candidates.
+
+**Not established for 0.3.0:** installation or upgrade of the Windows 0.3.0 build on a physical PC, physical iPhone use, clean account/VM, reboot/sign-in, uninstall/firewall removal and physical power on Windows; Gatekeeper/installed launch, the Keychain update dialog, Accessibility on the installed app, player/audio/launcher/login/sleep, lock/suspend, roaming and phone/LAN on macOS; any execution on Intel Mac hardware; Ubuntu GNOME X11/Wayland desktop input/text/cleanup, real login keyring, tray, player/audio/launcher/login/power and phone/LAN. Hosted runners, Rosetta, Xvfb, private D-Bus fixtures and recording adapters are automated evidence only. See [release readiness](release-readiness.md) for the support matrix and exact manual steps.

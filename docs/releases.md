@@ -2,24 +2,37 @@
 
 Open [GitHub Releases](https://github.com/maamouribilel/windows-pc-mobile-controller/releases), choose a version, and expand its **Assets** section.
 
-For the latest public preview, [PC Remote v0.2.1](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.2.1):
+For the latest public preview, [PC Remote v0.3.0](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.0):
 
-- [Windows x64 installer](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.1/PCRemote-0.2.1-win-x64-setup.exe): installs for the current user, adds a Start menu shortcut and an uninstall entry.
-- [Windows x64 portable ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.1/PCRemote-0.2.1-win-x64.zip): extract the whole archive and run `PCRemote-win-x64/PcController.App.exe`. Keep its adjacent runtime and web files.
-- [SHA256SUMS.txt](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.1/SHA256SUMS.txt): expected hashes for both downloads.
+- [Windows x64 installer](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.0/PCRemote-0.3.0-win-x64-setup.exe): installs for the current user, adds a Start menu shortcut and an uninstall entry.
+- [Windows x64 portable ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.0/PCRemote-0.3.0-win-x64.zip): extract the whole archive and run `PCRemote-win-x64/PcController.App.exe`. Keep its adjacent runtime and web files.
+- [macOS Apple Silicon ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.0/PCRemote-0.3.0-osx-arm64.zip) — **experimental**: contains `PC Remote.app` for macOS 14 or later.
+- [macOS Intel ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.0/PCRemote-0.3.0-osx-x64.zip) — **experimental**: built for Intel Macs, not yet run on Intel hardware.
+- [Ubuntu 24.04 x64 / GNOME archive](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.0/PCRemote-0.3.0-linux-x64.tar.gz) — **experimental**: contains `PCRemote-linux-x64/`.
+- `PCRemote-0.3.0-<platform>-manifest.json`: per-file hashes and the exact source revision for each macOS/Ubuntu archive.
+- [SHA256SUMS.txt](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.0/SHA256SUMS.txt): expected hashes for every download listed above.
 
-GitHub's generated **Source code (zip/tar.gz)** files contain the project source, not an installed Windows app. Normal use of the installer/portable build needs no SDK, Node.js, or separate .NET installation.
+GitHub's generated **Source code (zip/tar.gz)** files contain the project source, not an installed app. Normal use of the packaged builds needs no SDK, Node.js, or separate .NET installation; macOS and Ubuntu still need their native OS services.
 
-## Install and verify
+## Install and verify on Windows
 
-1. Download the installer or portable ZIP and its checksum file from the same version.
-2. In PowerShell, run `Get-FileHash -LiteralPath .\PCRemote-0.2.1-win-x64-setup.exe -Algorithm SHA256` (or use the ZIP filename). Compare the returned hash with the matching line in `SHA256SUMS.txt`.
+1. Download the installer or portable ZIP and the checksum file from the same version.
+2. In PowerShell, run `Get-FileHash -LiteralPath .\PCRemote-0.3.0-win-x64-setup.exe -Algorithm SHA256` (or use the ZIP filename). Compare the returned hash with the matching line in `SHA256SUMS.txt`.
 3. Run the installer as your normal Windows user, or extract the portable ZIP. The optional Private LAN firewall helper alone requests administrator access.
 4. Open PC Remote and follow the [certificate and iPhone pairing setup](setup.md).
 
-This preview is unsigned. Windows may show publisher/SmartScreen prompts. Requirements and remaining manual checks are described in the version's release notes, [limitations](limitations.md), and [release checklist](release-checklist.md).
+This preview is unsigned. Windows may show publisher/SmartScreen prompts. Version 0.3.0 bundles .NET 10.0.13 with Microsoft's 2026-10-13 security fixes; the 10.0.12 runtime in 0.2.1 is affected, so updating is recommended. Its Windows build passed automated suites on a hosted Windows runner but has not yet been installed or used with a physical phone. Requirements and remaining manual checks are described in the version's release notes, [limitations](limitations.md), and [release checklist](release-checklist.md).
 
 For an installer update, download the new version's installer. It requests a graceful exit before replacing the existing application files; exit through the tray menu if requested. Protected local certificate/device data is outside the installation directory and is retained. Keep each portable version in its own extracted directory and run one companion at a time.
+
+## Install and verify the experimental macOS and Ubuntu builds
+
+1. Check the archive with `shasum -a 256 <file>` (macOS) or `sha256sum <file>` (Ubuntu) and compare it with `SHA256SUMS.txt`.
+2. **macOS:** extract the ZIP (Finder or `ditto -x -k`), move `PC Remote.app` to a stable folder such as `/Applications` and open it. The app has only a local ad-hoc seal, so Gatekeeper treats it as unidentified: confirm the source and checksum, then allow it under **System Settings → Privacy & Security → Open Anyway**. Grant Accessibility only to this app. When updating an existing installation, choose **Allow Keychain access after update…** and approve the macOS Keychain dialog to keep the certificate root and remembered devices. Read the [macOS guide](macos-setup.md).
+3. **Ubuntu 24.04 x64 / GNOME:** install the runtime packages listed in the [Linux guide](linux-setup.md), extract with `tar -xzf`, keep the whole `PCRemote-linux-x64/` directory in a stable location and run `./PcController.Desktop` as your desktop user (never `sudo`). Wayland requires explicit Remote Desktop consent; text needs the local GTK opt-in.
+4. Both start paused and serve loopback HTTPS only. Approve your trusted network for the session, save and verify the public root profile, then pair from the phone as on Windows.
+
+These builds are experimental and are not signed for distribution. Their [release readiness](release-readiness.md) lists implemented features, pending native/phone/LAN acceptance and exact manual checks.
 
 ## Publishing the next version
 
@@ -27,36 +40,40 @@ Each published release uses its own Git tag and versioned asset filenames. Do no
 
 Read [AGENTS.md](../AGENTS.md), [CLAUDE.md](../CLAUDE.md), and the [release checklist](release-checklist.md). A version is complete only when its source, README, both agent files, GitHub files, and public assets are synchronized.
 
-1. Update shared `PcRemoteVersion` in `Directory.Build.props` (Desktop inherits it), the matching product version in `src/PcController.App/PcController.App.csproj`, the packaging default in `scripts/package.ps1`, and the installer fallback in `installer/PCRemote.iss`.
+1. Update shared `PcRemoteVersion` in `Directory.Build.props` (Desktop inherits it), the matching product version in `src/PcController.App/PcController.App.csproj`, the packaging default in `scripts/package.ps1`, and the installer fallback in `installer/PCRemote.iss`. Push source fixes before the version bump so `main` never advertises an unpublished version while CI is still being repaired.
 2. Update README version/status/download links, commands, outputs, and affected features/media. Update both `AGENTS.md` and `CLAUDE.md` version/release links and changed instructions. Update this download guide and add dated actual results/remaining gaps in `docs/release-evidence.md`; review affected setup, limitations, and acceptance docs. Preserve historical evidence. Review `.github/` workflows/templates/configuration and update affected files.
 3. Run `./scripts/check-release-docs.ps1` and the checks required by `AGENTS.md` and the [README](../README.md#validation). Provisional package tests may run before committing; do not publish those provisional artifacts.
-4. Commit the corresponding source and all release documentation. Build the final package from that commit so the DLL's informational source revision matches the future tag. Packaging also checks documentation synchronization before building:
+4. Commit the corresponding source and all release documentation and push `main`. Wait for that exact commit's **Security and regression checks** run to pass on every OS. Build the final packages from that commit so each informational source revision matches the future tag. Run the workflow manually on `main` with **final** checked (`gh workflow run security-checks.yml --ref main -f final=true`); it repeats every suite and uploads `release-win-x64-<sha>`, `release-osx-arm64-<sha>`, `release-osx-x64-<sha>` and `release-linux-x64-<sha>` workflow artifacts without tagging or publishing. Locally, the equivalent commands are:
 
    ```powershell
-   ./scripts/package.ps1 -Version 0.2.2
+   ./scripts/package.ps1 -Version 0.3.1
    Get-Content ./artifacts/latest-release.txt
    ```
 
-   Verify the final installer/ZIP hashes and license notices, inspect the package for private data and debug symbols, and scan source and packages for secrets. Check the DLL's product version/source revision and create an annotated tag for that exact commit:
-
-   ```powershell
-   git tag -a v0.2.2 -m "PC Remote v0.2.2"
-   git push origin main
-   git push origin v0.2.2
+   ```sh
+   python3 scripts/package-macos.py --rid osx-arm64 --final
+   python3 scripts/package-linux.py --final
    ```
 
-5. On GitHub **Releases → Draft a new release**, select that tag, add version-specific notes with actual validation and known limits, and attach the generated installer, portable ZIP, and `SHA256SUMS.txt`. Check **pre-release** for preview builds. Publish after reviewing the completed draft and its assets within the user's authorization.
-6. Verify the public tag points to the intended source commit, all three assets download publicly, and asset sizes/SHA-256 digests match the local files. Check the README/download links and rendered release notes, then report the release URL and any remaining limits.
+   Download the artifacts into a new empty directory. Verify every archive hash, inventory, license notice, native architecture, extracted macOS seal and informational source revision, inspect packages for private data and debug symbols, and scan source and packages for secrets. Merge all asset digests into one `SHA256SUMS.txt` (LF line endings, two spaces). Create an annotated tag for that exact commit:
 
-The `0.2.2` commands above illustrate a future release; they do not claim that version is already available. Build artifacts remain under ignored `artifacts/` locally and are uploaded as release assets, rather than committed to `main`.
+   ```powershell
+   git tag -a v0.3.1 -m "PC Remote v0.3.1"
+   git push origin v0.3.1
+   ```
+
+5. Create the GitHub release for that tag (for example `gh release create v0.3.1 --verify-tag --prerelease --notes-file <notes> <assets>`), with version-specific notes covering actual validation, platform status and known limits, and attach the Windows installer and ZIP, the macOS/Ubuntu archives and manifests, and the combined `SHA256SUMS.txt`. Keep **pre-release** for preview builds. Publish within the user's authorization.
+6. Verify the public tag points to the intended source commit, every asset downloads publicly, and asset sizes/SHA-256 digests match the local files. Check the README/download links and rendered release notes, then report the release URL and any remaining limits. Record final digests and public verification in a documentation-only follow-up commit.
+
+The `0.3.1` commands above illustrate a future release; they do not claim that version is already available. Build artifacts remain under ignored `artifacts/` locally and are uploaded as release assets, rather than committed to `main`.
 
 The GitHub **Release documentation** workflow checks version/link agreement on pull requests, `main` pushes, and version tag pushes. For a version bump it also requires changes to README, both agent files, this guide, and release evidence. Run `./scripts/check-release-docs.ps1 -BaseRef <previous-commit>` locally to perform that comparison. This check does not prove runtime behavior, absence of secrets, or availability of draft assets; complete those checks separately.
 
 Documentation-only maintenance keeps the existing app version, tag, and published binaries. Update and push `main` without replacing release assets.
 
 
-## Multi-platform candidates and future downloads
+## Multi-platform builds
 
-Only the Windows v0.2.1 links above are published. [Phase 5 release readiness](release-readiness.md) contains the source-candidate support matrix, packaging commands, signing status and exact remaining manual steps. Mac ARM64/Intel ZIP and Ubuntu x64 TAR.GZ scripts create self-contained **candidate** outputs under ignored timestamped directories, with manifest/source digest and checksums; no public links are invented. Native OS services remain required.
+Version 0.3.0 is the first release with experimental macOS ARM64/Intel ZIPs and an Ubuntu x64 TAR.GZ. [Release readiness](release-readiness.md) contains the support matrix, packaging commands, signing status and exact remaining manual steps. Candidate scripts label local outputs as candidates with a dirty-source manifest; `--final` (packaging and `check-package.py`, or the CI `final` dispatch input) produces release names only from a clean committed tree. Do not publish a candidate or rename it into a release asset.
 
-For a subsequently authorized preview, synchronize the shared/Windows version and all required documentation first, commit all source/docs, then build all final platforms from that exact clean commit. Review each platform's actual runtime, native architecture, notices, secrets, startup, informational revision, and pending acceptance. Final filenames should identify version/RID; merge every actual Windows installer/ZIP, Mac architecture archive and Ubuntu archive digest into one `SHA256SUMS.txt`. Do not publish a platform/backend/architecture that lacks the required gate without explicit preview limits. Signing/notarization may stay unavailable only if truthfully disclosed. The provisional scripts deliberately label outputs as candidates; `--final` (packaging and `check-package.py`, or the CI `final` dispatch input) produces release names only from a clean committed tree. The annotated tag, assets, support matrix and public checks must agree. Existing Windows releases are preserved.
+For every release, synchronize the shared/Windows version and all required documentation, commit all source/docs, then build all platforms from that exact clean commit. Review each platform's runtime, native architecture, notices, secrets, startup, informational revision and pending acceptance. Merge every Windows installer/ZIP, macOS architecture archive, Ubuntu archive and manifest digest into one `SHA256SUMS.txt`. Do not publish a platform/backend/architecture without its required automated gates and explicit preview limits. Signing/notarization may stay unavailable only if truthfully disclosed. The annotated tag, assets, support matrix and public checks must agree. Published releases are never replaced.

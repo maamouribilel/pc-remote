@@ -1,22 +1,32 @@
-# macOS MVP — source-built development candidate
+# macOS companion — experimental preview
 
-The public download remains **Windows 0.2.1 preview**. Phase 3 adds real macOS pointer/keyboard and Keychain adapters to the shared Avalonia shell. This is a local development candidate, with native input and physical-phone/LAN acceptance tracked separately in [the roadmap](../MULTIPLATFORM_PLAN.md#execution-log). Linux source composition now exists; real native baseline acceptance is pending in [Linux setup](linux-setup.md). Phase 5 now adds supported media, writable system volume, configured app launching, optional login registration and sleep; see the feature/acceptance boundaries below. Restart/shutdown remain unavailable.
+Version **0.3.0** publishes this companion as **experimental** Apple Silicon and Intel ZIPs; Windows remains the primary platform. Phase 3 adds real macOS pointer/keyboard and Keychain adapters to the shared Avalonia shell. Native input, physical-phone/LAN and installed-app acceptance are tracked separately in [the roadmap](../MULTIPLATFORM_PLAN.md#execution-log) and [release readiness](release-readiness.md). Linux source composition now exists; real native baseline acceptance is pending in [Linux setup](linux-setup.md). Phase 5 now adds supported media, writable system volume, configured app launching, optional login registration and sleep; see the feature/acceptance boundaries below. Restart/shutdown remain unavailable.
 
-## Build and launch
+## Install the 0.3.0 preview
+
+1. Download `PCRemote-0.3.0-osx-arm64.zip` (Apple Silicon) or `PCRemote-0.3.0-osx-x64.zip` (Intel, not yet run on Intel hardware) and `SHA256SUMS.txt` from the [v0.3.0 release](releases.md). Compare `shasum -a 256 <zip>` with the matching line.
+2. Extract with Finder or `ditto -x -k <zip> <folder>`. Do not use `unzip`: the flat .NET bundle keeps required code-signature metadata in extended attributes that `unzip` does not restore. `codesign --verify --deep --strict 'PC Remote.app'` should succeed.
+3. Move `PC Remote.app` to a stable folder such as `/Applications` before the first launch, so Accessibility, Keychain access and optional login registration refer to one location.
+4. The app has only a local ad-hoc seal (no Developer ID or notarization). Gatekeeper is expected to block the first launch of the downloaded app; after confirming its source and checksum, choose **Open Anyway** under **System Settings → Privacy & Security**. These prompts were not observed for this release.
+5. The companion starts paused with loopback HTTPS only. Continue with Accessibility, trusted-network approval and phone pairing below. When updating an earlier PC Remote for macOS, use **Allow Keychain access after update…** (see [Storage and recovery](#storage-and-recovery)).
+
+The bundle identifier is still `local.pc-remote.desktop.dev`; treat it as a preview identity that a future signed build may change.
+
+## Build and launch from source
 
 Use the pinned .NET SDK **10.0.402**, Node **24.21.0**, npm **11.19.0**, Python 3.9+, and Xcode Command Line Tools (`clang` and the macOS SDK). macOS 14 or later is the candidate deployment minimum; see [Avalonia's baselines](desktop-shell.md#dependency-and-baseline). Apple Silicon is the initial target. Intel compilation is separate from execution on Intel hardware.
 
 ```sh
 python3 scripts/portable.py build
 python3 scripts/package-macos.py
-open 'artifacts/macos-development-osx-arm64/PC Remote.app'
+# Open the .app path that packaging prints (a new timestamped artifacts/ directory).
 # Alternate source run (permission identity differs from the .app):
 python3 scripts/portable.py desktop
 # Intel candidate, built on a Mac:
 python3 scripts/package-macos.py --rid osx-x64
 ```
 
-The app bundles the browser, .NET runtime, Avalonia native dependencies, the native bridge and notices. ZIPs/checksums under `artifacts/` are provisional local outputs, excluded from Git. There is no Developer ID signature or notarization; SDK/linker ad-hoc signatures on individual Mach-O files do not make this a signed distribution. Do not advertise these as published downloads. Gatekeeper, clean-account installation, quarantine and signing/notarization onboarding require later acceptance. Run as the signed-in user, never with `sudo`. Keep a stable app location while testing Accessibility and Keychain identity.
+The app bundles the browser, .NET runtime, Avalonia native dependencies, the native bridge and notices. Local ZIPs/checksums under `artifacts/` are candidate outputs, excluded from Git; only `--final` outputs from the exact release commit are published. There is no Developer ID signature or notarization; SDK/linker ad-hoc signatures on individual Mach-O files do not make this a signed distribution. Gatekeeper, clean-account installation, quarantine and signing/notarization onboarding still require acceptance. Run as the signed-in user, never with `sudo`. Keep a stable app location while testing Accessibility and Keychain identity.
 
 Only one production instance per user may hold the installation's advisory file lock. A second launch reports that the companion is already running; use its menu-bar window. The kernel releases the lock on process termination, so an old lock file is harmless. Default window close and native Quit request graceful cleanup; keep-running-on-close remains opt-in. If native cleanup fails, Exit stays open/paused so permission can be restored and cleanup retried. Forced process termination cannot provide the same guarantee.
 
@@ -95,4 +105,4 @@ Phase 4 should reuse shared lifecycle/readiness/ownership fixes and the shell co
 
 [Release readiness](release-readiness.md) defines actual feature and acceptance boundaries. System volume uses writable Core Audio default output controls/read-back (read-only HDMI unavailable); General sends native system media keys and changes system volume. Player shortcuts use macOS VLC defaults and current layout resolution, requiring matching frontmost bundle/browser and player/tab focus. Locally choose `.app` bundles in Preferences; paths never reach the phone and LaunchServices requests activation without arguments. Optional start-at-login uses SMAppService main-app registration; it needs a stable installed/code-signed eligible bundle and may require local Login Items approval. No signing credential is provided or invented. Unsigned candidate eligibility/sign-in remains pending. Sleep is console-user IOKit; restart/shutdown remain backend-denied. Save work; physical power tests need separate disposable-target authorization.
 
-`python3 scripts/package-macos.py --rid osx-arm64` or `--rid osx-x64` now creates a fresh `artifacts/candidate-0.2.1-<rid>-<timestamp>/` `.app`/ZIP with checksums and manifest, rather than overwriting Phase 3 candidates. Run `python3 scripts/check-package.py --rid osx-arm64` for inventory/hash/runtime/version/source-revision startup without input/listeners. The package bundles .NET/ASP.NET, the native bridge, remote and actual dependency notices. No Developer ID signature/notarization or public release is claimed; no DMG is needed before installer acceptance. Hardware/GUI/clean-account/Keychain/TCC/player/login/phone/LAN/physical-power gates remain explicit in the handoff. Never enable unrelated permissions or bypass TLS/Gatekeeper as a compatibility claim.
+`python3 scripts/package-macos.py --rid osx-arm64` or `--rid osx-x64` now creates a fresh `artifacts/candidate-<version>-<rid>-<timestamp>/` `.app`/ZIP with checksums and manifest, rather than overwriting Phase 3 candidates. Run `python3 scripts/check-package.py --rid osx-arm64` for inventory/hash/runtime/version/source-revision startup without input/listeners. The package bundles .NET/ASP.NET, the native bridge, remote and actual dependency notices. No Developer ID signature/notarization or public release is claimed; no DMG is needed before installer acceptance. Hardware/GUI/clean-account/Keychain/TCC/player/login/phone/LAN/physical-power gates remain explicit in the handoff. Never enable unrelated permissions or bypass TLS/Gatekeeper as a compatibility claim.

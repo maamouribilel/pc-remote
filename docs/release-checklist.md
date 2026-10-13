@@ -10,7 +10,8 @@ For every new version, complete [AGENTS.md](https://github.com/maamouribilel/win
 - [ ] Download documentation and dated release evidence are updated; affected guides and limitations are current.
 - [ ] `.github/` files are reviewed and affected workflows/templates/configuration are updated.
 - [ ] `scripts/check-release-docs.ps1`, security/regression suites, dependency/runtime advisory checks, source/package secret scans, licenses, and hashes pass.
-- [ ] Matching source/documentation is committed and pushed; the release has installer, ZIP, checksums, accurate notes and preview/stable status.
+- [ ] Matching source/documentation is committed and pushed; that commit's hosted CI passed on Windows, macOS and Linux; bundled runtime advisories were rechecked on release day.
+- [ ] Final assets come from `--final`/the CI `final` dispatch at that exact commit; the release has installer, ZIP, any macOS/Ubuntu archives and manifests, one combined checksum file, accurate notes and preview/stable status.
 - [ ] Public tag/commit and download URLs, sizes, and SHA-256 digests are verified before declaring completion.
 
 ## Manual acceptance
@@ -33,7 +34,7 @@ Automated recording tests cover bounds, expired/single-use approval, Origin/auth
 
 - [ ] Distinguish implemented source, validated candidate, pending native/manual acceptance and unpublished public release per [release readiness](release-readiness.md).
 - [ ] Each final package bundles the remote/runtime/native bridge, exact version/source revision, actual managed/native licenses and safe contents; archive integrity, artifact secret scan and all aggregate SHA-256 sums pass.
-- [ ] Mac ARM64/real Intel and Ubuntu 24.04 x64/GNOME X11/Wayland are checked separately. Windows regression/DPAPI/Schannel/installer gates remain.
+- [ ] Mac ARM64/real Intel and Ubuntu 24.04 x64/GNOME X11/Wayland are checked separately. Windows regression/DPAPI/Schannel/installer gates remain. On macOS, an update of an existing installation is approved through **Allow Keychain access after update…** and keeps the same root/devices.
 - [ ] Native audio/read-back, actual matching player/default shortcuts/focus, real configured app launching and own login-start approval/sign-in/opt-out are accepted on authorized targets.
 - [ ] Phase 4 real Wayland text/cleanup, lock/suspend/provider/network/tray and physical Safari/Home Screen HTTPS/WSS acceptance are retained until actually passed.
 - [ ] Power recording/protocol tests remain separate from separately authorized disposable physical execution. Unsupported actions/backend/architectures stay UI/backend-denied.

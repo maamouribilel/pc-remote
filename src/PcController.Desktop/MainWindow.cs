@@ -117,7 +117,7 @@ public sealed class MainWindow : Window
         cancelPower = Button("Cancel power action", controller.CancelPower, "cancel-power"); power.Children.Add(cancelPower); preferences.Children.Add(power); preferences.Children.Add(powerState);
         preferencesExpander = new Expander { Header = "Preferences", Content = preferences };
         body.Children.Add(preferencesExpander);
-        body.Children.Add(Text("Development shell · public release remains Windows 0.2.1. Native control is reported separately from pairing and transport.", secondary: true));
+        body.Children.Add(Text("Experimental macOS/Linux preview · Windows remains the primary platform. Native control is reported separately from pairing and transport.", secondary: true));
         Content = new ScrollViewer { Content = body };
         controller.Changed += Changed; controller.ApprovalRequested += Approval;
         Closing += (_, e) =>

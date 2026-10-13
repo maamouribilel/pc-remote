@@ -7,17 +7,19 @@
 ### Your Windows PC. Controlled from your iPhone.
 
 A touchpad, keyboard, media remote, and app launcher in Safari.<br>
-Pair on your PC, connect over your home network, and keep control within reach.
+Pair on your PC, connect over your home network, and keep control within reach.<br>
+<sub>New in 0.3.0: experimental macOS and Ubuntu builds for testers.</sub>
 
-[![Download](https://img.shields.io/badge/Download-v0.2.1_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.2.1)
+[![Download](https://img.shields.io/badge/Download-v0.3.0_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.0)
 [![Windows](https://img.shields.io/badge/Windows-x64-0078D4?style=flat-square)](#download)
+[![macOS and Ubuntu](https://img.shields.io/badge/macOS_%2B_Ubuntu-experimental-8A8F98?style=flat-square)](#experimental-macos-and-ubuntu-builds)
 [![.NET](https://img.shields.io/badge/.NET-10-512BD4?style=flat-square)](#tech-stack)
 [![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?style=flat-square)](#tech-stack)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square)](#tech-stack)
 [![Transport](https://img.shields.io/badge/Transport-HTTPS_%2B_WSS-5EE8BE?style=flat-square)](docs/protocol.md)
 [![License](https://img.shields.io/badge/License-MIT-5EE8BE?style=flat-square)](LICENSE)
 
-**[Download for Windows](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.1/PCRemote-0.2.1-win-x64-setup.exe)** · **[All versions](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)** · **[Watch the walkthrough](#walkthrough)** · **[Build from source](#getting-started)**
+**[Download for Windows](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.0/PCRemote-0.3.0-win-x64-setup.exe)** · **[All versions](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)** · **[Watch the walkthrough](#walkthrough)** · **[Build from source](#getting-started)**
 
 <img src="docs/assets/desktop-controls.jpg" alt="The actual Windows companion showing power, pointer, and media preferences" width="900">
 
@@ -35,21 +37,30 @@ PC Remote runs as a Windows notification-tray companion and serves its own brows
 
 ## Download
 
-**[Download PC Remote v0.2.1 for Windows x64 →](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.1/PCRemote-0.2.1-win-x64-setup.exe)**
+**[Download PC Remote v0.3.0 for Windows x64 →](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.0/PCRemote-0.3.0-win-x64-setup.exe)**
 
 | Download | Choose this for |
 | :--- | :--- |
-| **[Windows installer](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.1/PCRemote-0.2.1-win-x64-setup.exe)** | Recommended: Start menu shortcuts and an uninstall entry |
-| **[Portable ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.1/PCRemote-0.2.1-win-x64.zip)** | Extract the complete archive, then run `PCRemote-win-x64/PcController.App.exe` |
-| **[SHA-256 checksums](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.2.1/SHA256SUMS.txt)** | Verify the installer or portable archive |
+| **[Windows installer](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.0/PCRemote-0.3.0-win-x64-setup.exe)** | Recommended: Start menu shortcuts and an uninstall entry |
+| **[Portable ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.0/PCRemote-0.3.0-win-x64.zip)** | Extract the complete archive, then run `PCRemote-win-x64/PcController.App.exe` |
+| **[macOS Apple Silicon](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.0/PCRemote-0.3.0-osx-arm64.zip)** · experimental | Extract and keep `PC Remote.app` in a stable folder. Unsigned; read the [macOS guide](docs/macos-setup.md) first |
+| **[macOS Intel](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.0/PCRemote-0.3.0-osx-x64.zip)** · experimental | Built for Intel Macs; not yet run on Intel hardware |
+| **[Ubuntu 24.04 x64 / GNOME](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.0/PCRemote-0.3.0-linux-x64.tar.gz)** · experimental | Extract and run `PCRemote-linux-x64/PcController.Desktop` as your desktop user; read the [Linux guide](docs/linux-setup.md) |
+| **[SHA-256 checksums](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.0/SHA256SUMS.txt)** | Verify every download, including the per-platform build manifests |
 
-**[Release notes for v0.2.1](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.2.1)** · **[Browse every published version](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)**
+**[Release notes for v0.3.0](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.0)** · **[Browse every published version](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)**
 
-On GitHub, open **Releases**, select the version you want, and expand **Assets**. Choose the installer or portable ZIP; GitHub's automatic **Source code** archives are for developers. See [download and version instructions](docs/releases.md).
+On GitHub, open **Releases**, select the version you want, and expand **Assets**. GitHub's automatic **Source code** archives are for developers. See [download and version instructions](docs/releases.md).
 
-Version 0.2.1 is a public preview. It targets Windows 10 1809 or later, x64; Windows 11 is the tested desktop OS. The app and installer are unsigned, and the remaining manual checks are documented in the [release checklist](docs/release-checklist.md). After installation, follow the [iPhone setup guide](docs/setup.md).
+Version 0.3.0 is a public preview. The Windows companion targets Windows 10 1809 or later, x64; Windows 11 is the tested desktop OS. The app and installer are unsigned, and the remaining manual checks are documented in the [release checklist](docs/release-checklist.md). After installation, follow the [iPhone setup guide](docs/setup.md).
 
-**Security update:** v0.2.1 isolates paired users from unpaired HTTP request floods, reserves capacity for power cancellation, prevents late media settings changes, and fixes strict TLS certificate compatibility while retaining the trusted root. Users of v0.2.0 should update.
+**Security update for Windows:** 0.3.0 bundles .NET **10.0.13** from Microsoft's 2026-10-13 security release (including CVE-2026-58280); the .NET 10.0.12 runtime in 0.2.1 is affected, so updating is recommended. PC actions now also bind to the original connected session before reading a request body.
+
+**What else changed for Windows:** the server moved into the shared portable host while keeping the existing WPF companion, Windows input/audio/power adapters, DPAPI-protected certificate/device files, trusted root and remembered devices, and the remote now receives platform capabilities. The Windows 0.3.0 build passed the automated regression, DPAPI migration, security, browser and strict-TLS suites on GitHub's hosted Windows runner, but it has **not** yet been installed or used with a physical iPhone. Please report problems through the repository's issues; older versions remain on the [Releases page](https://github.com/maamouribilel/windows-pc-mobile-controller/releases).
+
+### Experimental macOS and Ubuntu builds
+
+The same phone remote can now pair with a shared desktop companion on **macOS 14 or later** (Apple Silicon tested on macOS 27; Intel not yet run on hardware) and **Ubuntu 24.04 x64 with GNOME** (X11 or Wayland with explicit Remote Desktop consent). They start paused, serve HTTPS only on loopback until you approve a trusted network for the session, and keep keys in the macOS Keychain or the GNOME login keyring. These builds are **experimental**: they are not Developer ID signed or notarized and have no Linux distribution signature, macOS restart/shutdown are unavailable, Linux text input is limited to an opt-in GTK mode, and physical-phone/LAN, Ubuntu desktop, player, login and power acceptance are still pending. After updating PC Remote on a Mac, choose **Allow Keychain access after update…** and approve the macOS dialog to keep your existing certificate root and remembered devices. See the [support matrix and pending checks](docs/release-readiness.md).
 
 ## Live demo
 
@@ -111,6 +122,7 @@ Screenshots show the actual WPF companion and browser app, not generated mockups
 - Media shortcuts require the matching player, its focus, and appropriate shortcut settings. Opening an app does not select a video or begin playback.
 - iOS may suspend a backgrounded page; reopening reconnects without replaying stale input. Numerical input latency has not been measured.
 - The app and installer are unsigned. Clean-account installation, reboot, manual uninstall, and physical execution of the newest power controls still require separate checks.
+- The macOS and Ubuntu builds are experimental. They are unsigned/not notarized, need native OS services and permissions, and their physical-phone, LAN, player, login and power acceptance is pending. See [release readiness](docs/release-readiness.md).
 
 Read the [full limitations](docs/limitations.md) and [release checklist](docs/release-checklist.md).
 
@@ -122,13 +134,14 @@ Read the [full limitations](docs/limitations.md) and [release checklist](docs/re
 | :--- | :--- |
 | **Phone frontend** | Vanilla TypeScript 7.0.2, HTML, CSS, Vite 8.3.4, local SVG icons, Home Screen web manifest |
 | **Windows desktop** | C# / .NET 10, WPF, Windows Forms notification-tray integration |
+| **macOS / Ubuntu desktop (experimental)** | Avalonia 12.1.4 shell; Quartz/Accessibility, Core Audio and Keychain on macOS; XCB/XTEST, GNOME Remote Desktop portal, libpulse, MPRIS and GNOME keyring on Ubuntu |
 | **Backend** | Portable `PcController.Host`, ASP.NET Core / Kestrel, HTTPS endpoints, authenticated WebSockets |
 | **Native controls** | Windows SendInput, Core Audio volume, configured executable launching, Windows power APIs |
 | **Storage / database** | Local DPAPI-protected certificate/device files and JSON preferences; no database service |
 | **Authentication** | PC-approved single-use pairing, an HttpOnly secure device cookie, one active controller |
 | **Hosting** | Your Windows PC on TCP 8443, bound to loopback and selected Private IPv4 interfaces |
 | **Testing** | Portable .NET fixture runner, Windows regressions/native checks, Playwright 1.64.0 (Edge on Windows, Chromium elsewhere) |
-| **Packaging** | Self-contained `win-x64` publish, Inno Setup 7.1.0 installer, portable ZIP, SHA-256 hashes |
+| **Packaging** | Self-contained `win-x64` publish, Inno Setup 7.1.0 installer, portable ZIP; self-contained ad-hoc-sealed macOS `.app` ZIPs and an Ubuntu x64 archive; one SHA-256 file |
 
 ## Getting started
 
@@ -220,7 +233,7 @@ The browser sends bounded, allowlisted commands over WSS. The companion authenti
 
 ### Shared backend development on macOS/Linux
 
-Phases 1–5 provide the portable backend, Avalonia shell, platform-aware browser and a source-built macOS MVP with real Quartz/Accessibility input and Keychain storage. The published companion remains Windows-only. Linux now has source X11/consented Wayland portal and encrypted GNOME keyring adapters. **Phase 4 remains in progress**: real Ubuntu x64/GNOME X11 and Wayland text/cleanup plus phone/LAN acceptance are pending; text is optional GTK Unicode mode. See [Linux prerequisites, commands, recovery and gates](docs/linux-setup.md). macOS starts paused with loopback HTTPS after secure storage setup; LAN needs explicit session approval and native input needs Accessibility. Native/phone/LAN acceptance is separate. See [macOS build, permissions, recovery and limits](docs/macos-setup.md). See [desktop setup and fixture workflow](docs/desktop-shell.md). Use the same pinned SDK/Node/npm versions with native tool archives on PATH or in `.tools/`, plus Python 3.9+ (3.13+ for strict TLS):
+Phases 1–5 provide the portable backend, Avalonia shell, platform-aware browser, a macOS companion with real Quartz/Accessibility input and Keychain storage, and an Ubuntu companion with X11/consented Wayland portal input and encrypted GNOME keyring storage. Version 0.3.0 publishes these as **experimental** archives; Windows remains the primary platform. **Phase 4 remains in progress**: real Ubuntu x64/GNOME X11 and Wayland text/cleanup plus phone/LAN acceptance are pending, and Linux text is an optional GTK Unicode mode. See [Linux prerequisites, commands, recovery and gates](docs/linux-setup.md). macOS starts paused with loopback HTTPS after secure storage setup; LAN needs explicit session approval and native input needs Accessibility. See [macOS build, permissions, Keychain updates and limits](docs/macos-setup.md) and [desktop setup and fixture workflow](docs/desktop-shell.md). Use the same pinned SDK/Node/npm versions with native tool archives on PATH or in `.tools/`, plus Python 3.9+ (3.13+ for strict TLS):
 
 ```sh
 python3 scripts/portable.py build
@@ -235,12 +248,15 @@ python3 scripts/check-package.py --rid osx-arm64
 # On a Linux x64 build host:
 python3 scripts/package-linux.py
 python3 scripts/check-package.py --rid linux-x64
+# Release names only from a clean committed tree (CI: workflow_dispatch input "final"):
+python3 scripts/package-macos.py --rid osx-arm64 --final
+python3 scripts/check-package.py --rid osx-arm64 --final
 python3 scripts/portable.py mac-test
 python3 scripts/portable.py tls
 python3 scripts/portable.py audit
 ```
 
-Phase 5 adds native supported audio/media/launcher/login/power adapters and version-aware provisional archives. Mac power supports sleep only; Linux actions require logind permission without prompting. The source candidates retain manual/native gaps and have no new public downloads or distribution signatures. See the [feature matrix, package checks and exact release handoff](docs/release-readiness.md).
+Phase 5 adds native supported audio/media/launcher/login/power adapters and version-aware archives. Mac power supports sleep only; Linux actions require logind permission without prompting. See the [feature matrix, package checks and remaining acceptance](docs/release-readiness.md).
 
 PowerShell 7 `build.ps1`/`test.ps1` select portable projects automatically on macOS/Linux; pass `-Portable` on Windows. `install-tools.ps1` remains a Windows archive installer. See [portable architecture, adapters and fixture rules](docs/portable-host.md) and [dated Phase 1 evidence](MULTIPLATFORM_PLAN.md#execution-log).
 
@@ -262,7 +278,7 @@ The browser fixture script needs Python 3.9+ on Windows too; strict TLS needs Py
 
 See the [initial publication validation results](docs/publication-checks.md) for build, browser, transport, desktop, packaging, documentation, and secret-scan evidence.
 
-The [v0.2.1 release evidence](docs/release-evidence.md#version-021--security-hardening-2026-10-12) records the security fixes and current validation. GitHub's **Security and regression checks** workflow defines portable build/security/TLS checks on Windows, macOS and Linux, plus Windows regressions and browser tests. Configuring those jobs does not prove they have run.
+The [v0.3.0 release evidence](docs/release-evidence.md#version-030--experimental-macos-and-ubuntu-preview-2026-10-13) records this version's actual local and hosted CI results and remaining gaps. GitHub's **Security and regression checks** workflow runs portable build/security/TLS checks on Windows, macOS and Linux, Windows regressions and browser tests, isolated Linux checks and per-platform packaging. Hosted runs are automated evidence; they do not establish physical-phone, installed-app or native desktop acceptance.
 
 For strict certificate interoperability, run `./scripts/test-certificate.ps1` with **Python 3.13+** available. It uses only Python's standard library and checks valid trust, incorrect-host rejection, and untrusted-certificate rejection. CI includes this check; Python is a validation tool and is not needed to run the packaged app.
 
@@ -300,7 +316,7 @@ Deploy the companion to the Windows PC you want to control. Its web app is bundl
 
 ```powershell
 ./scripts/stop.ps1 -Configuration Release
-./scripts/package.ps1 -Version 0.2.1
+./scripts/package.ps1 -Version 0.3.0
 Get-Content ./artifacts/latest-release.txt
 ```
 
@@ -308,8 +324,8 @@ Packaging obtains the verified local Inno Setup compiler if needed, rebuilds Rel
 
 | Output | Use |
 | :--- | :--- |
-| `PCRemote-0.2.1-win-x64-setup.exe` | Per-user installation, Start menu shortcut, uninstall entry |
-| `PCRemote-0.2.1-win-x64.zip` | Portable distribution; keep the executable and adjacent files together |
+| `PCRemote-0.3.0-win-x64-setup.exe` | Per-user installation, Start menu shortcut, uninstall entry |
+| `PCRemote-0.3.0-win-x64.zip` | Portable distribution; keep the executable and adjacent files together |
 | `PCRemote-win-x64/` | App, bundled runtime, web assets, documentation, license notices |
 | `SHA256SUMS.txt` | Installer and archive hashes |
 
