@@ -21,7 +21,13 @@ internal static class MouseBrowserFixture
         var metadata = Path.Combine(directory, "certificates", "fixture.json");
         var events = Path.Combine(directory, "certificates", "events.json");
         var pcEvents = Path.Combine(directory, "certificates", "pc-events.json");
-        void Write(string path, object value) { File.WriteAllBytes(path + ".tmp", JsonSerializer.SerializeToUtf8Bytes(value)); File.Move(path + ".tmp", path, true); }
+        void Write(string path, object value)
+        {
+            File.WriteAllBytes(path + ".tmp", JsonSerializer.SerializeToUtf8Bytes(value));
+            // Windows refuses to replace a file the browser test is reading; the next 50 ms snapshot retries.
+            try { File.Move(path + ".tmp", path, true); }
+            catch (Exception e) when (File.Exists(path) && e is IOException or UnauthorizedAccessException) { }
+        }
         Write(metadata, new { challenge = server.Pairing.CurrentChallenge!.Value });
         using var lifetime = new CancellationTokenSource(TimeSpan.FromMinutes(5));
         try
