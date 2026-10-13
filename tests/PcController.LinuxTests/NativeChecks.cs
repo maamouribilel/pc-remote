@@ -29,24 +29,24 @@ internal static class NativeChecks
             var textDeadline = DateTime.UtcNow.AddSeconds(5); var receipt = await Read();
             while (Text(receipt) != "é😀 Linux" && DateTime.UtcNow < textDeadline) receipt = await Read();
             Program.Check(Text(receipt) == "é😀 Linux", "real GTK Unicode accent and non BMP receipt (" + Text(receipt) + ")");
-            input.Press("Backspace"); Program.Check(Text(await Read()) == "é😀 Linu", "native Backspace");
-            input.Shortcut("selectAll"); input.Text("replacement"); Program.Check(Text(await Read()) == "replacement", "Ctrl A layout resolved and Unicode replacement");
-            input.Shortcut("selectAll"); input.Shortcut("copy"); input.Press("End"); input.Shortcut("paste"); Program.Check(Text(await Read()) == "replacementreplacement", "native Ctrl copy paste isolated clipboard");
+            input.Press("Backspace"); Program.Check(Text(await Until(r => Text(r) == "é😀 Linu")) == "é😀 Linu", "native Backspace");
+            input.Shortcut("selectAll"); input.Text("replacement"); Program.Check(Text(await Until(r => Text(r) == "replacement")) == "replacement", "Ctrl A layout resolved and Unicode replacement");
+            input.Shortcut("selectAll"); input.Shortcut("copy"); input.Press("End"); input.Shortcut("paste"); Program.Check(Text(await Until(r => Text(r) == "replacementreplacement")) == "replacementreplacement", "native Ctrl copy paste isolated clipboard");
             input.Press("Home"); input.Press("ArrowRight"); input.Text("X");
-            Program.Check(Text(await Read()) == "rXeplacementreplacement", "Home and ArrowRight native caret movement");
+            Program.Check(Text(await Until(r => Text(r) == "rXeplacementreplacement")) == "rXeplacementreplacement", "Home and ArrowRight native caret movement");
             input.Press("Backspace"); input.Press("End"); input.Text("\r\n\té");
-            Program.Check(Text(await Read()) == "replacementreplacement\n\té", "native normalized Return and Tab insertion");
+            Program.Check(Text(await Until(r => Text(r) == "replacementreplacement\n\té")) == "replacementreplacement\n\té", "native normalized Return and Tab insertion");
             input.Key("Backspace", true); await Task.Delay(700);
             Program.Check(Text(await Read()) == "replacementreplacement\n\t", "navigation hold has one pulse and no server auto repeat"); input.Key("Backspace", false);
             var pointerBefore = await Read();
             input.Move(20, 10); input.Click("left", false); input.Scroll(0, 120);
-            var state = await Read(); Program.Check(int.Parse(state[3]) > int.Parse(pointerBefore[3]) && int.Parse(state[4]) > int.Parse(pointerBefore[4]) && int.Parse(state[5]) > int.Parse(pointerBefore[5]), "real pointer click motion scroll receipt");
+            var state = await Until(r => int.Parse(r[3]) > int.Parse(pointerBefore[3]) && int.Parse(r[4]) > int.Parse(pointerBefore[4]) && int.Parse(r[5]) > int.Parse(pointerBefore[5])); Program.Check(int.Parse(state[3]) > int.Parse(pointerBefore[3]) && int.Parse(state[4]) > int.Parse(pointerBefore[4]) && int.Parse(state[5]) > int.Parse(pointerBefore[5]), "real pointer click motion scroll receipt");
             Program.Check(int.Parse(state[8]) == int.Parse(pointerBefore[8]) + 20 && int.Parse(state[9]) == int.Parse(pointerBefore[9]) + 10, "actual relative pointer displacement");
             input.Click("right", false); await Read(); input.Press("Escape"); await Read(); await Task.Delay(500); input.Click("left", true); state = await Read(); Program.Check(int.Parse(state[6]) >= 1 && int.Parse(state[7]) >= 1, "native right click and recognized GTK double click");
             input.Press("Escape"); // Close target context menu if present.
             input.Button("left", true); input.Move(10, 0); input.Key("Shift", true);
-            state = await Read(); Program.Check(int.Parse(state[1]) != 0 && int.Parse(state[2]) != 0, "drag and modifier received held");
-            input.ReleaseAll(); state = await Read(); Program.Check(int.Parse(state[1]) == 0 && int.Parse(state[2]) == 0, "real held release cleanup");
+            state = await Until(r => int.Parse(r[1]) != 0 && int.Parse(r[2]) != 0); Program.Check(int.Parse(state[1]) != 0 && int.Parse(state[2]) != 0, "drag and modifier received held");
+            input.ReleaseAll(); state = await Until(r => int.Parse(r[1]) == 0 && int.Parse(r[2]) == 0); Program.Check(int.Parse(state[1]) == 0 && int.Parse(state[2]) == 0, "real held release cleanup");
             var audio = new LinuxPcActions(); var originalAudio = audio.GetVolume();
             Program.Check(originalAudio.Available, "native audio reads private PulseAudio null sink (no user's output)");
             var changedAudio = audio.SetVolume(37); Program.Check(changedAudio.Available && changedAudio.Level == 37 && !changedAudio.Muted, "native exact level writes and reads actual null sink");
@@ -64,7 +64,7 @@ internal static class NativeChecks
             }
             File.WriteAllText(desktop, "[Desktop Entry]\nType=Application\nName=Denied\nExec=/usr/bin/true\nTerminal=true\n"); Program.Check(!new LinuxLauncherPlatform().Available(app), "terminal launcher refused");
             foreach (var profile in MediaProfiles.Actions.Where(p => p.Key != "General")) foreach (var action in profile.Value) input.Media(profile.Key, action);
-            state = await Read(); Program.Check(int.Parse(state[2]) == 0, "all native player chords release modifiers on private GTK target (not player acceptance)");
+            state = await Until(r => int.Parse(r[2]) == 0); Program.Check(int.Parse(state[2]) == 0, "all native player chords release modifiers on private GTK target (not player acceptance)");
             var now = DateTimeOffset.UtcNow;
             using var controller = new InputController(input, new(), () => now, false);
             var ownership = new SessionOwnership(); ownership.ReleaseInput += controller.ReleaseAll;
@@ -86,11 +86,11 @@ internal static class NativeChecks
                 state = await Until(s => int.Parse(s[1]) == 0 && int.Parse(s[2]) == 0); Program.Check(session.Stop.IsCancellationRequested && int.Parse(state[1]) == 0 && int.Parse(state[2]) == 0, reason + " Core ownership interruption native cleanup");
             }
             controller.Execute(new(3,"key.down",Key:"Control")); now += TimeSpan.FromMilliseconds(1300);
-            Program.Check(controller.CheckWatchdog(), "watchdog expired"); state = await Read(); Program.Check(int.Parse(state[2]) == 0, "native watchdog key release");
+            Program.Check(controller.CheckWatchdog(), "watchdog expired"); state = await Until(r => int.Parse(r[2]) == 0); Program.Check(int.Parse(state[2]) == 0, "native watchdog key release");
             input.Button("left", true); input.Key("Shift", true); await Read();
             Program.Check(pc_linux_test_unfocus() == 1, "disposable target focus removed");
             Program.Fails(() => input.Move(10, 0), "focus loss blocks new native input");
-            input.ReleaseAll(); state = await Read(); Program.Check(int.Parse(state[1]) == 0 && int.Parse(state[2]) == 0, "focus loss permits only tracked cleanup ups");
+            input.ReleaseAll(); state = await Until(r => int.Parse(r[1]) == 0 && int.Parse(r[2]) == 0); Program.Check(int.Parse(state[1]) == 0 && int.Parse(state[2]) == 0, "focus loss permits only tracked cleanup ups");
         }
         finally
         {
