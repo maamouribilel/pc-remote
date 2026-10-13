@@ -196,3 +196,26 @@ Bug-fix preview for the experimental macOS companion; Windows and Ubuntu behavio
 On version commit `35bad7c` the push run [38472970739](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38472970739) passed every job, but the `final` dispatch [38472969018](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38472969018) failed one Windows browser check: the loopback test fixture crashed with `UnauthorizedAccessException` replacing its event snapshot while Playwright was reading it. The fixture now skips a refused replacement until its next 50 ms snapshot (the first metadata write must still succeed). That dispatch's artifacts were not used.
 
 **Not established for 0.3.1:** real Space/full-screen/display/Secure Input transitions on the installed app with a connected phone, approval of the Keychain update dialog for this build, and every gap listed for 0.3.0 (Windows installation/iPhone, macOS Gatekeeper/installed/Accessibility/player/login/sleep/phone, Intel hardware, Ubuntu GNOME desktop). Taking a player full-screen still pauses control by design; Resume is local.
+
+
+### Version 0.3.1 publication and public verification (2026-10-13)
+
+Published as a **pre-release**: [v0.3.1](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.1). The annotated tag `v0.3.1` points to commit `8fc1d1cf1e3f2f2d270086bada541af5ac024942`. The v0.2.0, v0.2.1 and v0.3.0 tags and assets were not changed.
+
+Hosted runs on `8fc1d1c`: the `final` dispatch [38474378271](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38474378271) passed every job and supplied all assets. The push run [38474378406](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38474378406) passed every job on attempt 2. On attempt 1, the macOS portable job's `dotnet list package --vulnerable` exited 1 without reporting an advisory. The same audit passed in five parallel jobs and in a local re-check, and only that job was re-run. The tag documentation run [38475858646](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38475858646) passed.
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `PCRemote-0.3.1-win-x64-setup.exe` | 62,692,719 | `988853720e7873659af4ad83181ea6960edc756fe49589307c004b3ec42c62c0` |
+| `PCRemote-0.3.1-win-x64.zip` | 89,738,832 | `d8d811888e6a5e68ebfdc2a1e057d5154b1df24795a8d3751a438deda6b567c6` |
+| `PCRemote-0.3.1-osx-arm64.zip` | 60,670,702 | `dba4f083dea4e8d106d9dfaf2eb3ce6cb7fe3908233651ef48398ba619d11b3e` |
+| `PCRemote-0.3.1-osx-x64.zip` | 63,379,797 | `2e35b91e6054cec8b359031e0c55829a6ae6c70c5679b5c0aa88f92d625ae7e9` |
+| `PCRemote-0.3.1-linux-x64.tar.gz` | 60,546,463 | `e20399800dd70d2b3c89e43b461873bb9c1e8998b2f9737f66ff13406e457207` |
+| `PCRemote-0.3.1-osx-arm64-manifest.json` | 109,626 | `be2a6dc4cc9c4eb7bd9e1467f3acd41ea51d5aff8fb2334ca1a067e6ec468621` |
+| `PCRemote-0.3.1-osx-x64-manifest.json` | 109,624 | `7c966828f156c13504ce3b1278cff90ea744750f178af5e12a0628a887dc62f2` |
+| `PCRemote-0.3.1-linux-x64-manifest.json` | 50,478 | `b01f3bcbdf3a2159b768ee7cb3325bad89c99b05a4732ea1db9246356cd0eb7f` |
+| `SHA256SUMS.txt` | 791 | covers the eight files above |
+
+Local verification used the same independent script as 0.3.0: checksums, manifest provenance (`candidate: false`, `sourceDirty: false`, revision `8fc1d1c`), extracted macOS seals, native architectures, ARM64 native and Intel Rosetta-emulated `--package-info` (`0.3.1+8fc1d1c`, .NET 10.0.13), Windows/Ubuntu informational revisions, licenses and secret scans. The shipped macOS bridge exports the network-trust generation, and the shell contains the new loopback explanation. After publication, all nine public URLs returned HTTP 200 to anonymous downloads with matching sizes and SHA-256 digests. The public `SHA256SUMS.txt` is byte-identical, GitHub's asset digests match, and the rendered release notes and README were checked in a browser.
+
+On the user's Mac, the verified public Apple Silicon ZIP replaced the earlier 0.3.0 installation in `/Applications` (the old bundle was moved aside, and the application data directory was not touched). The seal and `--package-info` passed and the app was launched. Because the code identity changed again, the user must re-approve Keychain access and re-enable Accessibility. Real Space/full-screen/display/Secure Input transitions with a connected phone remain the outstanding manual check for this fix.
