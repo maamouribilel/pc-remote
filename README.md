@@ -138,7 +138,7 @@ Read the [full limitations](docs/limitations.md) and [release checklist](docs/re
 - Internet access for the initial toolchain/dependency downloads.
 - For phone control: an iPhone with Safari and a trusted network marked **Private** on Windows.
 
-The scripts prefer a verified portable toolchain in `.tools/`: **.NET SDK 10.0.401**, **Node.js 24.21.0**, and **npm 11.19.0**. Packaged releases bundle .NET runtime 10.0.12 and do not need development tools.
+The scripts prefer a verified portable toolchain in `.tools/`: **.NET SDK 10.0.402**, **Node.js 24.21.0**, and **npm 11.19.0**. Packaged releases bundle .NET runtime 10.0.13 and do not need development tools.
 
 ### Install, build, and run
 

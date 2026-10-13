@@ -43,7 +43,7 @@ Certificate issuance is shared, but storage and key loading remain explicit adap
 
 ## Portable builds and checks
 
-Use the unchanged **.NET SDK 10.0.401**, **Node 24.21.0**, **npm 11.19.0**. Install native tool archives for your OS/architecture, either on PATH or under `.tools/dotnet/` and `.tools/node-v24.21.0-darwin-arm64/` (or the corresponding OS/architecture directory). The Windows installer script intentionally downloads Windows archives only. `global.json` rejects an SDK mismatch; the Python frontend entry point also checks exact Node/npm versions.
+Use the pinned **.NET SDK 10.0.402** (runtime 10.0.13), **Node 24.21.0**, **npm 11.19.0**. Install native tool archives for your OS/architecture, either on PATH or under `.tools/dotnet/` and `.tools/node-v24.21.0-darwin-arm64/` (or the corresponding OS/architecture directory). The Windows installer script intentionally downloads Windows archives only. `global.json` rejects an SDK mismatch; the Python frontend entry point also checks exact Node/npm versions.
 
 With Python 3.9+ and the pinned tools, from the repository root:
 

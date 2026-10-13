@@ -56,7 +56,7 @@ def main():
     info = json.loads(subprocess.check_output([str(binary), '--package-info'], env=env, text=True, timeout=15))
     if info['version'] != version() + '.0' or not info['bundledRemote'] or not info['informationalVersion'].endswith('+' + manifest['sourceRevision']):
         raise RuntimeError('Bundled product/source revision/web metadata differs: ' + json.dumps(info))
-    if info['runtime'] != '.NET 10.0.12':
+    if info['runtime'] != '.NET 10.0.13':
         raise RuntimeError('Unexpected bundled runtime: ' + info['runtime'])
     print('Candidate inventory, checksum and self-contained read-only startup passed: ' + json.dumps(info))
     print('GUI/installed/native/phone/LAN/power acceptance remains separate.')

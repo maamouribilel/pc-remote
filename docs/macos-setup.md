@@ -4,7 +4,7 @@ The public download remains **Windows 0.2.1 preview**. Phase 3 adds real macOS p
 
 ## Build and launch
 
-Use the pinned .NET SDK **10.0.401**, Node **24.21.0**, npm **11.19.0**, Python 3.9+, and Xcode Command Line Tools (`clang` and the macOS SDK). macOS 14 or later is the candidate deployment minimum; see [Avalonia's baselines](desktop-shell.md#dependency-and-baseline). Apple Silicon is the initial target. Intel compilation is separate from execution on Intel hardware.
+Use the pinned .NET SDK **10.0.402**, Node **24.21.0**, npm **11.19.0**, Python 3.9+, and Xcode Command Line Tools (`clang` and the macOS SDK). macOS 14 or later is the candidate deployment minimum; see [Avalonia's baselines](desktop-shell.md#dependency-and-baseline). Apple Silicon is the initial target. Intel compilation is separate from execution on Intel hardware.
 
 ```sh
 python3 scripts/portable.py build

@@ -13,7 +13,7 @@ function Get-VerifiedToolArchive([string]$Url, [string]$Name, [string]$Algorithm
     return $taskArchive
 }
 if (-not (Test-Path -LiteralPath (Join-Path $taskTools 'dotnet/dotnet.exe'))) {
-    $taskArchive = Get-VerifiedToolArchive 'https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.401/dotnet-sdk-10.0.401-win-x64.zip' 'dotnet-sdk.zip' 'SHA512' '24b670ad3d923bfcf47df6c3b034152398b42f6dbc388e10d783aee1cfb5e5817d399fc0ae2a12cfa822a55e61d34830ccb15c50ef6efee437ab874bb7c79430'
+    $taskArchive = Get-VerifiedToolArchive 'https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.402/dotnet-sdk-10.0.402-win-x64.zip' 'dotnet-sdk-10.0.402-win-x64.zip' 'SHA512' 'ae4fd528cb7e9f6af6aaf7de36715a69f761f183744f1bb3025d19f5a92447090ec561410e46266c1d10a63781ed6f3de771760bc76c876d87daabc367b898cd'
     Expand-Archive -LiteralPath $taskArchive -DestinationPath (Join-Path $taskTools 'dotnet') -Force
 }
 if (-not (Test-Path -LiteralPath (Join-Path $taskTools 'node-v24.21.0-win-x64/node.exe'))) {

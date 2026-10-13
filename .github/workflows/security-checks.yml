@@ -73,6 +73,11 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/remote/.nvmrc
+          cache: npm
+          cache-dependency-path: src/remote/package-lock.json
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
@@ -81,6 +86,8 @@ jobs:
           python-version: '3.13'
       - name: Xvfb GTK and encrypted disposable GNOME keyring prerequisites
         run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libsecret-1-dev libxcb-xtest0-dev libxkbcommon-x11-dev libpulse-dev dbus-x11 gnome-keyring xvfb libgtk-3-dev x11-xkb-utils python3-gi pulseaudio
+      - name: Bundled remote and Release build (host fixtures serve the real web assets)
+        run: python scripts/portable.py build
       - name: Guarded X11 input on private Xvfb, US and French layouts
         run: python scripts/portable.py linux-x11
       - name: Private D-Bus portal protocol denial, grants and closure (no Wayland input)
