@@ -11,15 +11,15 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PcController.Core;
-using PcController.Windows;
 
-namespace PcController.App;
+namespace PcController.Host;
 
 public sealed partial class CompanionServer : IAsyncDisposable
 {
     public const int Port = 8443;
+    private static readonly JsonSerializerOptions WireJson = new(JsonSerializerDefaults.Web);
     public NetworkSnapshot Network { get; }
-    public LocalCertificates Certificates { get; }
+    public ILocalCertificates Certificates { get; }
     public string ConnectionAddress => $"https://{Network.PrivateAddresses.FirstOrDefault()?.ToString() ?? "localhost"}:{Port}";
     private readonly WebApplication app;
     private readonly CancellationTokenSource shutdown = new();
@@ -28,32 +28,40 @@ public sealed partial class CompanionServer : IAsyncDisposable
     public PointerSettings PointerSettings { get; }
     public MediaSettings MediaSettings { get; }
     public bool InputProblem { get; private set; }
-    public LauncherSettings Launcher { get; }
+    public ILauncherSettings Launcher { get; }
     public IPcActions PcActions { get; }
     public PowerQueue Power { get; } = new();
     public string PowerMessage { get; private set; } = "";
     private readonly Timer powerTimer;
 
-    public CompanionServer(string? dataDirectory = null, IMouseInput? mouseInput = null, bool loopbackOnly = false, NetworkSnapshot? network = null, IPcActions? pcActions = null)
+    public PlatformCapabilities Capabilities { get; }
+    public HostReadiness Readiness { get; }
+    public CompanionServer(HostServices services)
     {
-        Network = loopbackOnly ? new NetworkSnapshot([], [], "Loopback test fixture") : network ?? NetworkSnapshot.Read();
-        var addresses = Network.PrivateAddresses.Append(IPAddress.Loopback).ToArray();
-        var certificateDirectory = Path.Combine(dataDirectory ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PcController"), "certificates");
-        Certificates = new LocalCertificates(certificateDirectory, addresses);
-        Devices = new ProtectedDevices(certificateDirectory);
+        var webRoot = services.WebRoot;
+        if (!File.Exists(Path.Combine(webRoot, "index.html"))) throw new IOException("Mobile assets are missing.");
+        if ((services.Capabilities.Keyboard || services.Capabilities.Text || services.Capabilities.Shortcuts) && services.Input is not IKeyboardInput ||
+            services.Capabilities.MediaActions.Values.Any(actions => actions.Count > 0) && services.Input is not IMediaInput)
+            throw new ArgumentException("Input adapter does not implement the advertised capabilities.", nameof(services));
+        Network = services.Network;
+        var addresses = Network.PrivateAddresses.Append(IPAddress.Loopback).Distinct().ToArray();
+        Certificates = services.Certificates;
+        if (!Certificates.Server.MatchesHostname("localhost", false, false) || addresses.Any(a => !Certificates.Server.MatchesHostname(a.ToString(), false, false)))
+            throw new ArgumentException("Server certificate SANs do not cover the exact listener bindings.", nameof(services));
+        Devices = services.Devices;
         Pairing = new PairingService(Devices);
         Pairing.IssueChallenge();
-        PointerSettings = new PointerSettings(certificateDirectory);
-        MediaSettings = new MediaSettings(certificateDirectory);
-        Launcher = new LauncherSettings(certificateDirectory);
-        PcActions = pcActions ?? new WindowsPcActions();
-        Input = new InputController(mouseInput ?? new WindowsInput(), PointerSettings.Value);
+        PointerSettings = services.PointerSettings;
+        MediaSettings = services.MediaSettings;
+        Launcher = services.Launcher;
+        PcActions = services.PcActions;
+        Capabilities = services.Capabilities;
+        Readiness = services.Readiness ?? new("ready", Capabilities.InputEnabled ? "ready" : "unavailable", Network.PrivateAddresses.Length > 0 ? "approved" : "loopback", "");
+        Input = new InputController(services.Input, PointerSettings.Value, capabilities: Capabilities);
         Sessions.ReleaseInput += () => { try { Input.ReleaseAll(); } catch (InputFailureException) { InputProblem = true; throw; } };
         Input.Failed += () => { InputProblem = true; Sessions.Pause(true); };
         Input.TimedOut += Sessions.EndCurrent;
         Sessions.Changed += () => Power.KeepSession(Sessions.ActiveSessionId);
-        var webRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
-        if (!File.Exists(Path.Combine(webRoot, "index.html"))) throw new IOException("Mobile assets are missing.");
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = [], WebRootPath = webRoot, ContentRootPath = AppContext.BaseDirectory });
         builder.Logging.ClearProviders(); // No URLs, payloads, cookies or exception data logged.
         var hosts = addresses.Select(a => $"{a}:{Port}").Append($"localhost:{Port}").ToHashSet(StringComparer.Ordinal);
@@ -106,7 +114,7 @@ public sealed partial class CompanionServer : IAsyncDisposable
         app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(10), KeepAliveTimeout = TimeSpan.FromSeconds(10) });
         app.UseDefaultFiles();
         app.UseStaticFiles();
-        app.MapGet("/health", () => Results.Json(new { ready = true, protocol = 1, stage = "mobile", inputEnabled = true }));
+        app.MapGet("/health", () => Results.Json(new { ready = true, protocol = 1, stage = "mobile", inputEnabled = Capabilities.InputEnabled }));
         MapPairingEndpoints();
         MapPcEndpoints();
         // Chromium can use HTTP/2 CONNECT for WebSockets; HTTP/1.1 uses GET.
@@ -163,10 +171,11 @@ public sealed partial class CompanionServer : IAsyncDisposable
     }
     public async ValueTask DisposeAsync()
     {
-        Power.Cancel();
-        await powerTimer.DisposeAsync();
+        Pairing.Close();
         Sessions.Shutdown();
-        await shutdown.CancelAsync();
+        Power.Cancel();
+        await powerTimer.DisposeAsync().ConfigureAwait(false);
+        await shutdown.CancelAsync().ConfigureAwait(false);
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         try { await app.StopAsync(timeout.Token).ConfigureAwait(false); } catch (OperationCanceledException) { }
         await app.DisposeAsync().ConfigureAwait(false);

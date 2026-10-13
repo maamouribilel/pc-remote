@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net10.0</TargetFramework>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <Version>0.2.1</Version><Product>PC Remote development shell</Product>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <PackageReference Include="QRCoder" Version="1.8.0" />
+    <ProjectReference Include="../PcController.Host/PcController.Host.csproj" />
+    <AvaloniaResource Include="../remote/public/pc-remote-v2-128.png" Link="Assets/logo.png" />
+    <AvaloniaResource Include="../remote/public/pc-remote-v2.ico" Link="Assets/tray.ico" />
+    <Content Include="../remote/dist/**" Link="wwwroot/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

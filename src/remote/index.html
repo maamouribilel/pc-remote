@@ -65,7 +65,7 @@
   <dialog id="connection-dialog" aria-labelledby="connection-title"><div class="dialog-heading"><h2 id="connection-title">Connection settings</h2><button id="close-settings" class="icon-button" type="button" aria-label="Close connection settings"><span data-icon="close"></span></button></div>
     <p id="error" class="error" role="alert" hidden></p>
     <details id="connection-details" open><summary>Connection &amp; Home Screen setup</summary><section aria-label="Connection">
-      <p id="description" class="description">Pair this browser and approve it on the PC to control it.</p>
+      <p id="capability-note" class="description" role="status"></p><p id="description" class="description">Pair this browser and approve it on the PC to control it.</p>
       <form id="pair-form" hidden><label for="pair-link">Pairing link or challenge from the PC</label><input id="pair-link" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required /><label for="device-name">Device name</label><input id="device-name" type="text" maxlength="64" value="My iPhone" autocomplete="off" required /><button id="pair-submit" class="primary" type="submit">Request PC approval</button></form>
       <button id="takeover" class="primary" type="button" hidden>Take over control</button><button id="forget" type="button" hidden>Forget this browser</button>
       <dl><div><dt>Transport</dt><dd id="transport">Checking…</dd></div><div><dt>Round-trip time</dt><dd id="latency">—</dd></div></dl><button id="test" type="button" disabled>Test connection</button>

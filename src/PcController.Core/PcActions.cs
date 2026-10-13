@@ -3,13 +3,14 @@ namespace PcController.Core;
 public sealed record LauncherApp(string Id, string Name, string Executable, string Profile);
 public sealed record VolumeState(bool Available, int Level = 0, bool Muted = false);
 public sealed record LaunchResult(bool Focused);
-public interface IPcActions
+public interface IVolumeActions
 {
     VolumeState GetVolume();
     VolumeState SetVolume(int level);
-    LaunchResult Launch(LauncherApp app);
-    void Power(string action);
 }
+public interface ILauncherActions { LaunchResult Launch(LauncherApp app); }
+public interface IPowerActions { void Power(string action); }
+public interface IPcActions : IVolumeActions, ILauncherActions, IPowerActions { }
 
 public sealed record PowerPreparation(string Token, string Action, string Device, string Session, DateTimeOffset Expires);
 public sealed record PendingPower(string Action, string Device, string Session, DateTimeOffset ExecuteAt);

@@ -10,6 +10,6 @@ export default defineConfig({
   reporter: 'list',
   // Explicit loopback-only UI QA fallback. It cannot validate certificate onboarding.
   // Production server and remote have no insecure mode; .NET integration still verifies TLS.
-  use: { baseURL: 'https://localhost:8443', channel: 'msedge', browserName: 'chromium',
+  use: { baseURL: 'https://localhost:8443', channel: process.platform === 'win32' ? 'msedge' : undefined, browserName: 'chromium',
     ignoreHTTPSErrors: process.env.PC_CONTROLLER_BROWSER_TLS_BYPASS === '1' },
 });

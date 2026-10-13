@@ -1,3 +1,4 @@
+import { type Capabilities, unavailable, labels as platformLabels } from './capabilities';
 import { renderIcon } from './icons';
 
 type Api = (path: string, body?: object) => Promise<Record<string, any>>;
@@ -19,6 +20,7 @@ export function setupPc(api: Api, release: () => void, profile: (value: string) 
   const cancel = document.getElementById('cancel-power') as HTMLButtonElement;
   const countdown = document.getElementById('power-countdown')!;
   const countdownText = document.getElementById('power-countdown-text')!;
+  let capabilities: Capabilities = unavailable;
   let enabled = false, session = '', loading = false, launching = false, preparing = false, savingVolume = false, editingVolume = false;
   let latestVolume: Volume = { available: false, level: 0, muted: false };
   let pending: PendingPower | null = null;
@@ -26,9 +28,9 @@ export function setupPc(api: Api, release: () => void, profile: (value: string) 
 
   function update() {
     panel.inert = !enabled; panel.classList.toggle('disabled', !enabled);
-    volume.disabled = !enabled || !latestVolume.available || savingVolume;
-    for (const button of apps.querySelectorAll<HTMLButtonElement>('button')) button.disabled = !enabled || launching || button.dataset.available !== 'true';
-    for (const button of document.querySelectorAll<HTMLButtonElement>('[data-power]')) button.disabled = !enabled || preparing || pending !== null;
+    volume.disabled = !enabled || !capabilities.volume || !latestVolume.available || savingVolume;
+    for (const button of apps.querySelectorAll<HTMLButtonElement>('button')) button.disabled = !enabled || !capabilities.launcher || launching || button.dataset.available !== 'true';
+    for (const button of document.querySelectorAll<HTMLButtonElement>('[data-power]')) button.disabled = !enabled || !capabilities.powerActions.includes(button.dataset.power!) || preparing || pending !== null;
     confirm.disabled = !enabled || preparing || !ticket || ticket.expires <= Date.now() || ticket.session !== session;
     cancel.disabled = !enabled || !pending;
     countdown.hidden = !pending;
@@ -38,7 +40,7 @@ export function setupPc(api: Api, release: () => void, profile: (value: string) 
     latestVolume = value;
     if (!editingVolume && !savingVolume) {
       volume.value = String(value.level); volumeValue.textContent = value.available ? `${value.level}%` : '—';
-      volumeNote.textContent = !value.available ? 'No Windows audio output is available.' : value.muted ? 'Windows is muted. Moving the slider unmutes it.' : 'Windows output volume · separate from the player’s volume';
+      volumeNote.textContent = !value.available ? `${platformLabels(capabilities).system} audio output is unavailable.` : value.muted ? `${platformLabels(capabilities).system} is muted. Moving the slider unmutes it.` : `${platformLabels(capabilities).system} output volume · separate from the player’s volume`;
     }
     update();
   }
@@ -47,7 +49,7 @@ export function setupPc(api: Api, release: () => void, profile: (value: string) 
     const current = session;
     const result = await api(path, { session: current, ...body });
     if (!enabled || current !== session) throw new Error('Connection changed. Check the PC before trying again.');
-    if (!result.ok) throw new Error(result.error === 'audio_unavailable' ? 'No Windows audio output is available.'
+    if (!result.ok) throw new Error(result.error === 'audio_unavailable' ? `${platformLabels(capabilities).system} audio output is unavailable.`
       : result.error === 'confirmation_expired' ? 'Confirmation expired. Choose the action again.'
       : result.error === 'launch_rate_limit' ? 'Wait a moment before opening another app.'
       : result.error === 'power_pending' ? 'Cancel the pending power action first.'
@@ -66,16 +68,16 @@ export function setupPc(api: Api, release: () => void, profile: (value: string) 
         const button = document.createElement('button'); button.type = 'button'; button.className = 'launcher-app'; button.dataset.available = String(entry.available);
         const icon = document.createElement('span'); renderIcon(icon, entry.profile === 'Stremio' ? 'stremio' : entry.profile === 'VLC' ? 'media' : entry.profile === 'YouTube' ? 'browser' : 'apps');
         const text = document.createElement('span'); text.className = 'launcher-name'; text.textContent = entry.name;
-        const hint = document.createElement('small'); hint.textContent = entry.available ? 'Open on PC' : 'App not found';
+        const hint = document.createElement('small'); hint.textContent = entry.available ? `Open on ${platformLabels(capabilities).computer}` : 'App not found';
         const arrow = document.createElement('span'); renderIcon(arrow, 'chevronRight');
         button.append(icon, text, hint, arrow);
         button.addEventListener('click', async () => {
-          if (launching || !enabled) return;
+          if (launching || !enabled || !capabilities.launcher) return;
           release(); launching = true; feedback.textContent = `Opening ${entry.name}…`; update();
           try {
             const response = await request('/api/pc/launch', { id: entry.id });
             profile(response.profile); selectTab('media-controls');
-            volumeFeedback.textContent = response.focused ? `${response.name} is ready on the PC.` : `${response.name} opened. If Windows keeps it behind another window, select it on the PC taskbar.`;
+            volumeFeedback.textContent = response.focused ? `${response.name} is ready on the ${platformLabels(capabilities).computer}.` : `${response.name} opened. If it remains behind another window, select it on the ${platformLabels(capabilities).computer}.`;
           } catch (reason) { feedback.textContent = String(reason).replace(/^Error: /, ''); }
           finally { launching = false; update(); }
         });
@@ -88,24 +90,24 @@ export function setupPc(api: Api, release: () => void, profile: (value: string) 
   }
   volume.addEventListener('input', () => { editingVolume = true; volumeValue.textContent = `${volume.value}%`; });
   volume.addEventListener('change', async () => {
-    if (!enabled || savingVolume) return;
-    release(); savingVolume = true; editingVolume = false; update(); volumeFeedback.textContent = 'Setting Windows volume…';
+    if (!enabled || !capabilities.volume || savingVolume) return;
+    release(); savingVolume = true; editingVolume = false; update(); volumeFeedback.textContent = `Setting ${platformLabels(capabilities).system} volume…`;
     try {
       const result = await request('/api/pc/volume', { level: Number(volume.value) });
-      savingVolume = false; applyVolume(result.volume); volumeFeedback.textContent = `Windows volume set to ${result.volume.level}%.`;
+      savingVolume = false; applyVolume(result.volume); volumeFeedback.textContent = `${platformLabels(capabilities).system} volume set to ${result.volume.level}%.`;
     } catch (reason) { savingVolume = false; applyVolume(latestVolume); volumeFeedback.textContent = String(reason).replace(/^Error: /, ''); }
     update();
   });
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-power]')) button.addEventListener('click', async () => {
-    if (!enabled || preparing || pending) return;
+    if (!enabled || !capabilities.powerActions.includes(button.dataset.power!) || preparing || pending) return;
     release(); preparing = true; ticket = undefined; feedback.textContent = ''; update();
     try {
       const result = await request('/api/pc/power/prepare', { action: button.dataset.power });
       ticket = { token: result.token, action: result.action, session, expires: Date.parse(result.expires) };
-      document.getElementById('power-title')!.textContent = `${labels[result.action]} this PC?`;
+      document.getElementById('power-title')!.textContent = `${labels[result.action]} this ${platformLabels(capabilities).computer}?`;
       document.getElementById('power-explanation')!.textContent = result.action === 'sleep'
-        ? 'The PC will sleep after a 30-second countdown. The remote will disconnect. Wake the PC locally to reconnect.'
-        : 'Save your work first. After a 30-second countdown, Windows will request this action. Apps with unsaved work may need your attention on the PC.';
+        ? `The ${platformLabels(capabilities).computer} will sleep after a 30-second countdown. The remote will disconnect. Wake it locally to reconnect.`
+        : `Save your work first. After a 30-second countdown, ${platformLabels(capabilities).system} will request this action. Apps with unsaved work may need your attention.`;
       confirm.textContent = `${labels[result.action]} in 30 seconds`;
       dialog.showModal();
     } catch (reason) { feedback.textContent = String(reason).replace(/^Error: /, ''); }
@@ -136,6 +138,7 @@ export function setupPc(api: Api, release: () => void, profile: (value: string) 
   setInterval(update, 500);
   return {
     sync,
+    setCapabilities(value: Capabilities) { capabilities = value; update(); },
     setConnection(value: boolean, id = '') {
       const changed = value && (!enabled || id !== session);
       enabled = value; session = value ? id : '';

@@ -43,13 +43,13 @@ internal static class KeyboardSmoke
                     Guard(); input.Press("Backspace"); await Task.Delay(100); check(field.Text.Length == 0, "actual Backspace deletes disposable selection");
                     Guard(); input.Text(sample + "\nNext"); await Task.Delay(100);
                     check(field.Text.Replace("\r\n", "\n") == sample + "\nNext", "actual multiline text separates Enter from Unicode units");
-                    Guard(); input.Chord(MediaProfiles.Mappings["YouTube"]["playPause"]); await Task.Delay(100);
+                    Guard(); input.Chord(WindowsMediaMappings.Mappings["YouTube"]["playPause"]); await Task.Delay(100);
                     check(field.Text.EndsWith("Nextk"), "actual YouTube profile chord emits physical K");
-                    Guard(); input.Chord(MediaProfiles.Mappings["VLC"]["seekBack"]); await Task.Delay(100);
+                    Guard(); input.Chord(WindowsMediaMappings.Mappings["VLC"]["seekBack"]); await Task.Delay(100);
                     check(field.SelectionLength == 1 && (GetAsyncKeyState(0x10) & 0x8000) == 0, "actual VLC seek chord emits Shift+Left and releases modifier");
-                    Guard(); input.Chord(MediaProfiles.Mappings["Stremio"]["next"]); await Task.Delay(100);
+                    Guard(); input.Chord(WindowsMediaMappings.Mappings["Stremio"]["next"]); await Task.Delay(100);
                     check(field.Text.EndsWith("NextN") && (GetAsyncKeyState(0x10) & 0x8000) == 0, "actual Stremio next episode chord emits Shift+N and releases modifier");
-                    Guard(); input.Chord(MediaProfiles.Mappings["Stremio"]["seekBack"]); await Task.Delay(100);
+                    Guard(); input.Chord(WindowsMediaMappings.Mappings["Stremio"]["seekBack"]); await Task.Delay(100);
                     check(field.SelectionLength == 0 && field.CaretIndex == field.Text.Length - 1, "actual Stremio seek chord emits Left");
                     using var controller = new InputController(input, new());
                     Guard(); controller.Execute(new(1, "key.down", Key: "Control")); await Task.Delay(100);

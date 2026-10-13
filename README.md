@@ -122,12 +122,12 @@ Read the [full limitations](docs/limitations.md) and [release checklist](docs/re
 | :--- | :--- |
 | **Phone frontend** | Vanilla TypeScript 7.0.2, HTML, CSS, Vite 8.3.4, local SVG icons, Home Screen web manifest |
 | **Windows desktop** | C# / .NET 10, WPF, Windows Forms notification-tray integration |
-| **Backend** | ASP.NET Core / Kestrel, HTTPS endpoints, authenticated WebSockets |
+| **Backend** | Portable `PcController.Host`, ASP.NET Core / Kestrel, HTTPS endpoints, authenticated WebSockets |
 | **Native controls** | Windows SendInput, Core Audio volume, configured executable launching, Windows power APIs |
 | **Storage / database** | Local DPAPI-protected certificate/device files and JSON preferences; no database service |
 | **Authentication** | PC-approved single-use pairing, an HttpOnly secure device cookie, one active controller |
 | **Hosting** | Your Windows PC on TCP 8443, bound to loopback and selected Private IPv4 interfaces |
-| **Testing** | Custom .NET check runner, native smoke checks, Playwright 1.64.0 using Microsoft Edge |
+| **Testing** | Portable .NET fixture runner, Windows regressions/native checks, Playwright 1.64.0 (Edge on Windows, Chromium elsewhere) |
 | **Packaging** | Self-contained `win-x64` publish, Inno Setup 7.1.0 installer, portable ZIP, SHA-256 hashes |
 
 ## Getting started
@@ -194,23 +194,43 @@ The recording follows the real browser interface through a secure connection, to
 ```text
 windows-pc-mobile-controller/
 ├── src/
-│   ├── PcController.App/       # WPF companion, HTTPS/WSS server, endpoints
+│   ├── PcController.App/       # WPF companion and Windows production composition
+│   ├── PcController.Desktop/   # Avalonia development shell (native adapters pending)
+│   ├── PcController.Host/      # Portable HTTPS/WSS, endpoints, lifecycle, preferences
 │   ├── PcController.Core/      # Protocol, pairing, ownership, media/power logic
-│   ├── PcController.Windows/   # Input, certificates, DPAPI, audio, launcher APIs
+│   ├── PcController.Windows/   # Native adapters, DPAPI/ACLs, key storage, discovery
 │   └── remote/                # TypeScript browser UI and shipped branding
 ├── tests/
-│   ├── PcController.Tests/    # .NET checks, recording fixtures, native smoke tests
+│   ├── PcController.PortableTests/ # Portable protocol/security/recording fixtures
+│   ├── PcController.Tests/    # Windows DPAPI, integration and native smoke checks
 │   └── remote/                # Playwright interactions and responsive checks
 ├── scripts/                   # Tools, build, run, tests, packaging, setup
 ├── installer/                 # Inno Setup definition
 ├── assets/                    # Original branding and historical design references
 ├── docs/                      # Guides, protocol, limitations, evidence, README media
-├── PcController.slnx          # .NET solution
+├── PcController.slnx          # Full Windows solution
+├── PcController.Portable.slnx # Core, Host, Desktop, and isolated tests
 ├── global.json                # Pinned .NET SDK
 └── Directory.Build.props      # Shared compiler settings
 ```
 
 The browser sends bounded, allowlisted commands over WSS. The companion authenticates devices, checks session ownership, and dispatches commands through the Windows adapters. Launcher requests carry configured app IDs; executable paths stay on the PC. Read the [protocol and security design](docs/protocol.md).
+
+### Shared backend development on macOS/Linux
+
+Phases 1–2 provide the portable backend, Avalonia desktop shell, and platform-aware browser. The published companion remains Windows-only. Normal Mac/Linux shell startup shows setup-required and starts no listener until secure storage and native adapters are implemented. See [desktop setup and fixture workflow](docs/desktop-shell.md). Use the same pinned SDK/Node/npm versions with native tool archives on PATH or in `.tools/`, plus Python 3.9+ (3.13+ for strict TLS):
+
+```sh
+python3 scripts/portable.py build
+python3 scripts/portable.py test
+python3 scripts/portable.py desktop-test
+python3 scripts/portable.py browser-capabilities
+python3 scripts/portable.py desktop
+python3 scripts/portable.py tls
+python3 scripts/portable.py audit
+```
+
+PowerShell 7 `build.ps1`/`test.ps1` select portable projects automatically on macOS/Linux; pass `-Portable` on Windows. `install-tools.ps1` remains a Windows archive installer. See [portable architecture, adapters and fixture rules](docs/portable-host.md) and [dated Phase 1 evidence](MULTIPLATFORM_PLAN.md#execution-log).
 
 ## Validation
 
@@ -226,11 +246,11 @@ With all companions closed:
 ./scripts/audit-dependencies.ps1
 ```
 
-The browser script starts a temporary loopback fixture and cleans it up afterward. Checks cover pairing, gestures, Unicode text, navigation, media, launcher/profile selection, volume read-back, cancelled power actions, reconnects, and portrait/landscape/desktop viewports.
+The browser fixture script needs Python 3.9+ on Windows too; strict TLS needs Python 3.13+. The browser script starts the portable temporary loopback fixture and cleans it up afterward. Checks cover pairing, gestures, Unicode text, navigation, media, launcher/profile selection, volume read-back, cancelled power actions, reconnects, and portrait/landscape/desktop viewports.
 
 See the [initial publication validation results](docs/publication-checks.md) for build, browser, transport, desktop, packaging, documentation, and secret-scan evidence.
 
-The [v0.2.1 release evidence](docs/release-evidence.md#version-021--security-hardening-2026-10-12) records the security fixes and current validation. GitHub's **Security and regression checks** workflow runs the build, dependency audits, security/ownership checks, and browser tests for future changes.
+The [v0.2.1 release evidence](docs/release-evidence.md#version-021--security-hardening-2026-10-12) records the security fixes and current validation. GitHub's **Security and regression checks** workflow defines portable build/security/TLS checks on Windows, macOS and Linux, plus Windows regressions and browser tests. Configuring those jobs does not prove they have run.
 
 For strict certificate interoperability, run `./scripts/test-certificate.ps1` with **Python 3.13+** available. It uses only Python's standard library and checks valid trust, incorrect-host rejection, and untrusted-certificate rejection. CI includes this check; Python is a validation tool and is not needed to run the packaged app.
 

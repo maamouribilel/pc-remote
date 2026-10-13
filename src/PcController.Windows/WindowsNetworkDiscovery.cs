@@ -3,9 +3,11 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 
+using PcController.Core;
+
 namespace PcController.Windows;
 
-public sealed record NetworkSnapshot(IPAddress[] PrivateAddresses, IPAddress[] AllAddresses, string Notice)
+public static class WindowsNetworkDiscovery
 {
     // GetAdapterId returns a native GUID, which IDispatch/dynamic cannot marshal.
     // Use the SDK's dual-interface vtable for this call instead of automation.

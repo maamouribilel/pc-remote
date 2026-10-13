@@ -21,6 +21,7 @@ public sealed class PairingService(IDeviceRepository devices, Func<DateTimeOffse
     private PairingChallenge? challenge;
     private PairingRequest? pending;
     private string state = "none";
+    private bool closed;
     private string? credential;
     private DeviceRecord? approved;
     private readonly Queue<DateTimeOffset> attempts = new();
@@ -34,6 +35,7 @@ public sealed class PairingService(IDeviceRepository devices, Func<DateTimeOffse
     {
         lock (gate)
         {
+            if (closed) throw new InvalidOperationException("pair_closed");
             pending = null; credential = null; approved = null; state = "none";
             challenge = new(RandomToken(), Now.AddMinutes(2));
             Changed?.Invoke();
@@ -46,6 +48,7 @@ public sealed class PairingService(IDeviceRepository devices, Func<DateTimeOffse
     {
         lock (gate)
         {
+            if (closed) throw new InvalidOperationException("pair_closed");
             while (attempts.TryPeek(out var first) && first <= Now.AddMinutes(-1)) attempts.Dequeue();
             if (attempts.Count >= 5) throw new InvalidOperationException("pair_rate_limit");
             attempts.Enqueue(Now);
@@ -64,7 +67,7 @@ public sealed class PairingService(IDeviceRepository devices, Func<DateTimeOffse
     {
         lock (gate)
         {
-            if (pending is not { } p || !Matches(p.Ticket, ticket) || p.Expires <= Now || state != "pending") return;
+            if (closed || pending is not { } p || !Matches(p.Ticket, ticket) || p.Expires <= Now || state != "pending") return;
             if (allow)
             {
                 credential = RandomToken();
@@ -89,6 +92,10 @@ public sealed class PairingService(IDeviceRepository devices, Func<DateTimeOffse
             Changed?.Invoke();
             return result;
         }
+    }
+    public void Close()
+    {
+        lock (gate) { closed = true; challenge = null; credential = null; approved = null; state = "denied"; Changed?.Invoke(); }
     }
     public DeviceRecord? Authenticate(string token)
     {

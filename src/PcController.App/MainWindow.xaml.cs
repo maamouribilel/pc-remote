@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using PcController.Core;
+using PcController.Host;
 using QRCoder;
 using PcController.Windows;
 
@@ -39,7 +40,7 @@ public partial class MainWindow : Window
         lastLink = lastDevices = lastMediaProfile = lastApps = null;
         Sensitivity.Text = server.PointerSettings.Value.Sensitivity.ToString(System.Globalization.CultureInfo.InvariantCulture);
         NaturalScroll.IsChecked = server.PointerSettings.Value.NaturalScroll;
-        MediaProfile.ItemsSource = MediaProfiles.Mappings.Keys.ToArray();
+        MediaProfile.ItemsSource = MediaProfiles.Actions.Keys.ToArray();
         Status.Text = server.Network.PrivateAddresses.Length > 0 ? "Secure LAN ready" : "Local setup · LAN unavailable";
         StatusDot.Fill = (Brush)FindResource(server.Network.PrivateAddresses.Length > 0 ? "AccentBrush" : "MutedBrush");
         NetworkNotice.Text = server.Network.Notice;
@@ -149,7 +150,7 @@ public partial class MainWindow : Window
         panel.Children.Add(new TextBlock { Text = "App name", Margin = new Thickness(0,0,0,8) });
         var name = new TextBox { Text = Path.GetFileNameWithoutExtension(picker.FileName), MaxLength = 64 }; panel.Children.Add(name);
         panel.Children.Add(new TextBlock { Text = "Media profile", Margin = new Thickness(0,16,0,8) });
-        var profilePicker = new ComboBox { ItemsSource = MediaProfiles.Mappings.Keys.ToArray(), SelectedItem = "General" }; panel.Children.Add(profilePicker);
+        var profilePicker = new ComboBox { ItemsSource = MediaProfiles.Actions.Keys.ToArray(), SelectedItem = "General" }; panel.Children.Add(profilePicker);
         var save = new Button { Content = "Add app", Margin = new Thickness(0,20,0,0) }; save.SetResourceReference(StyleProperty,"PrimaryButton");
         save.Click += (_, _) =>
         {

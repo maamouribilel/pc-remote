@@ -1,3 +1,4 @@
+import { readCapabilities, renderLabels, supports, unavailable, labels, type Capabilities } from './capabilities';
 import './style.css';
 import { setupTouchpad } from './touchpad';
 import { setupKeyboard } from './keyboard';
@@ -31,8 +32,9 @@ let poll: ReturnType<typeof setTimeout> | undefined;
 let attempts = 0, seq = 0, generation = 0;
 let authenticated = false, pairing = false;
 let controlReady = false, lastPing = 0;
+let capabilities: Capabilities = unavailable;
 function sendControl(type: string, payload: object): number | false {
-  if (!controlReady || socket?.readyState !== WebSocket.OPEN) return false;
+  if (!supports(capabilities, type, payload) || !controlReady || socket?.readyState !== WebSocket.OPEN) return false;
   if (socket.bufferedAmount > 16384) { socket.close(); return false; }
   socket.send(JSON.stringify({ v: 1, seq: ++seq, type, payload }));
   if (type === 'input.releaseAll') keyboard.reset();
@@ -44,6 +46,13 @@ const media = setupMedia((type, payload) => controls.flush() ? sendControl(type,
 const tabs = setupTabs(controls.release);
 const pc = setupPc(api, controls.release, media.profile, tabs.select);
 const connectionPanel = setupConnectionPanel(controls.release);
+function applyCapabilities(value: Capabilities) {
+  capabilities = value; renderLabels(value); keyboard.setCapabilities(value); media.setCapabilities(value); pc.setCapabilities(value);
+}
+function enableControl(auth: boolean) {
+  controlReady = auth; controls.setEnabled(auth && capabilities.pointer); keyboard.setEnabled(auth); media.setEnabled(auth);
+  for (const button of document.querySelectorAll<HTMLButtonElement>('#mouse-controls button')) button.disabled = !auth || !capabilities.pointer;
+}
 const releaseButton = element<HTMLButtonElement>('release');
 let pending: { sequence: number; started: number } | undefined;
 function display(message: string, connected = false, explanation?: string) {
@@ -90,11 +99,12 @@ function openSocket(auth: boolean, version: number) {
       if (!pending || reply.v !== 1 || reply.type !== 'pong' || reply.seq !== pending.sequence || typeof reply.session !== 'string') throw new Error();
       latency.textContent = `${Math.round(performance.now() - pending.started)} ms`;
       pending = undefined; clearTimeout(deadline); attempts = 0;
+      if (auth && reply.payload?.capabilities) applyCapabilities(readCapabilities({ protocol: 1, capabilities: reply.payload.capabilities }));
       if (typeof reply.payload?.mediaProfile === 'string') media.profile(reply.payload.mediaProfile);
       pc.setConnection(auth, reply.session); if (auth) pc.sync(reply.payload ?? {});
-      controlReady = auth; controls.setEnabled(auth); keyboard.setEnabled(auth); media.setEnabled(auth);
+      enableControl(auth);
       if (pairing) display('Waiting for PC approval', true);
-      else display(auth ? 'Connected securely' : 'Secure transport · unpaired', true);
+      else display(auth ? (Object.values(capabilities).some(v => v === true) || Object.values(capabilities.mediaActions).some(a => a.length) ? 'Connected securely' : 'Connected · controls unavailable') : 'Secure transport · unpaired', true);
     } catch { display('Invalid server reply'); current.close(); }
   };
   current.onerror = () => { if (socket === current) display('Connection failed', false, 'Check certificate trust, the Private firewall rule, and Wi-Fi client isolation.'); };
@@ -104,7 +114,7 @@ function openSocket(auth: boolean, version: number) {
     controlReady = false; controls.setEnabled(false); keyboard.setEnabled(false); media.setEnabled(false); pc.setConnection(false);
     transport.textContent = 'Disconnected';
     display(document.hidden ? 'Suspended' : 'Disconnected · retrying', false,
-      event.reason === 'input_failed' ? 'Windows input failed. Focus a normal application; elevated apps and secure desktops are unsupported.' : undefined);
+      event.reason === 'input_failed' ? 'Input is unavailable or failed. Check permissions and readiness in the companion.' : undefined);
     retry();
   };
 }
@@ -135,12 +145,16 @@ async function connect(take = false) {
   try {
     const status = await api('/api/status');
     if (version !== generation || document.hidden) return;
+    if (status.protocol !== 1) { applyCapabilities(unavailable); display('Unsupported companion protocol', false, 'Use a compatible companion and browser remote.'); return; }
     const wasAuthenticated = authenticated;
     authenticated = status.authenticated; form.hidden = authenticated; forget.hidden = !authenticated;
     if (authenticated && !wasAuthenticated) { (document.getElementById('connection-details') as HTMLDetailsElement).open = false; connectionPanel.close(); }
     if (!authenticated) connectionPanel.open(true);
+    applyCapabilities(authenticated ? readCapabilities(status) : unavailable);
     media.profile(status.mediaProfile);
-    description.textContent = authenticated ? 'Watch your PC screen. Choose a tab to control it.' : 'Pair this browser and approve it on the PC to control it.';
+    const readiness = status.readiness?.message;
+    document.getElementById('capability-note')!.textContent = authenticated ? readiness || 'Controls reflect this companion’s available capabilities.' : '';
+    description.textContent = authenticated ? `Watch your ${capabilities.platform === 'macos' ? 'Mac' : 'computer'} screen. Choose an available control.` : 'Pair this browser and approve it on the PC to control it.';
     if (authenticated) {
       pairing = false;
       const claim = await api('/api/session/claim', { takeover: take });
@@ -148,8 +162,8 @@ async function connect(take = false) {
       if (!claim.ok) {
         if (claim.error === 'unauthenticated') { display('Pairing expired or revoked'); retry(); return; }
         takeover.hidden = claim.error !== 'controller_busy';
-        display(claim.error === 'paused' ? 'Paused on PC' : 'Another controller is active', false,
-          claim.error === 'paused' ? 'Resume control on the PC.' : 'Take over only when you intend to replace the current controller.');
+        display(claim.error === 'paused' ? `Paused on ${labels(capabilities).computer}` : 'Another controller is active', false,
+          claim.error === 'paused' ? `Resume control on the ${labels(capabilities).computer}.` : 'Take over only when you intend to replace the current controller.');
         retry(); return;
       }
       openSocket(true, version);

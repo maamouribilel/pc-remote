@@ -1,0 +1,8 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Style Selector="Window"><Setter Property="Background" Value="#0B0F14"/><Setter Property="Foreground" Value="#F4F6F8"/><Setter Property="FontSize" Value="16"/></Style>
+  <Style Selector="Button"><Setter Property="MinHeight" Value="44"/><Setter Property="Padding" Value="16,10"/><Setter Property="CornerRadius" Value="12"/><Setter Property="Background" Value="#171D25"/></Style>
+  <Style Selector="Button.primary"><Setter Property="Background" Value="#5EE8BE"/><Setter Property="Foreground" Value="#0B0F14"/></Style>
+  <Style Selector="TextBlock.secondary"><Setter Property="Foreground" Value="#A7B1BF"/><Setter Property="FontSize" Value="14"/></Style>
+  <Style Selector="TextBox"><Setter Property="MinHeight" Value="44"/></Style>
+  <Style Selector="ComboBox"><Setter Property="MinHeight" Value="44"/></Style>
+</Styles>

@@ -38,6 +38,10 @@ public sealed class SessionOwnership(Func<DateTimeOffset>? clock = null)
             return (owner, ticket);
         }
     }
+    public (ControlSession Session, string Ticket)? ReserveAuthorized(string device, bool takeover, Func<bool> authenticate)
+    {
+        lock (gate) { return authenticate() ? Reserve(device, takeover) : null; }
+    }
     public ControlSession? Connect(string device, string ticket)
     {
         lock (gate)
@@ -77,7 +81,7 @@ public sealed class SessionOwnership(Func<DateTimeOffset>? clock = null)
         if (owner == null) return;
         var previous = owner; owner = null;
         try { ReleaseInput?.Invoke(); }
-        catch (InputFailureException) { paused = true; } // Fail closed if Windows cannot release input.
+        catch (InputFailureException) { paused = true; } // Fail closed if the adapter cannot release input.
         finally { previous.Stop.Cancel(); }
         Changed?.Invoke();
     }

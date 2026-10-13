@@ -1,5 +1,6 @@
 # Downloads official, pinned portable toolchains without changing global installations.
 $ErrorActionPreference = 'Stop'
+if ($env:OS -ne 'Windows_NT') { throw 'This installer fetches Windows archives. On macOS/Linux install the pinned native SDK and Node/npm listed in README.md, then use scripts/portable.py.' }
 $taskRoot = Split-Path $PSScriptRoot -Parent
 $taskTools = Join-Path $taskRoot '.tools'
 New-Item -ItemType Directory -Path $taskTools -Force | Out-Null

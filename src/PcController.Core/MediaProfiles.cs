@@ -1,12 +1,12 @@
 namespace PcController.Core;
 public static class MediaProfiles
 {
-    public static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, string[]>> Mappings = new Dictionary<string, IReadOnlyDictionary<string, string[]>>
+    public static readonly IReadOnlyDictionary<string, IReadOnlySet<string>> Actions = new Dictionary<string, IReadOnlySet<string>>
     {
-        ["General"] = new Dictionary<string, string[]> { ["playPause"] = ["MediaPlayPause"], ["next"] = ["MediaNext"], ["previous"] = ["MediaPrevious"], ["volumeUp"] = ["VolumeUp"], ["volumeDown"] = ["VolumeDown"], ["mute"] = ["VolumeMute"] },
-        ["YouTube"] = new Dictionary<string, string[]> { ["playPause"] = ["K"], ["next"] = ["Shift", "N"], ["previous"] = ["Shift", "P"], ["volumeUp"] = ["ArrowUp"], ["volumeDown"] = ["ArrowDown"], ["mute"] = ["M"], ["seekBack"] = ["J"], ["seekForward"] = ["L"], ["fullscreen"] = ["F"] },
-        ["VLC"] = new Dictionary<string, string[]> { ["playPause"] = ["Space"], ["next"] = ["N"], ["previous"] = ["P"], ["volumeUp"] = ["Control", "ArrowUp"], ["volumeDown"] = ["Control", "ArrowDown"], ["mute"] = ["M"], ["seekBack"] = ["Shift", "ArrowLeft"], ["seekForward"] = ["Shift", "ArrowRight"], ["fullscreen"] = ["F"] },
-        ["Stremio"] = new Dictionary<string, string[]> { ["playPause"] = ["Space"], ["next"] = ["Shift", "N"], ["volumeUp"] = ["ArrowUp"], ["volumeDown"] = ["ArrowDown"], ["mute"] = ["M"], ["seekBack"] = ["ArrowLeft"], ["seekForward"] = ["ArrowRight"], ["fullscreen"] = ["F"] }
+        ["General"] = new HashSet<string> { "playPause", "next", "previous", "volumeUp", "volumeDown", "mute" },
+        ["YouTube"] = new HashSet<string> { "playPause", "next", "previous", "volumeUp", "volumeDown", "mute", "seekBack", "seekForward", "fullscreen" },
+        ["VLC"] = new HashSet<string> { "playPause", "next", "previous", "volumeUp", "volumeDown", "mute", "seekBack", "seekForward", "fullscreen" },
+        ["Stremio"] = new HashSet<string> { "playPause", "next", "volumeUp", "volumeDown", "mute", "seekBack", "seekForward", "fullscreen" },
     };
-    public static bool Supports(string profile, string action) => Mappings.TryGetValue(profile, out var commands) && commands.ContainsKey(action);
+    public static bool Supports(string profile, string action) => Actions.TryGetValue(profile, out var actions) && actions.Contains(action);
 }

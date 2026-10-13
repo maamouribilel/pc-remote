@@ -6,10 +6,52 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  AVALONIA_TELEMETRY_OPTOUT: '1'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+
 permissions:
   contents: read
 
 jobs:
+  portable:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/remote/.nvmrc
+          cache: npm
+          cache-dependency-path: src/remote/package-lock.json
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Portable Release build
+        run: python scripts/portable.py build
+      - name: Portable pairing, ownership, transport, lifecycle, capabilities and security
+        run: python scripts/portable.py test
+      - name: Desktop shell host and headless UI workflows
+        run: python scripts/portable.py desktop-test
+      - name: Platform-aware browser checks
+        shell: bash
+        run: |
+          cd src/remote
+          npx playwright install --with-deps chromium
+          cd ../..
+          python scripts/portable.py browser-capabilities
+      - name: Strict TLS positive and negative interoperability
+        run: python scripts/portable.py tls
+      - name: Portable dependency audit
+        run: python scripts/portable.py audit
+
   validation:
     runs-on: windows-latest
     timeout-minutes: 15

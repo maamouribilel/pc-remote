@@ -1,10 +1,9 @@
 using PcController.Core;
 using System.IO;
-using PcController.Windows;
 
-namespace PcController.App;
+namespace PcController.Host;
 
-public sealed class ServerLifecycle(Func<NetworkSnapshot, CompanionServer> create, Func<NetworkSnapshot>? read = null) : IAsyncDisposable
+public sealed class ServerLifecycle(Func<NetworkSnapshot, CompanionServer> create, Func<NetworkSnapshot> read) : IAsyncDisposable
 {
     private readonly SemaphoreSlim gate = new(1, 1);
     private bool disposed, paused;
@@ -12,14 +11,14 @@ public sealed class ServerLifecycle(Func<NetworkSnapshot, CompanionServer> creat
     public event Action? Updating;
     public event Action<CompanionServer>? Ready;
     public event Action<string>? Failed;
-    private static string Signature(NetworkSnapshot snapshot) => string.Join(",", snapshot.PrivateAddresses.Select(a => a.ToString()).Order()) + "|" + string.Join(",", snapshot.AllAddresses.Select(a => a.ToString()).Order()) + "|" + snapshot.Notice;
+    private static string Signature(NetworkSnapshot snapshot) => string.Join(",", snapshot.PrivateAddresses.Select(a => a.ToString()).Order()) + "|" + string.Join(",", snapshot.AllAddresses.Select(a => a.ToString()).Order()) + "|" + snapshot.Notice + "|" + snapshot.TrustIdentity;
     public async Task RefreshAsync()
     {
-        if (!await gate.WaitAsync(0).ConfigureAwait(false)) return;
+        await gate.WaitAsync().ConfigureAwait(false);
         try
         {
             if (disposed) return;
-            var network = (read ?? NetworkSnapshot.Read)();
+            var network = read();
             if (Server is { } current && Signature(network) == Signature(current.Network) && current.Certificates.Server.NotAfter.ToUniversalTime() > DateTime.UtcNow.AddDays(14)) return;
             Updating?.Invoke();
             if (Server is { } previous)
@@ -34,19 +33,27 @@ public sealed class ServerLifecycle(Func<NetworkSnapshot, CompanionServer> creat
             try
             {
                 next = create(network);
+                if (Signature(next.Network) != Signature(network)) throw new InvalidOperationException("Factory changed approved listener snapshot.");
+                if (Signature(read()) != Signature(network)) throw new InvalidOperationException("Network changed during host setup.");
                 next.Sessions.Pause(paused);
                 await next.StartAsync().ConfigureAwait(false);
+                if (Signature(read()) != Signature(network)) throw new InvalidOperationException("Network changed while starting listeners.");
                 Server = next; Ready?.Invoke(next);
             }
             catch
             {
                 if (next != null) await next.DisposeAsync().ConfigureAwait(false);
-                Failed?.Invoke("HTTPS setup failed. Check port 8443, the Windows Private network profile, certificate expiry and the user data folder. Retrying automatically.");
+                Failed?.Invoke("HTTPS setup failed. Check port 8443, the trusted network selection, certificate expiry and the user data folder. Retrying automatically.");
             }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Net.NetworkInformation.NetworkInformationException)
         {
-            Server?.Sessions.Pause(true); paused = true;
+            paused = true;
+            if (Server is { } unsafeServer)
+            {
+                Server = null;
+                await unsafeServer.DisposeAsync().ConfigureAwait(false);
+            }
             Failed?.Invoke("Network inspection or input cleanup failed. Control is paused; check the interactive desktop and network settings. Retrying automatically.");
         }
         finally { gate.Release(); }

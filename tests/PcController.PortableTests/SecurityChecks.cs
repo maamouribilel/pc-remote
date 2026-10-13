@@ -4,7 +4,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
-using PcController.App;
+using PcController.Host;
 using PcController.Core;
 
 internal static class SecurityChecks
@@ -15,7 +15,7 @@ internal static class SecurityChecks
         try
         {
             var input = new RecordingMouse(); var pc = new RecordingPcActions();
-            await using var server = new CompanionServer(directory, input, loopbackOnly: true, pcActions: pc);
+            await using var server = PortableFixture.Create(directory, input, pc);
             await server.StartAsync();
             const string origin = "https://localhost:8443";
             bool Trust(X509Certificate? certificate, SslPolicyErrors errors)
@@ -94,6 +94,19 @@ internal static class SecurityChecks
                 check(response.StatusCode is HttpStatusCode.Conflict or HttpStatusCode.Unauthorized && server.MediaSettings.Profile == "VLC", "revocation during a request body prevents a late media mutation");
             }
             request = server.Pairing.Request(server.Pairing.IssueChallenge().Value, "Replacement security fixture");
+            server.Pairing.Decide(request.Ticket, true); claim = server.Pairing.Claim(request.Ticket);
+            cookies.Add(new Uri(origin), new Cookie("__Host-pc-device", claim.Credential!, "/") { Secure = true, HttpOnly = true });
+            reservation = server.Sessions.Reserve(claim.Device!.Id, false); session = server.Sessions.Connect(claim.Device.Id, reservation.Ticket)!;
+            using (var delayedClaim = new GatedJson("{\"takeover\":", "true}"))
+            using (var message = new HttpRequestMessage(HttpMethod.Post, "/api/session/claim") { Content = delayedClaim })
+            {
+                message.Headers.Add("Origin", origin); var responseTask = paired.SendAsync(message);
+                await delayedClaim.Started.Task.WaitAsync(TimeSpan.FromSeconds(3)); await Task.Delay(250);
+                server.RevokeDevice(claim.Device.Id); delayedClaim.Finish.TrySetResult();
+                using var response = await responseTask;
+                check(response.StatusCode == HttpStatusCode.Unauthorized && server.Sessions.OwnerDeviceId == null, "revocation during session claim body cannot reserve a fresh owner");
+            }
+            request = server.Pairing.Request(server.Pairing.IssueChallenge().Value, "Safety security fixture");
             server.Pairing.Decide(request.Ticket, true); claim = server.Pairing.Claim(request.Ticket);
             cookies.Add(new Uri(origin), new Cookie("__Host-pc-device", claim.Credential!, "/") { Secure = true, HttpOnly = true });
             reservation = server.Sessions.Reserve(claim.Device!.Id, false); session = server.Sessions.Connect(claim.Device.Id, reservation.Ticket)!;

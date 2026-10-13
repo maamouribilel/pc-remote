@@ -1,7 +1,7 @@
 using System.Text;
 using PcController.Core;
 using PcController.Windows;
-internal sealed class RecordingMouse : IMouseInput, IKeyboardInput
+internal sealed class RecordingMouse : IMouseInput, IKeyboardInput, IMediaInput
 {
     private readonly object gate = new();
     private readonly List<string> events = [];
@@ -17,6 +17,7 @@ internal sealed class RecordingMouse : IMouseInput, IKeyboardInput
     public void Press(string key) => Add($"press:{key}");
     public void Text(string text) => Add("text-length:" + text.Length); // Never record typed text.
     public void Shortcut(string action) => Add("shortcut:" + action);
+    public void Media(string profile, string action) => Chord(WindowsMediaMappings.Mappings[profile][action]);
     public void Chord(IReadOnlyList<string> keys) => Add("chord:" + string.Join("+", keys));
 }
 internal static class MouseChecks
@@ -52,6 +53,5 @@ internal static class MouseChecks
         owner = sessions.Reserve("test", false); sessions.Connect("test", owner.Ticket); controller.Execute(new(11, "pointer.button", Button: "left", Action: "down")); input.FailNext = true;
         bool paused = false; try { sessions.Reserve("replacement", true); } catch (InvalidOperationException e) { paused = e.Message == "paused"; }
         check(paused && sessions.Paused && owner.Session.Stop.IsCancellationRequested && sessions.OwnerDeviceId == null, "release failure blocks takeover and pauses control");
-        check(WindowsInput.NativeSize == (IntPtr.Size == 8 ? 40 : 28), "native INPUT size agrees with Windows ABI");
     }
 }

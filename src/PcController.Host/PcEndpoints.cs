@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using PcController.Core;
 
-namespace PcController.App;
+namespace PcController.Host;
 
 public sealed partial class CompanionServer
 {
@@ -15,11 +15,12 @@ public sealed partial class CompanionServer
     {
         app.MapGet("/api/pc", (HttpContext context) => Authenticate(context) == null ? Error("unauthenticated", 401) : Results.Json(new
         {
-            apps = Launcher.List().Select(a => new { id = a.Id, name = a.Name, profile = a.Profile, available = File.Exists(a.Executable) }),
-            volume = PcActions.GetVolume(), power = PublicPower(), powerMessage = PowerMessage
+            apps = Launcher.List().Select(a => new { id = a.Id, name = a.Name, profile = a.Profile, available = Capabilities.Launcher && Launcher.Available(a) }),
+            volume = Capabilities.Volume ? PcActions.GetVolume() : new VolumeState(false), power = PublicPower(), powerMessage = PowerMessage
         }));
         app.MapPost("/api/pc/launch", async Task<IResult> (HttpContext context) => await PcRequest(context, ["session", "id"], (body, deviceId) =>
         {
+            if (!Capabilities.Launcher) return Error("unsupported_action", 409);
             if (!StringField(body, "id", out var id) || id.Length != 32) return Error("invalid_app", 400);
             var entry = Launcher.Find(id);
             if (entry == null) return Error("invalid_app", 400);
@@ -32,6 +33,7 @@ public sealed partial class CompanionServer
         }));
         app.MapPost("/api/pc/volume", async Task<IResult> (HttpContext context) => await PcRequest(context, ["session", "level"], (body, deviceId) =>
         {
+            if (!Capabilities.Volume) return Error("unsupported_action", 409);
             var value = body.GetProperty("level");
             if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt32(out var level) || level is < 0 or > 100) return Error("invalid_volume", 400);
             var volume = PcActions.SetVolume(level);
@@ -40,6 +42,7 @@ public sealed partial class CompanionServer
         app.MapPost("/api/pc/power/prepare", async Task<IResult> (HttpContext context) => await PcRequest(context, ["session", "action"], (body, deviceId) =>
         {
             if (!StringField(body, "action", out var action) || !PowerQueue.Supported(action)) return Error("invalid_power_action", 400);
+            if (!Capabilities.PowerActions.Contains(action)) return Error("unsupported_action", 409);
             Input.ReleaseAll();
             var value = Power.Prepare(action, deviceId, body.GetProperty("session").GetString()!);
             PowerMessage = "";
@@ -81,6 +84,7 @@ public sealed partial class CompanionServer
     }
     public void ScheduleLocalPower(string action)
     {
+        if (!Capabilities.PowerActions.Contains(action)) throw new InvalidOperationException("unsupported_action");
         Input.ReleaseAll();
         var prepared = Power.Prepare(action, "local", "local");
         Power.Confirm(prepared.Token, "local", "local"); PowerMessage = "";
@@ -98,6 +102,7 @@ public sealed partial class CompanionServer
             if (due == null) return;
             try
             {
+                if (!Capabilities.PowerActions.Contains(due.Action)) { due = null; PowerMessage = "Power action unavailable."; return; }
                 Input.ReleaseAll();
             }
             catch (InputFailureException) { due = null; InputProblem = true; Sessions.Pause(true); PowerMessage = "Power cancelled because held input could not be released."; }
@@ -106,8 +111,8 @@ public sealed partial class CompanionServer
         else if (!Sessions.ExecuteDevice(pending.Device, pending.Session, Take)) Power.Cancel();
         if (due == null) return;
         // Sleep may block until resume. Never hold the session/input lock across it.
-        try { PowerMessage = "Power request sent to Windows. Save any work if Windows asks."; PcActions.Power(due.Action); }
+        try { PowerMessage = "Power request sent to the operating system. Save any work if asked."; PcActions.Power(due.Action); }
         catch (Exception exception) when (exception is Win32Exception or InvalidOperationException)
-        { PowerMessage = "Windows could not complete the power request. Check the PC and your account permissions."; }
+        { PowerMessage = "The operating system could not complete the power request. Check the PC and your account permissions."; }
     }
 }

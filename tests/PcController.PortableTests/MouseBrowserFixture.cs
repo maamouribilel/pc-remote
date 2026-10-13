@@ -1,14 +1,21 @@
 using System.Text.Json;
-using PcController.App;
+using PcController.Host;
 internal static class MouseBrowserFixture
 {
-    internal static async Task Run(string directory)
+    internal static async Task Run(string directory, string platform = "recording")
     {
         var mouse = new RecordingMouse();
         var pc = new RecordingPcActions();
-        await using var server = new CompanionServer(directory, mouse, loopbackOnly: true, pcActions: pc);
+        var capabilities = platform switch
+        {
+            "macos" => PcController.Core.PlatformCapabilities.ProtocolV1 with { Platform = "macos", MediaActions = new Dictionary<string, IReadOnlySet<string>> { ["General"] = new HashSet<string> { "playPause" } }, Volume = false, Launcher = false, PowerActions = new HashSet<string>() },
+            "linux" => PcController.Core.PlatformCapabilities.Unavailable("linux") with { Keyboard = true, Shortcuts = true },
+            "unavailable" => PcController.Core.PlatformCapabilities.Unavailable("macos"),
+            _ => PcController.Core.PlatformCapabilities.ProtocolV1 with { Platform = "recording" }
+        };
+        await using var server = PortableFixture.Create(directory, mouse, pc, capabilities: capabilities);
         foreach (var entry in server.Launcher.List()) server.Launcher.Remove(entry.Id);
-        server.Launcher.Add(Path.Combine(Environment.SystemDirectory,"notepad.exe"),"Test player","VLC");
+        server.Launcher.Add(PortableFixture.TestExecutable(directory),"Test player","VLC");
         server.ApproveDeviceAsync = (_, _) => Task.FromResult(true); // Test executable ONLY, loopback, recording input.
         await server.StartAsync();
         var metadata = Path.Combine(directory, "certificates", "fixture.json");

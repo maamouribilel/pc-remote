@@ -1,6 +1,6 @@
 using System.Text.Json;
 using PcController.Core;
-namespace PcController.Windows;
+namespace PcController.Host;
 public sealed class MediaSettings
 {
     private readonly object gate = new();
@@ -11,11 +11,11 @@ public sealed class MediaSettings
     {
         path = Path.Combine(directory, "media-settings.json");
         profile = File.Exists(path) ? JsonSerializer.Deserialize<string>(File.ReadAllBytes(path)) ?? "General" : "General";
-        if (!MediaProfiles.Mappings.ContainsKey(profile)) throw new InvalidDataException("Invalid media profile.");
+        if (!MediaProfiles.Actions.ContainsKey(profile)) throw new InvalidDataException("Invalid media profile.");
     }
     public void Save(string next)
     {
-        if (!MediaProfiles.Mappings.ContainsKey(next)) throw new ArgumentOutOfRangeException(nameof(next));
+        if (!MediaProfiles.Actions.ContainsKey(next)) throw new ArgumentOutOfRangeException(nameof(next));
         lock (gate) { File.WriteAllBytes(path + ".tmp", JsonSerializer.SerializeToUtf8Bytes(next)); File.Move(path + ".tmp", path, true); profile = next; }
     }
 }

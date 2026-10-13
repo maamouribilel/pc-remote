@@ -5,6 +5,9 @@ namespace PcController.Core;
 public sealed record ControlCommand(long Sequence, string Type, double X = 0, double Y = 0, string Button = "", string Action = "", string Key = "", string Text = "", string Profile = "");
 public static class ControlProtocol
 {
+    // Additive authenticated capability/readiness metadata needs a larger server reply.
+    // Client commands retain the exact 1024-byte/depth-four v1 limits below.
+    public const int MaxReplyBytes = 4096;
     public static bool TryParse(ReadOnlyMemory<byte> bytes, long previous, out ControlCommand? command)
     {
         command = null;
@@ -43,7 +46,7 @@ public static class ControlProtocol
             {
                 if (!Fields(payload, ["action"]) || payload.GetProperty("action").ValueKind != JsonValueKind.String) return false;
                 var action = payload.GetProperty("action").GetString()!;
-                if (!KeyboardCommands.Shortcuts.ContainsKey(action)) return false;
+                if (!KeyboardCommands.Shortcuts.Contains(action)) return false;
                 command = new(sequence, type, Action: action); return true;
             }
             if (type == "text.insert")
@@ -95,12 +98,11 @@ public static class KeyboardCommands
 {
     public static readonly HashSet<string> Modifiers = ["Control", "Alt", "Shift", "Windows"];
     public static readonly HashSet<string> Keys = ["Enter", "Backspace", "Escape", "Tab", "Control", "Alt", "Shift", "Windows", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"];
-    public static readonly IReadOnlyDictionary<string, string[]> Shortcuts = new Dictionary<string, string[]>
-    { ["copy"] = ["Control", "C"], ["paste"] = ["Control", "V"], ["selectAll"] = ["Control", "A"], ["undo"] = ["Control", "Z"], ["switchApp"] = ["Alt", "Tab"] };
+    public static readonly IReadOnlySet<string> Shortcuts = new HashSet<string> { "copy", "paste", "selectAll", "undo", "switchApp" };
 }
 public sealed class InputFailureException : Exception
 {
-    public InputFailureException() : base("Windows could not insert all input events. Check the focused application's privileges and interactive desktop.") { }
+    public InputFailureException(string message = "Input could not complete. Check permissions and the interactive desktop.") : base(message) { }
 }
 public sealed record PointerPreferences(double Sensitivity = 1, bool NaturalScroll = true)
 {
@@ -110,6 +112,7 @@ public sealed class InputController : IDisposable
 {
     private readonly object gate = new();
     private readonly IMouseInput input;
+    private readonly PlatformCapabilities capabilities;
     private readonly Func<DateTimeOffset> clock;
     private readonly Timer? watchdog;
     private readonly HashSet<string> held = [];
@@ -123,8 +126,9 @@ public sealed class InputController : IDisposable
     private bool cleanupPending;
     public event Action? Failed;
     public event Action? TimedOut;
-    public InputController(IMouseInput input, PointerPreferences preferences, Func<DateTimeOffset>? clock = null, bool startWatchdog = true)
+    public InputController(IMouseInput input, PointerPreferences preferences, Func<DateTimeOffset>? clock = null, bool startWatchdog = true, PlatformCapabilities? capabilities = null)
     {
+        this.capabilities = capabilities ?? PlatformCapabilities.ProtocolV1;
         this.input = input; this.preferences = preferences.Valid ? preferences : throw new ArgumentOutOfRangeException(nameof(preferences));
         var start = System.Diagnostics.Stopwatch.GetTimestamp(); var startTime = DateTimeOffset.UtcNow;
         this.clock = clock ?? (() => startTime + System.Diagnostics.Stopwatch.GetElapsedTime(start));
@@ -138,6 +142,7 @@ public sealed class InputController : IDisposable
             last = clock();
             try
             {
+                if (!capabilities.Supports(command)) throw new InputFailureException("Action unavailable on this platform.");
                 switch (command.Type)
                 {
                     case "ping": break;
@@ -181,11 +186,11 @@ public sealed class InputController : IDisposable
                         if (input is not IKeyboardInput textInput || heldKeys.Count != 0 || clock() - lastText < TimeSpan.FromMilliseconds(250)) throw new InputFailureException();
                         lastText = clock(); textInput.Text(command.Text); break;
                     case "media.action":
-                        if (input is not IKeyboardInput mediaInput || heldKeys.Count != 0 || !MediaProfiles.Supports(command.Profile, command.Action)) throw new InputFailureException();
+                        if (input is not IMediaInput mediaInput || heldKeys.Count != 0 || !MediaProfiles.Supports(command.Profile, command.Action)) throw new InputFailureException();
                         while (mediaActions.TryPeek(out var firstMedia) && firstMedia <= clock().AddSeconds(-1)) mediaActions.Dequeue();
                         if (mediaActions.Count >= 10) throw new InputFailureException();
                         mediaActions.Enqueue(clock());
-                        mediaInput.Chord(MediaProfiles.Mappings[command.Profile][command.Action]); break;
+                        mediaInput.Media(command.Profile, command.Action); break;
                     default: throw new InvalidOperationException("Unsupported command");
                 }
             }

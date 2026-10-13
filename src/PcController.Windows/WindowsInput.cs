@@ -3,7 +3,7 @@ using PcController.Core;
 
 namespace PcController.Windows;
 
-public sealed class WindowsInput : IMouseInput, IKeyboardInput
+public sealed class WindowsInput : IMouseInput, IKeyboardInput, IMediaInput
 {
     [StructLayout(LayoutKind.Sequential)]
     private struct MouseInput { public int X, Y; public uint Data, Flags, Time; public nuint Extra; }
@@ -27,7 +27,7 @@ public sealed class WindowsInput : IMouseInput, IKeyboardInput
     private static NativeInput Mouse(uint flags, int x = 0, int y = 0, int data = 0) => new()
     { Type = 0, Value = new InputUnion { Mouse = new MouseInput { X = x, Y = y, Data = unchecked((uint)data), Flags = flags } } };
     private static void Insert(params NativeInput[] events)
-    { if (events.Length != 0 && SendInput((uint)events.Length, events, NativeSize) != events.Length) throw new InputFailureException(); }
+    { if (events.Length != 0 && SendInput((uint)events.Length, events, NativeSize) != events.Length) throw new InputFailureException("Windows could not insert all input events. Check the focused application's privileges and interactive desktop."); }
     private static uint Flag(string button, bool down) => button switch
     { "left" => down ? 0x0002u : 0x0004u, "right" => down ? 0x0008u : 0x0010u, _ => throw new ArgumentOutOfRangeException(nameof(button)) };
     public void Move(int dx, int dy) { lock (gate) Insert(Mouse(0x0001, dx, dy)); }
@@ -54,7 +54,7 @@ public sealed class WindowsInput : IMouseInput, IKeyboardInput
     {
         lock (gate)
         {
-            if (held.Contains(button)) throw new InputFailureException();
+            if (held.Contains(button)) throw new InputFailureException("Windows could not insert all input events. Check the focused application's privileges and interactive desktop.");
             held.Add(button);
             var down = Mouse(Flag(button, true)); var up = Mouse(Flag(button, false));
             Insert(twice ? [down, up, down, up] : [down, up]); held.Remove(button);
@@ -94,7 +94,7 @@ public sealed class WindowsInput : IMouseInput, IKeyboardInput
     }
     public void Press(string key)
     {
-        lock (gate) { if (heldKeys.Contains(key)) throw new InputFailureException(); heldKeys.Add(key); Insert(Keyboard(key, true), Keyboard(key, false)); heldKeys.Remove(key); }
+        lock (gate) { if (heldKeys.Contains(key)) throw new InputFailureException("Windows could not insert all input events. Check the focused application's privileges and interactive desktop."); heldKeys.Add(key); Insert(Keyboard(key, true), Keyboard(key, false)); heldKeys.Remove(key); }
     }
     public void Text(string text)
     {
@@ -111,12 +111,13 @@ public sealed class WindowsInput : IMouseInput, IKeyboardInput
         }
     }
     public void Shortcut(string action)
-        => Chord(KeyboardCommands.Shortcuts[action]);
+        => Chord(WindowsShortcutMappings.Shortcuts[action]);
+    public void Media(string profile, string action) => Chord(WindowsMediaMappings.Mappings[profile][action]);
     public void Chord(IReadOnlyList<string> keys)
     {
         lock (gate)
         {
-            if (heldKeys.Count != 0) throw new InputFailureException();
+            if (heldKeys.Count != 0) throw new InputFailureException("Windows could not insert all input events. Check the focused application's privileges and interactive desktop.");
             foreach (var key in keys) heldKeys.Add(key);
             Insert(keys.Select(key => Keyboard(key, true)).Concat(keys.Reverse().Select(key => Keyboard(key, false))).ToArray());
             heldKeys.Clear();

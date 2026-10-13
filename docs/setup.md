@@ -19,3 +19,7 @@ The PC address/QR and certificate SAN refresh automatically after network change
 Uninstall through Windows Settings → Apps → PC Remote. It exits the companion and removes its own startup entry, shortcuts, files and scoped firewall rule. Removing that rule may require the administrator prompt. Cancellation leaves the app installed so cleanup can be retried. Protected credentials/certificates remain under `%LOCALAPPDATA%\PcController` for reinstall; delete them only after removing phone/Windows root trust if permanently retiring the installation. Earlier developer firewall rules are separate and intentionally preserved.
 
 The installer and application are unsigned. Windows may show Unknown publisher/SmartScreen warnings; no signing or warning-free installation is claimed. Inspect the source and compare SHA256SUMS.txt before running. This build targets Windows 10 1809 or later x64; it has been tested on Windows 11 on the development PC. Clean-account/reboot tests require separate evidence.
+
+## macOS/Linux development shell
+
+The public downloads above remain Windows 0.2.1. Phase 2 provides a source-built Avalonia shell; it reports missing secure storage/native input and starts no listener in normal operation. Build/run and the isolated loopback approval fixture are documented in [desktop shell setup](desktop-shell.md). Do not install fixture trust or treat recording checks as phone/LAN acceptance.

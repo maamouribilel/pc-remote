@@ -11,3 +11,9 @@ Current public preview: **0.2.1**. It fixes the shared HTTP-budget and late medi
 - Media chords require the matching focused player/default hotkeys. General uses the active Windows media session/system volume. YouTube previous requires a playlist; Stremio Next requires another episode and has no supported Previous shortcut. Seek duration can vary with player settings. External Stremio players require their matching profile.
 - Per-installation CA trust requires explicit iPhone profile installation/full trust. Never bypass a warning as acceptance. Root expiry/replacement requires new trust. Address changes keep the root and renew leaf SANs, but phone bookmarks must use the new IP.
 - No installer/application code signing is configured. Windows warnings are possible. Current-account tests do not prove clean-account/VM installation, reboot or uninstall. Record those actual tests before marking release acceptance complete.
+
+- Development Phase 1 provides a portable shared backend and isolated macOS/Linux loopback tests. It does not add a usable Mac/Linux companion, native input, protected production storage, desktop UI or LAN trust setup. The published release remains Windows-only; see [Phase 1 scope/evidence](../MULTIPLATFORM_PLAN.md#execution-log).
+
+## Phase 2 development shell
+
+A source-built Avalonia macOS/Linux shell and platform-aware browser are available for development. The normal shell reports setup-required and has no HTTPS listener until Keychain/keyring storage and real platform services exist. Approval/pause/revoke workflows can be checked with the separate loopback fixture; they do not establish native input, physical-phone, GNOME Wayland, LAN or installed acceptance. Network identity/notification coverage needs platform acceptance before a production factory is enabled. [Desktop shell guide](desktop-shell.md) documents dependency baselines, window/tray fallback and commands. Public downloads remain Windows 0.2.1.

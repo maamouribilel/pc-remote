@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>net10.0-windows</TargetFramework></PropertyGroup>
-  <ItemGroup><ProjectReference Include="../PcController.Core/PcController.Core.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../PcController.Core/PcController.Core.csproj" />
+    <ProjectReference Include="../PcController.Host/PcController.Host.csproj" /></ItemGroup>
 </Project>

@@ -17,6 +17,7 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="QRCoder" Version="1.8.0" />
     <ProjectReference Include="../PcController.Core/PcController.Core.csproj" />
+    <ProjectReference Include="../PcController.Host/PcController.Host.csproj" />
     <ProjectReference Include="../PcController.Windows/PcController.Windows.csproj" />
     <Content Include="../remote/dist/**" Link="wwwroot/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>

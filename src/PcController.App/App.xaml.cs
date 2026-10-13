@@ -4,6 +4,7 @@ using System.Windows.Threading;
 using Microsoft.Win32;
 using PcController.Windows;
 using PcController.Core;
+using PcController.Host;
 using Forms = System.Windows.Forms;
 
 namespace PcController.App;
@@ -38,7 +39,7 @@ public partial class App : Application
         try
         {
             var nativeInput = new WindowsInput(); // Retains native hold tracking across network restarts.
-            lifecycle = new ServerLifecycle(snapshot => { var server = new CompanionServer(mouseInput: nativeInput, network: snapshot); server.ApproveDeviceAsync = setup.ApproveDeviceAsync; return server; });
+            lifecycle = new ServerLifecycle(snapshot => { var server = WindowsHostFactory.Create(snapshot, nativeInput); server.ApproveDeviceAsync = setup.ApproveDeviceAsync; return server; }, new WindowsTrustedNetworkDiscovery().Read);
             lifecycle.Updating += () => Dispatcher.BeginInvoke(() => setup.ShowUpdating());
             lifecycle.Ready += server => Dispatcher.BeginInvoke(() => { if (!exiting) { setup.ShowReady(server); UpdateTray(); } });
             lifecycle.Failed += message => Dispatcher.BeginInvoke(() => { if (!exiting) { setup.ShowFailure(message); UpdateTray(); } });

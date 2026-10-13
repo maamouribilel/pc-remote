@@ -13,7 +13,7 @@ if (args.Length == 2 && args[0] == "--serve-mouse-fixture") { await MouseBrowser
 
 if (args.Contains("--network"))
 {
-    var network = NetworkSnapshot.Read();
+    var network = WindowsNetworkDiscovery.Read();
     Console.WriteLine(network.Notice);
     Console.WriteLine("Private IPv4: " + string.Join(", ", network.PrivateAddresses.Select(a => a.ToString())));
     Console.WriteLine("All IPv4: " + string.Join(", ", network.AllAddresses.Select(a => a.ToString())));
@@ -30,8 +30,10 @@ MouseChecks.Run(Check);
 KeyboardChecks.Run(Check);
 MediaChecks.Run(Check);
 PcActionChecks.Run(Check);
-if (args.Contains("--pc-native-smoke")) PcActionChecks.Native(Check);
-LifecycleChecks.Local(Check);
+if (args.Contains("--pc-native-smoke")) WindowsPcChecks.Native(Check);
+WindowsLifecycleChecks.Local(Check);
+WindowsPcChecks.Launcher(Check);
+Check(WindowsInput.NativeSize == (IntPtr.Size == 8 ? 40 : 28), "native INPUT size agrees with Windows ABI");
 if (args.Contains("--lifecycle")) await LifecycleChecks.Network(Check);
 if (args.Contains("--pc-features")) await PcEndpointChecks.Run(Check);
 if (args.Contains("--security")) await SecurityChecks.Run(Check);
@@ -61,6 +63,13 @@ using (var first = new LocalCertificates(testDirectory, [IPAddress.Loopback]))
     Check(first.Renewed && first.Root.HasPrivateKey && first.Server.HasPrivateKey, "initial certificate generation");
     Check(first.Server.Extensions["2.5.29.35"]?.RawData.SequenceEqual(X509AuthorityKeyIdentifierExtension.CreateFromCertificate(first.Root, true, false).RawData) == true, "server authority key identifier matches the trusted root");
     Check(first.Server.Extensions["2.5.29.14"] != null, "server certificate has a subject key identifier for strict validators");
+    // Write the pre-extraction DPAPI JSON format directly; adapter refactoring must read it unchanged.
+    var migrationCredential = PairingService.RandomToken();
+    var legacyDevice = new DeviceRecord(Guid.NewGuid().ToString("N"), "Migration fixture", PairingService.Hash(migrationCredential), DateTimeOffset.UtcNow.AddDays(1));
+    var devicePath = Path.Combine(testDirectory, "devices.protected");
+    File.WriteAllBytes(devicePath, UserProtection.Protect(JsonSerializer.SerializeToUtf8Bytes(new[] { legacyDevice })));
+    var protectedRoot = File.ReadAllBytes(Path.Combine(testDirectory, "root.protected"));
+    var protectedDevices = File.ReadAllBytes(devicePath);
     using var next = new LocalCertificates(testDirectory, [IPAddress.Loopback]);
     Check(!next.Renewed && next.Fingerprint == first.Fingerprint && next.Server.Thumbprint == first.Server.Thumbprint, "protected persistence");
     // Model an existing 0.2.0 installation whose valid leaf omitted AKI/SKI.
@@ -80,6 +89,11 @@ using (var first = new LocalCertificates(testDirectory, [IPAddress.Loopback]))
         using var migrated = new LocalCertificates(testDirectory, [IPAddress.Loopback]);
         Check(migrated.Renewed && migrated.Fingerprint == first.Fingerprint && migrated.Server.Thumbprint != legacy.Thumbprint && migrated.Server.Extensions["2.5.29.35"] != null,
             "legacy server certificate renews without replacing the trusted root");
+        var migratedDevices = new ProtectedDevices(testDirectory);
+        Check(migratedDevices.List().Single() == legacyDevice && new PairingService(migratedDevices).Authenticate(migrationCredential) != null,
+            "pre-extraction DPAPI device data still authenticates after leaf migration");
+        Check(File.ReadAllBytes(Path.Combine(testDirectory, "root.protected")).SequenceEqual(protectedRoot) && File.ReadAllBytes(devicePath).SequenceEqual(protectedDevices),
+            "leaf migration leaves original protected root/device bytes untouched");
     }
     using var changed = new LocalCertificates(testDirectory, [IPAddress.Loopback, IPAddress.Parse("192.0.2.10")]);
     Check(changed.Renewed && changed.Fingerprint == first.Fingerprint && changed.Server.Thumbprint != first.Server.Thumbprint, "SAN regeneration preserves root");
@@ -99,7 +113,7 @@ Directory.Delete(testDirectory, true);
 if (args.Contains("--integration"))
 {
     var targetHost = args.Contains("--lan")
-        ? NetworkSnapshot.Read().PrivateAddresses.FirstOrDefault()?.ToString() ?? throw new InvalidOperationException("No Private IPv4 address available for LAN tests.")
+        ? WindowsNetworkDiscovery.Read().PrivateAddresses.FirstOrDefault()?.ToString() ?? throw new InvalidOperationException("No Private IPv4 address available for LAN tests.")
         : "localhost";
     var origin = $"https://{targetHost}:8443";
     Console.WriteLine("Transport test address: " + origin);

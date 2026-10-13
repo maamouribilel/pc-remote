@@ -4,9 +4,8 @@ using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
-using PcController.App;
+using PcController.Host;
 using PcController.Core;
-using PcController.Windows;
 
 internal static class PairingChecks
 {
@@ -16,7 +15,7 @@ internal static class PairingChecks
         Directory.CreateDirectory(directory);
         try
         {
-            var store = new ProtectedDevices(directory);
+            var store = new ProtectedDevices(directory, new TestProtectedStorage());
             var now = DateTimeOffset.UtcNow;
             var pairing = new PairingService(store, () => now);
             bool Fails(Action action, string code) { try { action(); return false; } catch (InvalidOperationException e) { return e.Message == code; } }
@@ -32,7 +31,7 @@ internal static class PairingChecks
             check(claim.State == "approved" && claim.Credential != null && pairing.Authenticate(claim.Credential) != null, "approved device authenticates");
             check(pairing.Claim(request.Ticket).Credential == null, "approval credential claim cannot replay");
             check(store.List().Single().CredentialHash != claim.Credential && !File.ReadAllText(Path.Combine(directory, "devices.protected")).Contains(claim.Credential!), "device store contains no clear reusable credential");
-            var reloaded = new PairingService(new ProtectedDevices(directory), () => now);
+            var reloaded = new PairingService(new ProtectedDevices(directory, new TestProtectedStorage()), () => now);
             check(reloaded.Authenticate(claim.Credential!) != null, "remembered authentication survives store reload");
             now = now.AddDays(31); check(reloaded.Authenticate(claim.Credential!) == null, "expired device credential rejected"); now = now.AddDays(-31);
             store.Revoke(claim.Device!.Id); check(pairing.Authenticate(claim.Credential!) == null, "revoked device rejected");
@@ -41,6 +40,10 @@ internal static class PairingChecks
             check(Fails(() => pairing.Request(pairing.IssueChallenge().Value, "Phone"), "pair_rate_limit"), "pairing attempts rate limited");
             now = now.AddMinutes(2); request = pairing.Request(pairing.IssueChallenge().Value, "Phone"); now = now.AddMinutes(3); pairing.Decide(request.Ticket, true);
             check(pairing.Claim(request.Ticket).State == "pair_expired" && store.List().Length == 0, "late PC approval cannot resurrect an expired ticket");
+            var failing = new PairingService(new FailedDeviceRepository());
+            var failedRequest = failing.Request(failing.IssueChallenge().Value, "Storage fixture");
+            failing.Decide(failedRequest.Ticket, true);
+            check(failing.Claim(failedRequest.Ticket) is { State: "storage_failed", Credential: null }, "protected-store failure cannot approve a browser");
             var sessions = new SessionOwnership(() => now); var releases = 0;
             sessions.ReleaseInput += () => releases++;
             var first = sessions.Reserve("one", false); var connected = sessions.Connect("one", first.Ticket)!;
@@ -60,10 +63,16 @@ internal static class PairingChecks
         }
         finally { Directory.Delete(directory, true); }
     }
+    private sealed class FailedDeviceRepository : IDeviceRepository
+    {
+        public DeviceRecord[] List() => [];
+        public void Add(DeviceRecord device) => throw new IOException("Test storage unavailable.");
+        public void Revoke(string id) => throw new IOException("Test storage unavailable.");
+    }
     private static async Task Integration(Action<bool, string> check, string directory)
     {
         var mouse = new RecordingMouse();
-        await using var server = new CompanionServer(directory, mouse, loopbackOnly: true);
+        await using var server = PortableFixture.Create(directory, mouse);
         var decision = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         server.ApproveDeviceAsync = (_, _) => decision.Task; // Test fixture only; production uses the actual WPF approval window.
         await server.StartAsync();
@@ -119,8 +128,8 @@ internal static class PairingChecks
         async Task Ping(ClientWebSocket socket)
         {
             await socket.SendAsync(Encoding.UTF8.GetBytes("{\"v\":1,\"seq\":1,\"type\":\"ping\",\"payload\":{}}"), WebSocketMessageType.Text, true, timeout.Token);
-            var bytes = new byte[1024]; var result = await socket.ReceiveAsync(bytes, timeout.Token);
-            using var pong = JsonDocument.Parse(bytes.AsMemory(0, result.Count));
+            using var pong = await SocketReplies.Json(socket, timeout.Token, chunkSize: 127);
+            check(pong.RootElement.GetProperty("payload").GetProperty("capabilities").GetProperty("platform").GetString() == "recording", "fragmented additive capability reply retains camel-case v1 metadata");
             check(pong.RootElement.GetProperty("type").GetString() == "pong" && pong.RootElement.GetProperty("session").GetString() != null, "authenticated real WSS ping/pong with verified certificate");
         }
         check((await Post("/api/session/claim", "{\"takeover\":false}")).IsSuccessStatusCode, "approved device reserves one session");

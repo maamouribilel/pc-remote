@@ -4,21 +4,25 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using PcController.Core;
-using PcController.Windows;
 
-namespace PcController.App;
+namespace PcController.Host;
 
 public sealed partial class CompanionServer
 {
     private const string DeviceCookie = "__Host-pc-device";
     private const string PairCookie = "__Host-pc-pair";
     private const string LeaseCookie = "__Host-pc-lease";
-    public ProtectedDevices Devices { get; }
+    public IDeviceRepository Devices { get; }
     public PairingService Pairing { get; }
     public SessionOwnership Sessions { get; } = new();
     public Func<PairingRequest, string, Task<bool>>? ApproveDeviceAsync { get; set; }
     public string? PairingAddress => Pairing.CurrentChallenge is { } c ? $"{ConnectionAddress}/#pair={c.Value}" : null;
-    public void RevokeDevice(string id) { Devices.Revoke(id); Sessions.Revoke(id); }
+    public void RevokeDevice(string id)
+    {
+        try { Devices.Revoke(id); }
+        catch { Sessions.Pause(true); throw; }
+        finally { Sessions.Revoke(id); }
+    }
     private static bool ValidOrigin(HttpContext context) => context.Request.Headers.Origin.Count == 1 &&
         context.Request.Headers.Origin[0] == $"https://{context.Request.Host.Value}";
     private static CookieOptions Cookie(DateTimeOffset expires) => new()
@@ -54,7 +58,7 @@ public sealed partial class CompanionServer
         {
             var device = Authenticate(context);
             return Results.Json(new { authenticated = device != null, deviceName = device?.Name,
-                paused = Sessions.Paused, busy = Sessions.OwnerDeviceId != null, protocol = 1, inputEnabled = true, inputProblem = InputProblem, mediaProfile = MediaSettings.Profile });
+                paused = Sessions.Paused, busy = Sessions.OwnerDeviceId != null, protocol = 1, inputEnabled = Capabilities.InputEnabled, inputProblem = InputProblem, mediaProfile = MediaSettings.Profile, capabilities = device == null ? null : Capabilities, readiness = device == null ? null : Readiness });
         });
         app.MapPost("/api/pair/request", async (HttpContext context) =>
         {
@@ -91,7 +95,10 @@ public sealed partial class CompanionServer
             if (body == null || body.RootElement.GetProperty("takeover").ValueKind is not (JsonValueKind.True or JsonValueKind.False)) return Error("invalid_request", 400);
             try
             {
-                var reservation = Sessions.Reserve(device.Id, body.RootElement.GetProperty("takeover").GetBoolean());
+                var authorized = Sessions.ReserveAuthorized(device.Id, body.RootElement.GetProperty("takeover").GetBoolean(),
+                    () => !shutdown.IsCancellationRequested && Authenticate(context)?.Id == device.Id);
+                if (authorized == null) return Error("unauthenticated", 401);
+                var reservation = authorized.Value;
                 context.Response.Cookies.Append(LeaseCookie, reservation.Ticket, Cookie(DateTimeOffset.UtcNow.AddSeconds(30)));
                 return Results.Json(new { session = reservation.Session.Id });
             }
@@ -113,7 +120,7 @@ public sealed partial class CompanionServer
             using var body = await JsonBody(context, ["profile"]);
             if (body == null || body.RootElement.GetProperty("profile").ValueKind != JsonValueKind.String) return Error("invalid_request", 400);
             var profile = body.RootElement.GetProperty("profile").GetString()!;
-            if (!MediaProfiles.Mappings.ContainsKey(profile)) return Error("invalid_profile", 400);
+            if (!MediaProfiles.Actions.ContainsKey(profile)) return Error("invalid_profile", 400);
             try
             {
                 IResult result = Error("controller_busy_or_paused", 409);
@@ -122,6 +129,7 @@ public sealed partial class CompanionServer
                 Sessions.ExecuteDevice(device.Id, session, () =>
                 {
                     if (Authenticate(context)?.Id != device.Id) { result = Error("unauthenticated", 401); return; }
+                    if (!Capabilities.MediaActions.TryGetValue(profile, out var actions) || actions.Count == 0) { result = Error("unsupported_action", 409); return; }
                     MediaSettings.Save(profile); result = Results.Json(new { profile });
                 });
                 return result;
@@ -156,6 +164,16 @@ public sealed partial class CompanionServer
         catch (Exception) { /* Any UI/lifetime failure denies approval. No request data is logged. */ }
         Pairing.Decide(request.Ticket, allow);
     }
+    private static async Task SendControlReply(WebSocket socket, object reply, CancellationToken token)
+    {
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(reply, WireJson);
+        if (bytes.Length > ControlProtocol.MaxReplyBytes)
+        {
+            await socket.CloseOutputAsync(WebSocketCloseStatus.InternalServerError, "reply_unavailable", token);
+            return;
+        }
+        await socket.SendAsync(bytes, WebSocketMessageType.Text, true, token);
+    }
     private async Task RunControl(WebSocket socket, ControlSession session, string credential, CancellationToken disconnected)
     {
         using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(disconnected, shutdown.Token, session.Stop.Token);
@@ -185,9 +203,9 @@ public sealed partial class CompanionServer
             catch (InputFailureException)
             { InputProblem = true; await socket.CloseOutputAsync(WebSocketCloseStatus.PolicyViolation, "input_failed", lifetime.Token); return; }
             if (command.Type == "ping")
-                await socket.SendAsync(JsonSerializer.SerializeToUtf8Bytes(new { v = 1, seq = previous, type = "pong", session = session.Id, payload = new { mediaProfile = MediaSettings.Profile, volume = PcActions.GetVolume(), power = PublicPower(), powerMessage = PowerMessage } }), WebSocketMessageType.Text, true, lifetime.Token);
+                await SendControlReply(socket, new { v = 1, seq = previous, type = "pong", session = session.Id, payload = new { capabilities = Capabilities, readiness = Readiness, mediaProfile = MediaSettings.Profile, volume = Capabilities.Volume ? PcActions.GetVolume() : new VolumeState(false), power = PublicPower(), powerMessage = PowerMessage } }, lifetime.Token);
             else if (command.Type == "text.insert")
-                await socket.SendAsync(JsonSerializer.SerializeToUtf8Bytes(new { v = 1, seq = previous, type = "ack", session = session.Id, payload = new { } }), WebSocketMessageType.Text, true, lifetime.Token);
+                await SendControlReply(socket, new { v = 1, seq = previous, type = "ack", session = session.Id, payload = new { } }, lifetime.Token);
         }
     }
 }

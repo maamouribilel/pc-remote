@@ -47,3 +47,7 @@ The initial server used ephemeral imported private keys: its process listened, b
 ## Version 0.2.1 certificate compatibility
 
 Version 0.2.1 adds server authority and subject key identifiers for strict X.509 validators. On upgrade, a legacy server certificate is renewed automatically with the same trusted root and current address names. Existing root trust and remembered devices are retained; this migration does not require reinstalling the iPhone profile. Always verify the displayed fingerprint and certificate trust as described in this guide. The `scripts/test-certificate.ps1` fixture checks strict trust plus wrong-host and untrusted-root rejection.
+
+## Phase 1 architecture (development)
+
+Certificate issuance and leaf-renewal orchestration now live in `PcController.Host`; Windows supplies DPAPI/ACL protection and temporary Schannel user-key loading through explicit contracts. The directory, protected PFX/device formats, trusted root and renewal rules above are unchanged. No macOS/Linux production storage adapter or plaintext fallback is included. The portable test executable uses temporary test storage only; Python 3.13+ `scripts/portable.py tls` checks strict localhost trust and negative hostname/root cases. See [portable host](portable-host.md) and the roadmap for actual evidence and pending Windows migration execution.

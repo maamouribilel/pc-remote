@@ -1,5 +1,6 @@
 using System.Text.Json;
 using PcController.Core;
+using PcController.Host;
 using PcController.Windows;
 internal static class MediaChecks
 {
@@ -9,11 +10,11 @@ internal static class MediaChecks
         check(Parse("General", "playPause") && !Parse("General", "seekForward") && !Parse("General", "fullscreen"), "General profile rejects unsupported seek/fullscreen");
         check(!Parse("Shell", "playPause") && !Parse("VLC", "execute"), "media profile and action allowlists");
         check(Parse("Stremio", "next") && Parse("Stremio", "mute") && !Parse("Stremio", "previous"), "Stremio supports next episode and rejects unsupported previous");
-        check(MediaProfiles.Mappings["Stremio"]["next"].SequenceEqual(["Shift", "N"]) && MediaProfiles.Mappings["Stremio"]["seekBack"].SequenceEqual(["ArrowLeft"]), "Stremio next episode and seek shortcuts");
-        check(MediaProfiles.Mappings["YouTube"]["previous"].SequenceEqual(["Shift", "P"]) && MediaProfiles.Mappings["VLC"]["volumeUp"].SequenceEqual(["Control", "ArrowUp"]), "verified application-specific media chords");
+        check(WindowsMediaMappings.Mappings["Stremio"]["next"].SequenceEqual(["Shift", "N"]) && WindowsMediaMappings.Mappings["Stremio"]["seekBack"].SequenceEqual(["ArrowLeft"]), "Stremio next episode and seek shortcuts");
+        check(WindowsMediaMappings.Mappings["YouTube"]["previous"].SequenceEqual(["Shift", "P"]) && WindowsMediaMappings.Mappings["VLC"]["volumeUp"].SequenceEqual(["Control", "ArrowUp"]), "verified application-specific media chords");
         var now = DateTimeOffset.UtcNow; var input = new RecordingMouse();
         using var controller = new InputController(input, new(), () => now, false);
-        foreach (var profile in MediaProfiles.Mappings)
+        foreach (var profile in WindowsMediaMappings.Mappings)
         {
             foreach (var action in profile.Value)
             {

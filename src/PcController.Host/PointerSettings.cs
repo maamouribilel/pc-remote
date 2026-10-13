@@ -1,6 +1,6 @@
 using System.Text.Json;
 using PcController.Core;
-namespace PcController.Windows;
+namespace PcController.Host;
 public sealed class PointerSettings
 {
     private readonly string path;

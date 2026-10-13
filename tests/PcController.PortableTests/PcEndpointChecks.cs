@@ -4,7 +4,7 @@ using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
-using PcController.App;
+using PcController.Host;
 
 internal static class PcEndpointChecks
 {
@@ -14,9 +14,9 @@ internal static class PcEndpointChecks
         try
         {
             var pc = new RecordingPcActions(); var input = new RecordingMouse();
-            await using var server = new CompanionServer(directory,input,loopbackOnly:true,pcActions:pc);
+            await using var server = PortableFixture.Create(directory, input, pc);
             foreach (var entry in server.Launcher.List()) server.Launcher.Remove(entry.Id);
-            server.Launcher.Add(Path.Combine(Environment.SystemDirectory,"notepad.exe"),"Notes","General");
+            server.Launcher.Add(PortableFixture.TestExecutable(directory),"Notes","General");
             await server.StartAsync();
             const string origin = "https://localhost:8443";
             bool Trust(X509Certificate? certificate, SslPolicyErrors errors)
@@ -45,7 +45,7 @@ internal static class PcEndpointChecks
             cookies.Add(new Uri(origin),new Cookie("__Host-pc-device",claim.Credential!,"/") { Secure = true, HttpOnly = true });
             using var catalog = await Json(await http.GetAsync("/api/pc"));
             var appId = catalog.RootElement.GetProperty("apps")[0].GetProperty("id").GetString()!;
-            check(!catalog.RootElement.GetRawText().Contains("notepad.exe",StringComparison.OrdinalIgnoreCase),"phone receives app names and IDs without executable paths");
+            check(!catalog.RootElement.GetRawText().Contains("test-player.exe",StringComparison.OrdinalIgnoreCase),"phone receives app names and IDs without executable paths");
             check((await Post("/api/pc/launch",new { session = new string('a',32), id = appId })).StatusCode == HttpStatusCode.Conflict,"paired browser needs a live controller session to launch apps");
             using var reservation = await Json(await Post("/api/session/claim",new { takeover = false }));
             var session = reservation.RootElement.GetProperty("session").GetString()!;
@@ -55,13 +55,13 @@ internal static class PcEndpointChecks
             using var heartbeatStop = new CancellationTokenSource();
             var heartbeat = Task.Run(async () =>
             {
-                var bytes = new byte[2048]; long seq = 0;
+                long seq = 0;
                 try
                 {
                     while (!heartbeatStop.IsCancellationRequested)
                     {
                         await socket.SendAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { v = 1, seq = ++seq, type = "ping", payload = new { } })),WebSocketMessageType.Text,true,heartbeatStop.Token);
-                        await socket.ReceiveAsync(bytes,heartbeatStop.Token);
+                        using var reply = await SocketReplies.Json(socket, heartbeatStop.Token);
                         await Task.Delay(1000,heartbeatStop.Token);
                     }
                 }

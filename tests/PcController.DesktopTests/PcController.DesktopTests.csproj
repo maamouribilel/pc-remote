@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile></PropertyGroup>
+ <ItemGroup>
+  <Compile Include="../../src/PcController.Windows/WindowsMediaMappings.cs" Link="WindowsMediaMappings.cs" />
+  <ProjectReference Include="../../src/PcController.Desktop/PcController.Desktop.csproj" />
+  <PackageReference Include="Avalonia.Headless" Version="12.1.4" />
+  <Compile Include="../PcController.PortableTests/PortableFixture.cs" Link="PortableFixture.cs" />
+  <Compile Include="../PcController.PortableTests/RecordingPcActions.cs" Link="RecordingPcActions.cs" />
+  <Compile Include="../PcController.PortableTests/MouseChecks.cs" Link="MouseChecks.cs" />
+  <Compile Include="../PcController.PortableTests/KeyboardChecks.cs" Link="KeyboardChecks.cs" />
+  <Content Include="../../src/remote/dist/**" Link="wwwroot/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+ </ItemGroup>
+</Project>

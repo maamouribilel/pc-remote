@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="src/PcController.Desktop/PcController.Desktop.csproj" />
+  <Project Path="tests/PcController.DesktopTests/PcController.DesktopTests.csproj" />
+  <Project Path="src/PcController.Core/PcController.Core.csproj" />
+  <Project Path="src/PcController.Host/PcController.Host.csproj" />
+  <Project Path="tests/PcController.PortableTests/PcController.PortableTests.csproj" />
+</Solution>

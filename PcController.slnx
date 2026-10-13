@@ -1,10 +1,14 @@
 <Solution>
+  <Project Path="src/PcController.Desktop/PcController.Desktop.csproj" />
+  <Project Path="tests/PcController.DesktopTests/PcController.DesktopTests.csproj" />
   <Folder Name="/src/">
     <Project Path="src/PcController.App/PcController.App.csproj" />
+    <Project Path="src/PcController.Host/PcController.Host.csproj" />
     <Project Path="src/PcController.Core/PcController.Core.csproj" />
     <Project Path="src/PcController.Windows/PcController.Windows.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/PcController.PortableTests/PcController.PortableTests.csproj" />
     <Project Path="tests/PcController.Tests/PcController.Tests.csproj" />
   </Folder>
 </Solution>
