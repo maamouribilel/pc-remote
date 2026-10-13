@@ -152,3 +152,30 @@ Both failures were test timing races that had passed on every earlier run; the t
 The release commit's own runs and final asset digests are recorded in the GitHub release notes and a documentation-only follow-up entry, because they are produced after this commit. Final assets are built by the `final` workflow dispatch from that exact clean commit, never from renamed candidates.
 
 **Not established for 0.3.0:** installation or upgrade of the Windows 0.3.0 build on a physical PC, physical iPhone use, clean account/VM, reboot/sign-in, uninstall/firewall removal and physical power on Windows; Gatekeeper/installed launch, the Keychain update dialog, Accessibility on the installed app, player/audio/launcher/login/sleep, lock/suspend, roaming and phone/LAN on macOS; any execution on Intel Mac hardware; Ubuntu GNOME X11/Wayland desktop input/text/cleanup, real login keyring, tray, player/audio/launcher/login/power and phone/LAN. Hosted runners, Rosetta, Xvfb, private D-Bus fixtures and recording adapters are automated evidence only. See [release readiness](release-readiness.md) for the support matrix and exact manual steps.
+
+
+### Version 0.3.0 publication and public verification (2026-10-13)
+
+Published as a **pre-release**: [v0.3.0](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.0). The annotated tag `v0.3.0` (tag object `dbdcbd3`) points to commit `6bf908c030f7f8c7903c4a4cc0e71fa186be183a`. Existing v0.2.0/v0.2.1 tags and assets were not changed.
+
+Actual hosted runs on `6bf908c`: push run [38463186338](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38463186338) and `final` dispatch [38463184359](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38463184359) passed every job on Windows, macOS ARM64 and Ubuntu 24.04 x64 (same suites and counts as the `826e46c` row above); the tag's release-documentation run [38464949711](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38464949711) passed for `v0.3.0`. All assets come from the `final` dispatch artifacts:
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `PCRemote-0.3.0-win-x64-setup.exe` | 62,694,906 | `e8975a749c0742c53582819d6c20e74736ac7cd1f5579e5ad200b625ffa9f1f2` |
+| `PCRemote-0.3.0-win-x64.zip` | 89,738,769 | `1f5b5ae70e84bc04fc5f9b83e88ce5eb6815f9178764f68fe9dae52c47b3219f` |
+| `PCRemote-0.3.0-osx-arm64.zip` | 60,664,694 | `68e0f0935e62b840c38fe71585d6c34ccf77001552d0570a7fd9d0a4774674fd` |
+| `PCRemote-0.3.0-osx-x64.zip` | 63,373,853 | `0027d24e95437f738a2796f43e757214ecea5ab3125c62f33a58ba4c67f5f4e3` |
+| `PCRemote-0.3.0-linux-x64.tar.gz` | 60,538,249 | `7492b199dd7cb4acb5b722d75452377f25206a25053513506fba02b827580180` |
+| `PCRemote-0.3.0-osx-arm64-manifest.json` | 109,626 | `635cc1988b6e7f3794d8c71700459ab60e2cd5a0c34f900ed90dda619da03f5f` |
+| `PCRemote-0.3.0-osx-x64-manifest.json` | 109,624 | `c6517f5de93acb76a3ef506279e58cc2faaa9433882fc7238cccbc7625f9af7f` |
+| `PCRemote-0.3.0-linux-x64-manifest.json` | 50,478 | `f922899269d19c3c2165d4aa40efbc63838e67cf83d7d9f42b63f2df9b07db2f` |
+| `SHA256SUMS.txt` | 791 | covers the eight files above |
+
+Local verification of the downloaded artifacts (new empty directory, verification script run with `python -I`): per-platform and combined checksums; every extracted file matched its manifest (`candidate: false`, `sourceDirty: false`, revision `6bf908c`; 464 macOS and 463 Ubuntu files, 648 Windows ZIP files); both extracted macOS bundles passed `codesign --verify --deep --strict` (ad-hoc, identifier `local.pc-remote.desktop.dev`, no Team ID); native architectures (Avalonia/Skia/HarfBuzz libraries are universal); `--package-info` reported `0.3.0+6bf908c`, .NET 10.0.13 and the bundled remote on Apple Silicon natively and for Intel only under Rosetta emulation; Windows and Ubuntu assemblies carry `0.3.0+6bf908c`; 29 license notices per macOS/Ubuntu package and the Windows .NET/QRCoder/MIT notices; no PDB, protected, certificate or credential files. Gitleaks 8.30.1 found nothing in the extracted trees; its 60 `generic-api-key` hits in the three manifests were each confirmed to be the SHA-256 digest of a listed file whose name contains words such as Authentication, Secrets or KeyDerivation.
+
+Native observation on this Mac (Apple Silicon, macOS 27): the final ARM64 app was started from the extracted archive with `DOTNET_ROOT` removed and a system-only `PATH`. With this account's existing storage item bound to an earlier development build, it refused the key without any dialog and opened no TCP socket or 8443 listener; a second launch printed that PC Remote is already running and exited 0; SIGTERM ended the first process. SHA-256 of the protected root/server files and public root, the data file list and the Keychain item's modification date were unchanged. The window was not inspected, the app was not installed in `/Applications`, and the Keychain update dialog was not approved (that needs the user's own login password).
+
+Public checks after publication: release is a non-draft pre-release for tag `v0.3.0`; all nine asset URLs returned HTTP 200 to anonymous downloads into a new empty directory with matching sizes and SHA-256 digests; the public `SHA256SUMS.txt` is byte-identical to the verified file; GitHub's asset `digest` fields match. The rendered release notes, the README download table/badge/anchors on `main` and this file's `v0.3.0` anchor were checked in a browser.
+
+All gaps listed in the 0.3.0 entry above remain open, including Windows installation/physical iPhone use, macOS Gatekeeper/installed/Keychain-dialog/Accessibility/player/login/sleep/phone acceptance, Intel hardware, and Ubuntu GNOME X11/Wayland desktop acceptance.
