@@ -1,12 +1,12 @@
 # Ubuntu companion — experimental preview
 
-Version **0.3.0** publishes an **experimental** Ubuntu 24.04 x64 archive; Windows remains the primary platform. Linux has source adapters and production composition; **Phase 4 remains in progress** until real Ubuntu 24.04 x64/GNOME X11 and Wayland text/input/cleanup acceptance. The archive is published for testers with those gaps stated.
+Since version **0.3.0**, releases publish an **experimental** Ubuntu 24.04 x64 archive; Windows remains the primary platform. Linux has source adapters and production composition; **Phase 4 remains in progress** until real Ubuntu 24.04 x64/GNOME X11 and Wayland text/input/cleanup acceptance. The archive is published for testers with those gaps stated.
 
-## Install the 0.3.0 preview
+## Install the preview
 
 1. On Ubuntu 24.04 x64 with GNOME, install the runtime packages from [Phase 5 feature/archive notes](#phase-5-featurearchive-candidate) (`libglib2.0-0t64 libsecret-1-0 libxcb1 libxcb-xtest0 libxkbcommon0 libxkbcommon-x11-0 libpulse0 libx11-6 libice6 libsm6 libfontconfig1 libgl1` plus the GNOME keyring, portal and NetworkManager services that a standard Ubuntu desktop provides).
-2. Download `PCRemote-0.3.0-linux-x64.tar.gz` and `SHA256SUMS.txt` from the [v0.3.0 release](releases.md) and compare `sha256sum PCRemote-0.3.0-linux-x64.tar.gz`.
-3. Extract with `tar -xzf PCRemote-0.3.0-linux-x64.tar.gz` into a stable folder you own and run `./PCRemote-linux-x64/PcController.Desktop` as your desktop user, never with `sudo`.
+2. Download `PCRemote-0.3.1-linux-x64.tar.gz` and `SHA256SUMS.txt` from the [v0.3.1 release](releases.md) and compare `sha256sum PCRemote-0.3.1-linux-x64.tar.gz`.
+3. Extract with `tar -xzf PCRemote-0.3.1-linux-x64.tar.gz` into a stable folder you own and run `./PCRemote-linux-x64/PcController.Desktop` as your desktop user, never with `sudo`.
 4. It starts paused with loopback HTTPS. On Wayland, request Remote Desktop consent; enable GTK Unicode text only for a verified GTK target. Then approve your trusted network for the session and pair the phone.
 
 This archive has no distribution signature; verify the checksum. It was built and its metadata startup checked on a hosted Ubuntu 24.04 x64 runner, not on a GNOME desktop. Do not treat a build, portal dialog, XWayland shell, private-bus fixture or Xvfb check as that acceptance. [Dated evidence and support matrix](../MULTIPLATFORM_PLAN.md#execution-log) separate each backend.

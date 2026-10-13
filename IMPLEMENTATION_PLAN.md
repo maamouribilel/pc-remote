@@ -520,3 +520,6 @@ Security maintenance — 2026-10-12, version 0.2.1:
 Release 0.3.0 — 2026-10-13:
 - Windows companion now runs on the shared portable host with unchanged DPAPI/root/device formats; PC actions bind to the original connected session before body reads. Bundles .NET 10.0.13 (SDK 10.0.402) from Microsoft's 2026-10-13 security release.
 - Hosted `windows-latest` CI ran the Release build, default (including DPAPI migration), security, pairing, lifecycle, PC-feature, browser and strict TLS suites plus packaging/content/revision checks. No installation, physical iPhone, reboot, uninstall or power acceptance was performed on a Windows PC for this version; those manual checks remain open. See the dated 0.3.0 entry in docs/release-evidence.md.
+
+Release 0.3.1 — 2026-10-13:
+- macOS-only fix: LAN approval survives Space/full-screen, display and readiness changes (still revoked by network, sleep and session events). Windows behavior unchanged; Windows physical/installed acceptance remains open as for 0.3.0. See docs/release-evidence.md.
