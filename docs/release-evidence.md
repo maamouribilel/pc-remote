@@ -513,3 +513,24 @@ Read-only diagnosis on that Mac (screen-recording frames, Accessibility reading 
 - The intermittent focus-query failure could not be reproduced on demand after the recording ended. A GUI probe succeeded with the probe itself and with Claude in front, so that fix is defensive.
 
 **Not established:** a paired phone keeping control across Wi-Fi signal changes on the installed app; real roaming between access points, which should still revoke approval.
+
+## Version 0.3.5 — macOS LAN approval on Wi-Fi (2026-10-14)
+
+Preview release of the fixes described in the [2026-10-14 entry](#2026-10-14--macos-lan-approval-dropped-on-wi-fi-signal-updates-fixed-for-035). Windows and Ubuntu behavior is unchanged from 0.3.4.
+
+**Hosted CI on fix commit `8f3af0e`** (run [38620935396](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38620935396)) passed every job on attempt 2:
+- Portable on Windows, macOS and Ubuntu x64: shared **272** and desktop **86** each.
+- Mac adapter **65** on macOS, including both new checks.
+- Linux faults **88**; Ubuntu x64 isolated suites.
+- Windows validation and all provisional packages.
+
+On attempt 1, the Ubuntu private-Xvfb check *native right click and recognized GTK double click* failed. That commit changed no Linux code. The check read the GTK target once immediately after the click, the same single-sample pattern `0cff900` fixed for the other X11 end-state checks. Only that job was re-run, and test-only commit `161739d` now polls it for up to five seconds.
+
+On release day the runtime advisory feed again had no advisories for .NET 10.0.13.
+
+**Not established:**
+- A paired phone keeping control across Wi-Fi signal changes on the installed app.
+- Real roaming between access points.
+- Every earlier 0.3.x gap.
+
+The final assets and digests follow in the publication entry.

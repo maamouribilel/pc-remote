@@ -2,7 +2,7 @@
 
 ## Supported version
 
-Security fixes are provided in the latest published preview, currently **v0.3.4**. Update from older previews using the [Windows installer, portable ZIP or experimental macOS/Ubuntu archives](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.4). Versions 0.3.0 and later bundle .NET 10.0.13 from Microsoft's 2026-10-13 security release; earlier builds bundle the affected 10.0.12 runtime. The app has no automatic updater. Preview status and outstanding physical/manual acceptance checks are documented in release notes, `docs/release-checklist.md` and `docs/release-readiness.md`. The macOS and Ubuntu builds are experimental: report issues for them the same way, but they do not yet have the native and physical acceptance evidence of the Windows companion.
+Security fixes are provided in the latest published preview, currently **v0.3.5**. Update from older previews using the [Windows installer, portable ZIP or experimental macOS/Ubuntu archives](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.5). Versions 0.3.0 and later bundle .NET 10.0.13 from Microsoft's 2026-10-13 security release; earlier builds bundle the affected 10.0.12 runtime. The app has no automatic updater. Preview status and outstanding physical/manual acceptance checks are documented in release notes, `docs/release-checklist.md` and `docs/release-readiness.md`. The macOS and Ubuntu builds are experimental: report issues for them the same way, but they do not yet have the native and physical acceptance evidence of the Windows companion.
 
 ## Report an issue privately
 

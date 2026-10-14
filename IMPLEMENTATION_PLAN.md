@@ -532,3 +532,6 @@ Release 0.3.3 — 2026-10-14:
 
 Release 0.3.4 — 2026-10-14:
 - macOS-only fix: keyboard-layout (Text Input Source) lookups moved to the main thread; with Accessibility granted the host setup previously trapped and never started. Host setup failures stay visible. Windows/Ubuntu behavior unchanged; Windows physical/installed acceptance remains open.
+
+Release 0.3.5 — 2026-10-14:
+- macOS-only fix: Wi-Fi LinkQuality SystemConfiguration updates no longer revoke LAN approval; the interactive-session check falls back to the frontmost app when the system-wide AX focus query cannot complete. Windows/Ubuntu unchanged; Windows physical/installed acceptance remains open.
