@@ -534,3 +534,43 @@ On release day the runtime advisory feed again had no advisories for .NET 10.0.1
 - Every earlier 0.3.x gap.
 
 The final assets and digests follow in the publication entry.
+
+
+### Version 0.3.5 publication and public verification (2026-10-14)
+
+Published as a **pre-release**: [v0.3.5](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.5). The annotated tag `v0.3.5` points to commit `f2980d2a19518f962baff5527946bbc1acb432bb`, not to the version-bump commit `5aedec6`. Earlier tags and assets were not changed.
+
+Hosted runs:
+- **Version commit `5aedec6`:** both the push run 38622426722 and the final run 38622434838 failed the new interactive-session check on hosted macOS. The runner had no ordinary frontmost app or AX focus value, which the product correctly treats as not interactive.
+- **`f62008a`:** gated the check on an ordinary frontmost app. Its push run 38623765869 passed, but its final run 38623777679 failed the same way.
+- **`f2980d2`:** skips this local-desktop check under `CI=true`. Its final dispatch [38625592883](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38625592883) passed every job and supplied the assets: shared 272 and desktop 86 on all three OSes, Mac adapter 64 with the local-only check skipped, Linux faults 88, the Windows suites and the Ubuntu isolated suites. Its push run was cancelled as a duplicate at the user's request.
+- **`84ee50a`:** at the user's request, the workflow no longer runs on every push to `main`; the `final` dispatch is the release gate.
+- None of these failed runs produced published assets.
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `PCRemote-0.3.5-win-x64-setup.exe` | 62,689,229 | `7f252a52e4eff8bf44696e946af55548faa563a5db85c918c6fa60df5dda4474` |
+| `PCRemote-0.3.5-win-x64.zip` | 89,739,659 | `65779c0348d2a8b50540589414c96c2c3914eb307687301b9dc014eabb492305` |
+| `PCRemote-0.3.5-osx-arm64.zip` | 60,700,745 | `a2038a5eba258ac4daeab03d46155e8efbe7add3cff487fe1abbef03f117a290` |
+| `PCRemote-0.3.5-osx-x64.zip` | 63,409,772 | `c7ac3cc9e2856b4f98bc79b5745f26b377213b53155430fa4dded1ad193b9a82` |
+| `PCRemote-0.3.5-linux-x64.tar.gz` | 60,560,412 | `7b804b2c257466fb0fbfeabe204079d2263cf2b138fc1703f62897e496b4c75c` |
+| `PCRemote-0.3.5-osx-arm64-manifest.json` | 109,626 | `64e8ffae7d39e67d66d15a7531f7d210586ddd54c8b2db6a6b603348d13c8077` |
+| `PCRemote-0.3.5-osx-x64-manifest.json` | 109,624 | `bb3a800d94d2c75c61b7343e4335a0e8df68ae4cdffe278af98087639b3468f3` |
+| `PCRemote-0.3.5-linux-x64-manifest.json` | 50,478 | `c595ad9c647f9036e5b36faa5d79c1ab71a37a87e8889de2214bbfbec64ec85a` |
+| `SHA256SUMS.txt` | 791 | covers the eight files above |
+
+Local verification used the same independent script as before:
+- Checksums match.
+- Manifests: `candidate: false`, `sourceDirty: false`, revision `f2980d2`, version 0.3.5. Inventories match.
+- Extracted macOS seals and architectures verify.
+- `--package-info` reports `0.3.5+f2980d2` with .NET 10.0.13: natively on Apple Silicon, and for Intel under Rosetta emulation only.
+- Byte-pattern checks (not runtime verification) confirm both macOS bridges contain the LinkQuality filter and the layout observer.
+- License notices are present, there are no PDB or private files, and the Gitleaks scan is clean.
+
+After publication, all nine public URLs returned HTTP 200 with matching sizes and SHA-256 digests. The public `SHA256SUMS.txt` is byte-identical, and GitHub's asset digests match.
+
+At the user's request, the verified public Apple Silicon ZIP replaced 0.3.4 in `/Applications`:
+- The SHA-256 matched, the seal verified before and after installation, and `--package-info` reported `0.3.5+f2980d2`.
+- 0.3.4 was not running and was moved to the Trash, not permanently deleted.
+- The application data directory and the Keychain item were not touched.
+- 0.3.5 launched. It needs Keychain approval and a re-added Accessibility entry for its new code identity.

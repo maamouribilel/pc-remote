@@ -601,3 +601,9 @@ The final staging command `.tools/phase5-refresh-guides.py` refreshed only revie
   - Hosted CI passed on `f527b88` and `c36c69c`. The `c36c69c` push run passed after re-running one Windows Playwright page-setup timeout.
   - The final dispatch 38614827128 supplied the assets. Evidence: [0.3.4 publication](docs/release-evidence.md#version-034-publication-and-public-verification-2026-10-14).
   - Phase 4 remains **In progress**.
+- **Published 2026-10-14 as 0.3.5:** [v0.3.5 pre-release](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.5), with the annotated tag at `f2980d2`. Changes:
+  - macOS Wi-Fi `LinkQuality` updates no longer revoke LAN approval: on the user's Wi-Fi, 3 revocations in 40 s before the fix, 0 after.
+  - The session check falls back to the frontmost app when the system-wide AX focus query cannot complete.
+  - The workflow no longer runs on every push; the `final` dispatch 38625592883 is the release gate and supplied the assets.
+
+  Evidence: [0.3.5 publication](docs/release-evidence.md#version-035-publication-and-public-verification-2026-10-14). Phase 4 remains **In progress**.
