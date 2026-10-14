@@ -291,3 +291,43 @@ The release commit's own runs, the final assets and their digests are recorded i
 - Intel hardware.
 - Physical-phone and LAN use of the phone-remote fixes.
 - Every earlier 0.3.x gap.
+
+### Version 0.3.2 publication and public verification (2026-10-14)
+
+Published as a **pre-release**: [v0.3.2](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.2). The annotated tag `v0.3.2` points to commit `ece5d4c463034141ad0bcf49c22310775521e8d8`. Earlier tags and assets were not changed.
+
+Hosted runs on `ece5d4c`, all of which passed every job:
+- The `final` dispatch [38540711618](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38540711618) supplied all assets. Windows default 151, security 185, pairing 193, lifecycle 158, PC feature 180, browser 6; shared 272 and desktop 79 on all three OSes; Mac adapter 62; Linux faults 88; Xvfb/GTK US 41 and French 41; portal/MPRIS/logind 31; keyring/strict TLS 24.
+- The push run [38540702103](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38540702103).
+- The documentation runs for the commit and for the tag ([38542158676](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38542158676)).
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `PCRemote-0.3.2-win-x64-setup.exe` | 62,683,606 | `a91c952580d4e44d1bab98c8df1aaf4832650886cc4efb6fee981424b9afdbb2` |
+| `PCRemote-0.3.2-win-x64.zip` | 89,739,659 | `39067453d787928cb1fc1f4819ebd65eae34a9922128acc3d38db90b4f0bb89a` |
+| `PCRemote-0.3.2-osx-arm64.zip` | 60,691,631 | `8c336590ea30281a3da3625491690410b66d384455e49c60761460797743a677` |
+| `PCRemote-0.3.2-osx-x64.zip` | 63,400,728 | `fd7b7bfb7d456e5b898dcbce3fffc547675d78ca59013a1be9a7db49003023d0` |
+| `PCRemote-0.3.2-linux-x64.tar.gz` | 60,552,399 | `f4eadfb13801a610252a49013d07eed4ac22b818c04c27a0d81892b37005787e` |
+| `PCRemote-0.3.2-osx-arm64-manifest.json` | 109,626 | `e87a65d1b34b4b9a666b34a9eeda280cdc28a802c8a0743114c715e30ed9dc04` |
+| `PCRemote-0.3.2-osx-x64-manifest.json` | 109,624 | `57c4c1eb0478b11683d404e6f69452c10df209700911f67ccd820f5b4f14aadc` |
+| `PCRemote-0.3.2-linux-x64-manifest.json` | 50,478 | `0b03e9aaaa5e2183cb3a2ec9393fb3988698ddecefb1f27c54d53691b71ee33d` |
+| `SHA256SUMS.txt` | 791 | covers the eight files above |
+
+Local verification of the downloaded workflow artifacts, using an independent script:
+- Per-platform and combined checksums match.
+- Manifest provenance: `candidate: false`, `sourceDirty: false`, revision `ece5d4c`, version 0.3.2.
+- Every extracted file matches its manifest inventory (464/464/463 files).
+- Extracted macOS seals pass `codesign --verify --deep --strict`.
+- Native architectures are correct for the executables and native bridges.
+- `--package-info` reports `0.3.2+ece5d4c` and .NET 10.0.13 natively on Apple Silicon; the Intel build was run under Rosetta emulation only.
+- The Windows and Ubuntu informational revisions match, and Ubuntu TAR ownership is normalized.
+- License notices are present, there are no PDB, private-key or protected files, and a Gitleaks scan of the extracted packages is clean.
+- The shipped binaries contain the redesigned shell, the macOS lock fix, the Linux session fallback and NetworkManager filter, and the phone-remote fixes.
+
+After publication:
+- All nine public URLs returned HTTP 200 to anonymous downloads, with matching sizes and SHA-256 digests.
+- The public `SHA256SUMS.txt` is byte-identical, and GitHub's asset digests match.
+- The release is marked pre-release.
+- The rendered release notes (all sections, both tables and the checksum block) and the README's v0.3.2 badge and download links were checked in a browser.
+
+The user's installed macOS app was not updated by this release work. The gaps listed under [Version 0.3.2](#version-032--bug-fixes-and-macoslinux-window-redesign-2026-10-14) remain open.

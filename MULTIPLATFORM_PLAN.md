@@ -591,3 +591,7 @@ The final staging command `.tools/phase5-refresh-guides.py` refreshed only revie
   - Physical phone/LAN use of the remote fixes.
   - Hosted CI has not run on these changes.
   - Phase 4 remains **In progress**.
+- **Published 2026-10-14 as 0.3.2:** [v0.3.2 pre-release](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.2), with the annotated tag at `ece5d4c`.
+  - Hosted CI passed every job on the fix commit `0601761` (run 38539382226) and on the version commit (push run 38540702103, `final` dispatch 38540711618, which supplied the assets).
+  - Final digests and public verification are in the [0.3.2 publication evidence](docs/release-evidence.md#version-032-publication-and-public-verification-2026-10-14).
+  - Phase 4 remains **In progress**, and all native/manual gaps remain open.
