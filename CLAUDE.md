@@ -6,6 +6,8 @@ Current app version: `0.3.6`.
 Current public release: [v0.3.6 preview](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.6) — Windows companion plus experimental macOS ARM64/Intel and Ubuntu 24.04 x64 archives.
 
 
+- Public documentation and GitHub metadata describe every supported platform and browser with its actual status: Windows primary; macOS and Ubuntu experimental; iPhone Safari and its Home Screen app verified on hardware; Chromium-based browsers covered by automated checks at phone and desktop sizes; Android, iPad and Firefox untested. Never present the product as Windows-only or iPhone/Safari-only, and never claim a device, browser or platform that has not been verified. Keep companion UI text device-neutral except where a step is genuinely platform-specific.
+
 ## Portable backend, shared shell and platform development (Phases 1–5)
 
 - Version 0.3.6 distributes the Windows WPF companion as the primary platform plus experimental macOS/Ubuntu archives of the shared shell. `PcController.Host` and `PcController.Core` target `net10.0`; WPF/UI and native Windows integration stay in App/Windows. Read `docs/portable-host.md` and the dated `MULTIPLATFORM_PLAN.md` execution log before continuing the migration.

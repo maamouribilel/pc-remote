@@ -94,10 +94,10 @@ public sealed class MainWindow : Window
         }
         readinessBanner.Child = bannerRow; readinessBanner.Margin = new Thickness(0, 0, 0, 16);
 
-        // Pair your iPhone.
+        // Pair your phone.
         var pair = new StackPanel();
-        pair.Children.Add(Text("Pair your iPhone", "title"));
-        pair.Children.Add(Spaced(Text("Scan with the iPhone Camera, open the link in Safari, then approve the request on this computer.", "secondary"), 6, 0));
+        pair.Children.Add(Text("Pair your phone", "title"));
+        pair.Children.Add(Spaced(Text("Scan with your phone's camera, open the link in its browser, then approve the request on this computer.", "secondary"), 6, 0));
         var qrWell = new Border { Width = 230, Height = 230, Background = Brushes.White, CornerRadius = new CornerRadius(14), Padding = new Thickness(12), Margin = new Thickness(0, 22, 0, 14), HorizontalAlignment = HorizontalAlignment.Center };
         RenderOptions.SetBitmapInterpolationMode(qr, BitmapInterpolationMode.None);
         AutomationProperties.SetName(qr, "Short-lived pairing QR code"); AutomationProperties.SetAutomationId(qr, "pairing-qr");
@@ -153,18 +153,18 @@ public sealed class MainWindow : Window
 
         dashboard = new Grid { ColumnSpacing = 16, RowSpacing = 16 };
 
-        // Certificate & iPhone setup.
+        // Certificate & phone setup.
         var certificate = new StackPanel { Spacing = 10 };
-        certificate.Children.Add(Step("1", "Save the public trust profile, then AirDrop or email it to your iPhone. It contains no private key."));
-        export = Button("Save iPhone trust profile…", () => _ = ExportProfile(), "export-profile"); export.HorizontalAlignment = HorizontalAlignment.Left;
+        certificate.Children.Add(Step("1", "Save the public trust profile, then AirDrop or email it to your phone. It is an iPhone/iPad profile; other devices import pc-remote-root.cer from the same folder. It contains no private key."));
+        export = Button("Save trust profile…", () => _ = ExportProfile(), "export-profile"); export.HorizontalAlignment = HorizontalAlignment.Left;
         certificate.Children.Add(Indented(export));
         certificate.Children.Add(Step("2", "Install the profile, then enable full trust in Settings → General → About → Certificate Trust Settings. Before trusting it, confirm this SHA-256 fingerprint matches the profile."));
         SetAccessibleName(fingerprint, "Certificate SHA-256 fingerprint", "fingerprint");
         certificate.Children.Add(Indented(WithCopy(fingerprint, () => controller.Server is { } server ? Grouped(server.Certificates.Fingerprint) : null, "copy-fingerprint", "Copy certificate fingerprint")));
-        certificate.Children.Add(Step("3", "Scan the pairing QR, or paste this complete link into Safari. Enter a device name, request pairing, then approve it here. Each browser, including the Home Screen app, may need its own approval."));
+        certificate.Children.Add(Step("3", "Scan the pairing QR, or paste this complete link into the phone's browser. Enter a device name, request pairing, then approve it here. Each browser, including the Home Screen app, may need its own approval."));
         SetAccessibleName(pairing, "Manual pairing link", "pairing-link");
         certificate.Children.Add(Indented(WithCopy(pairing, () => controller.Server?.PairingAddress, "copy-pairing-link", "Copy pairing link")));
-        certificateExpander = Section("Certificate & iPhone setup", certificate);
+        certificateExpander = Section("Certificate & phone setup", certificate);
 
         // Permissions & platform setup.
         var setup = new StackPanel { Spacing = 12 };
@@ -350,8 +350,8 @@ public sealed class MainWindow : Window
         {
             var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                Title = "Save public iPhone trust profile", SuggestedFileName = "pc-remote.mobileconfig",
-                FileTypeChoices = [new FilePickerFileType("iPhone certificate profile") { Patterns = ["*.mobileconfig"] }]
+                Title = "Save public trust profile (iPhone/iPad)", SuggestedFileName = "pc-remote.mobileconfig",
+                FileTypeChoices = [new FilePickerFileType("iPhone/iPad trust profile") { Patterns = ["*.mobileconfig"] }]
             });
             if (file == null || controller.Server != server) return;
             // Only the already-exported public CA profile is copied. No private keys.
@@ -527,7 +527,7 @@ public sealed class MainWindow : Window
                 devices.Children.Add(Row(Icons.Phone, device.Name, (controlling ? "Controlling · " : "") + $"Remembered until {device.Expires.LocalDateTime:d}",
                     Button("Revoke", () => controller.Revoke(device.Id), "revoke-" + device.Id, "Revoke " + device.Name), controlling));
             }
-            if (records.Length == 0) devices.Children.Add(Text(server == null ? "No paired devices." : "No paired devices yet. Create a pairing link to pair your iPhone.", "secondary"));
+            if (records.Length == 0) devices.Children.Add(Text(server == null ? "No paired devices." : "No paired devices yet. Create a pairing link to pair your phone.", "secondary"));
         }
         // Expand guidance once, when it is first needed, without fighting a person who collapses it.
         if (!certificateShown && server != null && records.Length == 0) { certificateShown = true; certificateExpander.IsExpanded = true; }

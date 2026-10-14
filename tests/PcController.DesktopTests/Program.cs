@@ -92,7 +92,7 @@ internal sealed class UiChecks : IDisposable
             fixture.RefreshAsync().GetAwaiter().GetResult();
             check(fixture.Server != null, "fixture dashboard host starts: " + fixture.Status);
             Dispatcher.UIThread.RunJobs(); early.UpdateLayout();
-            check(early.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == "No paired devices yet. Create a pairing link to pair your iPhone."), "device list empty state updates once the host is ready");
+            check(early.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == "No paired devices yet. Create a pairing link to pair your phone."), "device list empty state updates once the host is ready");
             early.Close(); early.Close();
             var dashboard = new MainWindow(fixture); dashboard.Show(); Dispatcher.UIThread.RunJobs(); dashboard.UpdateLayout();
             check(dashboard.GetVisualDescendants().OfType<Image>().Any(i => AutomationProperties.GetAutomationId(i) == "pairing-qr" && i.Source != null && i.IsVisible), "fixture dashboard renders actual short-lived pairing QR (active link=" + (fixture.Server!.PairingAddress != null) + ")");

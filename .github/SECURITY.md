@@ -10,10 +10,10 @@ Use [GitHub's private vulnerability report form](https://github.com/maamouribile
 
 ## Trust boundaries
 
-- Pair only your own trusted browser and approve only a request you initiated. An approved browser can control applications in your signed-in Windows session; keyboard access is broad access, even though individual API commands are allowlisted.
+- Pair only your own trusted browser and approve only a request you initiated. An approved browser can control applications in your signed-in desktop session on Windows, macOS or Ubuntu; keyboard access is broad access, even though individual API commands are allowlisted.
 - Use a trusted Private LAN, the companion's displayed HTTPS address, certificate fingerprint verification, and the scoped Private/LocalSubnet firewall rule. Do not expose TCP 8443 to the internet or bypass certificate warnings.
 - Device credentials and private certificate keys use Windows-user DPAPI and restricted local storage. This protects them from other normal Windows users; it cannot protect a Windows account already compromised by malware or an administrator.
-- Revoke lost browsers from the PC and use tray **Pause control** or **Exit** to stop control. Remembered browser authorization lasts up to 30 days. Remove certificate trust when permanently retiring an installation.
+- Revoke lost browsers in the companion and use **Pause control** or **Exit** (tray on Windows and Ubuntu, menu bar on macOS) to stop control. Remembered browser authorization lasts up to 30 days. Remove certificate trust when permanently retiring an installation.
 - On macOS, the storage key lives in the per-user login Keychain and certificate/device files are AES-256-GCM envelopes. On Ubuntu, the key lives in the password-encrypted GNOME login keyring, which is weaker than DPAPI/Keychain against same-user access. See the platform guides.
 - Releases are unsigned (macOS bundles carry only a local ad-hoc seal; no Developer ID/notarization or Linux distribution signature). Obtain assets from this repository's GitHub Releases and compare their SHA-256 hashes; source archives are not installed applications.
 
@@ -21,7 +21,7 @@ Use [GitHub's private vulnerability report form](https://github.com/maamouribile
 
 `scripts/test.ps1 -Security` exercises real certificate-validated HTTPS against an isolated loopback server with recording input/power adapters. It checks unauthorized mutations, browser-origin restrictions, private-file isolation, request limits, safety-action capacity, and ownership changes during delayed media requests. Other suites cover pairing, WebSocket validation/replay/cleanup, lifecycle, and browser interaction.
 
-`scripts/audit-dependencies.ps1` checks npm and NuGet feeds. GitHub's **Security and regression checks** workflow runs the automated suites and dependency audits on code pushes and pull requests. Release preparation also scans secrets and verifies bundled runtime advisories, package contents, licenses, and public asset hashes. Passing checks reduce known risks; they do not establish that the app has no bugs or replace physical-device/manual acceptance.
+`scripts/audit-dependencies.ps1` checks npm and NuGet feeds. GitHub's **Security and regression checks** workflow runs the automated suites and dependency audits on pull requests, on manual dispatch and, as the release gate, on the `final` dispatch for each version. Release preparation also scans secrets and verifies bundled runtime advisories, package contents, licenses, and public asset hashes. Passing checks reduce known risks; they do not establish that the app has no bugs or replace physical-device/manual acceptance.
 
 `scripts/test-certificate.ps1` uses Python 3.13+ with strict chain/name verification, including negative trust tests. Existing server leaves missing authority/subject key identifiers are renewed on upgrade while keeping the trusted root. No production certificate-verification bypass is introduced.
 

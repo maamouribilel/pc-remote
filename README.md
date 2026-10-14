@@ -4,26 +4,28 @@
 
 # PC Remote
 
-### Your Windows PC. Controlled from your iPhone.
+### Your computer. Controlled from your phone.
 
-A touchpad, keyboard, media remote, and app launcher in Safari.<br>
-Pair on your PC, connect over your home network, and keep control within reach.<br>
-<sub>New since 0.3.0: experimental macOS and Ubuntu builds for testers.</sub>
+A touchpad, keyboard, media remote, and app launcher in the browser you already have.<br>
+Pair on your computer, connect over your own network, and keep control within reach.<br>
+<sub>Companions for Windows (primary), macOS and Ubuntu (experimental previews). Works from a phone, a tablet or another computer.</sub>
 
 [![Download](https://img.shields.io/badge/Download-v0.3.6_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.6)
-[![Windows](https://img.shields.io/badge/Windows-x64-0078D4?style=flat-square)](#download)
-[![macOS and Ubuntu](https://img.shields.io/badge/macOS_%2B_Ubuntu-experimental-8A8F98?style=flat-square)](#experimental-macos-and-ubuntu-builds)
+[![Windows](https://img.shields.io/badge/Windows-x64_primary-0078D4?style=flat-square)](#supported-environments)
+[![macOS](https://img.shields.io/badge/macOS-14%2B_experimental-8A8F98?style=flat-square)](#supported-environments)
+[![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04_experimental-8A8F98?style=flat-square)](#supported-environments)
+[![Remote](https://img.shields.io/badge/Remote-browser_based-5EE8BE?style=flat-square)](#supported-environments)
 [![.NET](https://img.shields.io/badge/.NET-10-512BD4?style=flat-square)](#tech-stack)
 [![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?style=flat-square)](#tech-stack)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square)](#tech-stack)
 [![Transport](https://img.shields.io/badge/Transport-HTTPS_%2B_WSS-5EE8BE?style=flat-square)](docs/protocol.md)
 [![License](https://img.shields.io/badge/License-MIT-5EE8BE?style=flat-square)](LICENSE)
 
-**[Download for Windows](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-win-x64-setup.exe)** · **[All versions](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)** · **[Watch the walkthrough](#walkthrough)** · **[Build from source](#getting-started)**
+**[Download for Windows](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-win-x64-setup.exe)** · **[macOS](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-osx-arm64.zip)** · **[Ubuntu](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-linux-x64.tar.gz)** · **[All versions](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)** · **[Watch the walkthrough](#walkthrough)** · **[Build from source](#getting-started)**
 
-<img src="docs/assets/desktop-controls.jpg" alt="The actual Windows companion showing power, pointer, and media preferences" width="900">
+<img src="docs/assets/desktop-controls.jpg" alt="The Windows companion showing power, pointer, and media preferences" width="900">
 
-**A native Windows companion. A browser remote. One trusted local connection.**
+**A native companion on the computer you control. A browser remote on any device. One trusted local connection.**
 
 </div>
 
@@ -31,9 +33,29 @@ Pair on your PC, connect over your home network, and keep control within reach.<
 
 ## Made for the screen across the room
 
-Watch your PC screen while your phone handles the controls. Move the pointer, send text, navigate menus, switch media profiles, open configured apps, and adjust Windows volume from five focused tabs.
+Watch your computer's screen while your phone handles the controls. Move the pointer, send text, navigate menus, switch media profiles, open configured apps, and adjust the system volume from five focused tabs.
 
-PC Remote runs as a Windows notification-tray companion and serves its own browser interface. All application assets are bundled locally. Normal packaged operation needs no cloud account, subscription, Node.js installation, or separate .NET runtime.
+PC Remote runs as a small companion on the computer you control (notification tray on Windows, menu bar on macOS, tray or window on Ubuntu) and serves its own browser interface. All application assets are bundled locally. Normal packaged operation needs no cloud account, subscription, Node.js installation, or separate .NET runtime.
+
+## Supported environments
+
+PC Remote has two halves: the **companion** that runs on the computer being controlled, and the **remote**, a web app the companion serves to any browser on the same trusted network. The table states what has actually been verified; everything else is still an open check.
+
+| Companion (the computer you control) | Status | Verified so far |
+| :--- | :--- | :--- |
+| **Windows 10 1809 or later, x64** (Windows 11 tested) | Primary | Native input, audio, launcher and power; installer and portable ZIP; physical iPhone control on the 0.2.x previews; hosted Windows suites on every 0.3.x release |
+| **macOS 14 or later, Apple Silicon** (tested on macOS 27) | Experimental | Quartz/Accessibility input, Core Audio, Keychain-backed storage; pairing and control from an iPhone on the developer's Mac; guarded native input smoke (41 checks) |
+| **macOS 14 or later, Intel** | Experimental, not run on Intel hardware | Cross-built, inventory-checked, metadata startup under Rosetta emulation only |
+| **Ubuntu 24.04 x64 with GNOME** (X11, or Wayland with Remote Desktop consent) | Experimental | Hosted and isolated suites (private Xvfb/GTK, portal protocol, encrypted keyring); a real GNOME desktop is still pending |
+
+| Remote (where you hold the controls) | Status | Verified so far |
+| :--- | :--- | :--- |
+| **iPhone: Safari and the Home Screen web app** | Verified | Physical iPhone 15 Pro with the trusted certificate and touch control (Windows companion); an iPhone also controlled the macOS companion on 2026-10-14 |
+| **Chromium-based browsers (Chrome, Edge, Brave)** | Automated checks | Playwright suites in Chromium (Edge on Windows) at phone-portrait, phone-landscape and desktop viewports; Brave on iOS reached the macOS companion in one session but kept flagging the private root in its address bar |
+| **A desktop browser on another computer** | Layout verified | The remote renders its desktop layout at 1280×800 in the automated checks; a desktop browser pairs exactly like a phone |
+| **Android phones and tablets, iPad, Firefox** | Not yet verified | The remote uses standard HTTPS, WebSockets and touch/pointer events, but these devices and browsers have not been tested, and trusting the companion's public root certificate on them is a manual step the project has not documented |
+
+On every platform the companion and the remote share one trusted local network, the browser trusts the companion's per-installation root certificate, and the companion runs in a signed-in interactive desktop session. Screen streaming, file transfer and internet access are not part of PC Remote. Per-version evidence and the remaining manual checks are in the [release readiness matrix](docs/release-readiness.md) and the [release evidence](docs/release-evidence.md).
 
 ## Download
 
@@ -52,7 +74,7 @@ PC Remote runs as a Windows notification-tray companion and serves its own brows
 
 On GitHub, open **Releases**, select the version you want, and expand **Assets**. GitHub's automatic **Source code** archives are for developers. See [download and version instructions](docs/releases.md).
 
-Version 0.3.6 is a public preview. The Windows companion targets Windows 10 1809 or later, x64; Windows 11 is the tested desktop OS. The app and installer are unsigned, and the remaining manual checks are documented in the [release checklist](docs/release-checklist.md). After installation, follow the [iPhone setup guide](docs/setup.md).
+Version 0.3.6 is a public preview. The Windows companion targets Windows 10 1809 or later, x64; Windows 11 is the tested desktop OS. The app and installer are unsigned, and the remaining manual checks are documented in the [release checklist](docs/release-checklist.md). After installation, follow the [setup guide](docs/setup.md) for your platform and phone.
 
 **New in 0.3.6:** on macOS, the approved network no longer drops back to `localhost` when macOS re-publishes its Wi-Fi record (every few minutes on the tested Mac), which made the phone report "TypeError: Load failed". Space/full-screen, display-sleep and Secure Input changes no longer deny a pending phone approval or restart the companion (which also discarded the pairing link); a pause shows the one reason macOS reports instead of the Accessibility alert; a permission granted while the app is running takes effect without reopening it; and the new `scripts/sign-macos-local.py` keeps the Accessibility entry across updates (the Keychain dialog after an update stays once per build). Windows and Ubuntu behavior is unchanged from 0.3.5. See the [0.3.6 evidence](docs/release-evidence.md#version-036--macos-lan-approval-pairing-approvals-and-local-signing-2026-10-14).
 
@@ -70,9 +92,9 @@ The same phone remote can now pair with a shared desktop companion on **macOS 14
 
 **[Install PC Remote, then connect on your own network →](#download)**
 
-This application is hosted by your Windows PC on a trusted Private LAN. There is **no public hosted demo URL** in this project. Start the companion, open **the HTTPS address it displays** in iPhone Safari, complete certificate setup, and approve the pairing request on the PC. Follow the [complete onboarding guide](docs/setup.md).
+This application is hosted by your own computer on a trusted local network. There is **no public hosted demo URL** in this project. Start the companion, open **the HTTPS address it displays** in your phone's browser, complete certificate setup, and approve the pairing request on the computer. Follow the [complete onboarding guide](docs/setup.md).
 
-The [walkthrough below](#walkthrough) previews the real interface before installation. Public cloud hosting of the frontend alone would not provide access to the Windows input backend.
+The [walkthrough below](#walkthrough) previews the real interface before installation. Public cloud hosting of the frontend alone would not provide access to the native input backend.
 
 ## A closer look
 
@@ -85,9 +107,9 @@ The [walkthrough below](#walkthrough) previews the real interface before install
     <td align="center" width="33%"><strong>Navigation</strong><br><sub>Large arrows and familiar navigation keys.</sub><br><br><img src="docs/assets/mobile-navigation.png" alt="Actual PC Remote navigation tab" width="270"></td>
   </tr>
   <tr>
-    <td align="center"><strong>Media</strong><br><sub>Playback profiles and Windows volume.</sub><br><br><img src="docs/assets/mobile-media.png" alt="Actual media tab with playback and volume controls" width="270"></td>
+    <td align="center"><strong>Media</strong><br><sub>Playback profiles and system volume.</sub><br><br><img src="docs/assets/mobile-media.png" alt="Actual media tab with playback and volume controls" width="270"></td>
     <td align="center"><strong>PC</strong><br><sub>Configured apps and confirmed power actions.</sub><br><br><img src="docs/assets/mobile-pc.png" alt="Actual PC tab showing the fixture's test app and power controls" width="270"></td>
-    <td align="center"><strong>One connection</strong><br><br>🔒 PC-approved pairing<br><br>📶 Local HTTPS + WSS<br><br>🖥️ Native Windows input<br><br>📱 Safari / Home Screen<br><br>🛟 Visible release control</td>
+    <td align="center"><strong>One connection</strong><br><br>🔒 PC-approved pairing<br><br>📶 Local HTTPS + WSS<br><br>🖥️ Native input on Windows, macOS and Ubuntu<br><br>📱 Any modern browser · Home Screen app on iPhone<br><br>🛟 Visible release control</td>
   </tr>
 </table>
 
@@ -99,34 +121,31 @@ The [walkthrough below](#walkthrough) previews the real interface before install
 
 </details>
 
-Screenshots show the actual WPF companion and browser app, not generated mockups. Browser captures use the project's isolated loopback fixture with recording input/power adapters; the launcher entry is a test app. Mobile images are browser viewport captures, not photographs of a physical iPhone. See [capture details](docs/assets/README.md).
+Screenshots show the actual Windows companion and browser app, not generated mockups; the macOS and Ubuntu companions use the same dashboard layout and are not pictured yet. Browser captures use the project's isolated loopback fixture with recording input/power adapters; the launcher entry is a test app. Mobile images are browser viewport captures, not photographs of a physical phone. See [capture details](docs/assets/README.md).
 
 ## Features
 
 | | What you can do |
 | :--- | :--- |
-| 🖱️ **Touchpad** | One-finger pointer movement, tap to click, two-finger scrolling, right/double click, and explicit start/end dragging. Adjust sensitivity and natural scrolling on Windows. |
+| 🖱️ **Touchpad** | One-finger pointer movement, tap to click, two-finger scrolling, right/double click, and explicit start/end dragging. Adjust sensitivity and natural scrolling in the companion. |
 | ⌨️ **Keyboard** | Send composed text, including accents and emoji. Use held modifiers, common shortcuts, and **Release input**. |
 | 🧭 **Navigation** | Use arrows, Enter, Home, End, and Page keys in the application focused on your PC. |
 | 🎬 **Media profiles** | Choose General, YouTube, VLC, or Stremio. Controls follow each profile's supported shortcuts; Stremio includes **Next episode**. |
-| 🔊 **Windows volume** | Set the current Windows output to an exact 0–100 percentage and read back its actual level. |
-| 🚀 **App launcher** | Open or bring forward PC-configured executables. Manage up to 24 entries in the Windows companion; the phone sends configured IDs. |
-| ⏻ **Power controls** | Request Sleep, Restart, or Shut down after confirmation and a cancellable 30-second countdown. Phone requests cancel on controller disconnect. |
+| 🔊 **System volume** | Set the current output volume to an exact 0–100 percentage and read back its actual level (Windows Core Audio, macOS Core Audio, Ubuntu PulseAudio/PipeWire). |
+| 🚀 **App launcher** | Open or bring forward PC-configured executables. Manage up to 24 entries in the companion; the phone sends configured IDs, never paths. |
+| ⏻ **Power controls** | Request Sleep, Restart, or Shut down after confirmation and a cancellable 30-second countdown (Windows: all three; macOS: sleep; Ubuntu: what logind permits). Phone requests cancel on controller disconnect. |
 | 🔐 **Approved devices** | Scan a short-lived pairing QR, approve on the PC, remember a browser, revoke devices, and explicitly take over another controller. |
 | 🛟 **Input cleanup** | Release held input when switching tabs, pausing, disconnecting, or suspending the phone page. A watchdog clears interrupted holds. |
-| 🖥️ **Tray companion** | Close the window to keep the server running. Open, pause, resume, or exit from the tray; optionally start at sign-in. |
+| 🖥️ **Companion** | Close the window to keep the server running. Open, pause, resume, or exit from the tray (Windows, Ubuntu) or the menu bar (macOS); optionally start at sign-in. |
 
 <details>
 <summary><strong>Compatibility and current limits</strong></summary>
 
-- Targets **Windows 10 1809 or later, x64**; Windows 11 is the tested desktop OS.
-- Safari and Home Screen operation have prior physical iPhone 15 Pro evidence. Other devices and AZERTY layouts remain unverified.
-- Requires a trusted **Private IPv4 LAN** and a signed-in interactive Windows session. Elevated applications, the lock screen, and secure desktop are unsupported.
-- Watch the PC screen: screen streaming, file/clipboard transfer, internet routing, Wake-on-LAN, and simultaneous controllers are not implemented.
-- Media shortcuts require the matching player, its focus, and appropriate shortcut settings. Opening an app does not select a video or begin playback.
-- iOS may suspend a backgrounded page; reopening reconnects without replaying stale input. Numerical input latency has not been measured.
-- The app and installer are unsigned. Clean-account installation, reboot, manual uninstall, and physical execution of the newest power controls still require separate checks.
-- The macOS and Ubuntu builds are experimental. They are unsigned/not notarized, need native OS services and permissions, and their physical-phone, LAN, player, login and power acceptance is pending. See [release readiness](docs/release-readiness.md).
+- **Windows:** targets Windows 10 1809 or later, x64; Windows 11 is the tested desktop OS. Requires a trusted **Private IPv4 LAN** and a signed-in interactive session. Elevated applications, the lock screen and the secure desktop are unsupported. Clean-account installation, reboot, manual uninstall and physical execution of the newest power controls still require separate checks.
+- **macOS (experimental):** macOS 14 or later; Apple Silicon tested, Intel not run on hardware. Needs Accessibility permission and an explicit, session-only network approval. Restart and shut down are unavailable; sleep only. Unsigned and not notarized.
+- **Ubuntu (experimental):** 24.04 x64 with GNOME; X11, or Wayland with Remote Desktop consent. Text input needs the local GTK opt-in; power actions depend on logind permission. Not yet accepted on a real GNOME desktop.
+- **Remote:** iPhone Safari and its Home Screen app are verified on a physical device; Chromium-based browsers at phone and desktop sizes are covered by automated checks; Android, iPad and Firefox are untested. Phones may suspend a backgrounded page; reopening reconnects without replaying stale input. AZERTY and other layouts remain unverified, and input latency has not been measured numerically.
+- **Everywhere:** watch the screen you control. Screen streaming, file/clipboard transfer, internet routing, Wake-on-LAN and simultaneous controllers are not implemented. Media shortcuts need the matching focused player; opening an app does not select a video or begin playback. All builds are unsigned; verify checksums. See [release readiness](docs/release-readiness.md).
 
 Read the [full limitations](docs/limitations.md) and [release checklist](docs/release-checklist.md).
 
@@ -136,14 +155,14 @@ Read the [full limitations](docs/limitations.md) and [release checklist](docs/re
 
 | Layer | Implementation |
 | :--- | :--- |
-| **Phone frontend** | Vanilla TypeScript 7.0.2, HTML, CSS, Vite 8.3.4, local SVG icons, Home Screen web manifest |
+| **Browser remote** | Vanilla TypeScript 7.0.2, HTML, CSS, Vite 8.3.4, local SVG icons, Home Screen web manifest |
 | **Windows desktop** | C# / .NET 10, WPF, Windows Forms notification-tray integration |
 | **macOS / Ubuntu desktop (experimental)** | Avalonia 12.1.4 shell; Quartz/Accessibility, Core Audio and Keychain on macOS; XCB/XTEST, GNOME Remote Desktop portal, libpulse, MPRIS and GNOME keyring on Ubuntu |
 | **Backend** | Portable `PcController.Host`, ASP.NET Core / Kestrel, HTTPS endpoints, authenticated WebSockets |
-| **Native controls** | Windows SendInput, Core Audio volume, configured executable launching, Windows power APIs |
-| **Storage / database** | Local DPAPI-protected certificate/device files and JSON preferences; no database service |
+| **Native controls** | Windows SendInput, Core Audio, launcher and power APIs; macOS Quartz events, Core Audio, LaunchServices and IOKit sleep; Ubuntu XCB/XTEST or Remote Desktop portal, libpulse, MPRIS, GIO and logind |
+| **Storage / database** | Local certificate/device files protected per platform (Windows DPAPI; macOS Keychain-backed AES-GCM; Ubuntu GNOME-keyring-backed AES-GCM) plus JSON preferences; no database service |
 | **Authentication** | PC-approved single-use pairing, an HttpOnly secure device cookie, one active controller |
-| **Hosting** | Your Windows PC on TCP 8443, bound to loopback and selected Private IPv4 interfaces |
+| **Hosting** | Your own computer on TCP 8443, bound to loopback and the trusted interface (Windows: Private IPv4 interfaces; macOS/Ubuntu: the interface you approve for the session) |
 | **Testing** | Portable .NET fixture runner, Windows regressions/native checks, Playwright 1.64.0 (Edge on Windows, Chromium elsewhere) |
 | **Packaging** | Self-contained `win-x64` publish, Inno Setup 7.1.0 installer, portable ZIP; self-contained ad-hoc-sealed macOS `.app` ZIPs and an Ubuntu x64 archive; one SHA-256 file |
 
@@ -151,13 +170,15 @@ Read the [full limitations](docs/limitations.md) and [release checklist](docs/re
 
 ### Prerequisites
 
-- An x64 Windows development machine with PowerShell and Git.
+- **Windows:** an x64 machine with PowerShell 7 and Git. **macOS:** Xcode Command Line Tools and Python 3. **Ubuntu:** `cc`, `pkg-config` and the native development packages listed in the [Linux guide](docs/linux-setup.md).
 - Internet access for the initial toolchain/dependency downloads.
-- For phone control: an iPhone with Safari and a trusted network marked **Private** on Windows.
+- For control: a phone, tablet or computer with a modern browser on the same trusted network. iPhone Safari is the verified path; on Windows that network must be marked **Private**, on macOS and Ubuntu you approve the interface in the companion.
 
 The scripts prefer a verified portable toolchain in `.tools/`: **.NET SDK 10.0.402**, **Node.js 24.21.0**, and **npm 11.19.0**. Packaged releases bundle .NET runtime 10.0.13 and do not need development tools.
 
 ### Install, build, and run
+
+Windows (PowerShell 7):
 
 ```powershell
 git clone https://github.com/maamouribilel/windows-pc-mobile-controller.git
@@ -168,23 +189,33 @@ Set-Location windows-pc-mobile-controller
 ./scripts/run.ps1 -Configuration Release
 ```
 
-`build.ps1` runs `npm ci`, TypeScript checking, a production Vite build, and a .NET solution build. It copies the built web app into the companion's `wwwroot/`. `run.ps1` selects the portable runtime when available.
+macOS or Ubuntu:
+
+```sh
+git clone https://github.com/maamouribilel/windows-pc-mobile-controller.git
+cd windows-pc-mobile-controller
+
+python3 scripts/portable.py build
+python3 scripts/portable.py desktop
+```
+
+`build.ps1` runs `npm ci`, TypeScript checking, a production Vite build, and a .NET solution build, and copies the built web app into the companion's `wwwroot/`; `run.ps1` selects the portable runtime when available. `portable.py build` does the same for the shared companion, and `desktop` starts it; packaging commands for each platform are under [Shared backend development](#shared-backend-development-on-macoslinux) and [Build and deploy](#build-and-deploy).
 
 ### Environment configuration
 
-**No `.env` file, API key, cloud credential, or database connection string is required.** Certificates, device authorization, and preferences are created locally. Private keys and device credentials use Windows user-bound DPAPI under `%LOCALAPPDATA%\PcController\certificates`, outside this repository.
+**No `.env` file, API key, cloud credential, or database connection string is required.** Certificates, device authorization, and preferences are created locally. Private keys and device credentials stay outside this repository: Windows user-bound DPAPI under `%LOCALAPPDATA%\PcController\certificates`, a Keychain-backed key with AES-GCM files under `~/Library/Application Support/PC Remote` on macOS, and a GNOME-keyring-backed key on Ubuntu.
 
-Use the live address displayed by the companion on port **8443**. The optional firewall helper requests administrator access for a program-specific rule limited to **Private profiles / LocalSubnet**. Run the companion itself as a normal user.
+Use the live address displayed by the companion on port **8443**. On Windows, the optional firewall helper requests administrator access for a program-specific rule limited to **Private profiles / LocalSubnet**; on macOS and Ubuntu you approve the interface under **Trusted network** for the session instead. Run the companion itself as a normal user.
 
 <details>
-<summary><strong>Pair your iPhone in four steps</strong></summary>
+<summary><strong>Pair your phone in four steps</strong></summary>
 
-1. In Windows **Certificate & network setup**, export the public iPhone certificate profile. Compare its fingerprint with the PC before trusting it.
-2. Install the profile on the iPhone and enable full trust under **Settings → General → About → Certificate Trust Settings**. Follow [certificate setup and removal](docs/certificates.md).
-3. Create a pairing link, scan the QR in Camera, open Safari, name the device, and request approval. Approve on the PC. The link expires after two minutes and is single use.
-4. Optionally use Safari **Share → Add to Home Screen**. The Home Screen browser may need separate approval.
+1. In the companion's certificate setup, export the public trust profile. Compare its fingerprint with the one the companion shows before trusting it.
+2. Trust the companion's root on the phone. iPhone: install the profile and enable full trust under **Settings → General → About → Certificate Trust Settings** (verified path). Other devices: import the public root certificate file, which the project has not yet verified. Follow [certificate setup and removal](docs/certificates.md).
+3. Create a pairing link, scan the QR with the phone's camera, open the link in its browser, name the device, and request approval. Approve on the computer. The link expires after two minutes and is single use.
+4. Optionally add the page to the Home Screen (Safari **Share → Add to Home Screen**; other browsers offer their own install option). A Home Screen app may need its own approval.
 
-Remembered authentication expires after 30 days and can be revoked immediately on Windows. Address changes preserve root/device records but require opening the new address.
+Remembered authentication expires after 30 days and can be revoked immediately in the companion. Address changes preserve root/device records but require opening the new address.
 
 </details>
 
@@ -196,7 +227,7 @@ Remembered authentication expires after 30 days and can be revoked immediately o
 ./scripts/run.ps1 -Configuration Release
 ```
 
-Exit any installed copy through its tray menu before starting a development companion or isolated tests. Both use port 8443 and enforce one instance per Windows user.
+Exit any installed copy through its tray menu before starting a development companion or isolated tests. Both use port 8443 and enforce one instance per user.
 
 ## Walkthrough
 
@@ -221,6 +252,9 @@ windows-pc-mobile-controller/
 │   └── remote/                # TypeScript browser UI and shipped branding
 ├── tests/
 │   ├── PcController.PortableTests/ # Portable protocol/security/recording fixtures
+│   ├── PcController.DesktopTests/  # Shared shell host and headless UI workflows
+│   ├── PcController.MacOSTests/    # macOS adapter, Keychain and guarded native checks
+│   ├── PcController.LinuxTests/    # Linux adapter faults, Xvfb, portal and keyring checks
 │   ├── PcController.Tests/    # Windows DPAPI, integration and native smoke checks
 │   └── remote/                # Playwright interactions and responsive checks
 ├── scripts/                   # Tools, build, run, tests, packaging, setup
@@ -233,7 +267,7 @@ windows-pc-mobile-controller/
 └── Directory.Build.props      # Shared compiler settings
 ```
 
-The browser sends bounded, allowlisted commands over WSS. The companion authenticates devices, checks session ownership, and dispatches commands through the Windows adapters. Launcher requests carry configured app IDs; executable paths stay on the PC. Read the [protocol and security design](docs/protocol.md).
+The browser sends bounded, allowlisted commands over WSS. The companion authenticates devices, checks session ownership, and dispatches commands through the platform adapters (Windows, macOS or Linux). Launcher requests carry configured app IDs; executable paths stay on the PC. Read the [protocol and security design](docs/protocol.md).
 
 ### Shared backend development on macOS/Linux
 
@@ -302,7 +336,7 @@ For strict certificate interoperability, run `./scripts/test-certificate.ps1` wi
 ./scripts/test-desktop.ps1 -Executable "$env:LOCALAPPDATA\Programs\PCRemote\PcController.App.exe"
 ```
 
-Native tests abort on lost target focus. The browser fixture uses an explicit loopback-only TLS bypass for UI checks; this does not establish iPhone certificate trust. .NET transport tests validate the installation root, chain, server EKU, and hostname/IP SAN. Production has no plaintext or TLS-bypass mode.
+Native tests abort on lost target focus. The browser fixture uses an explicit loopback-only TLS bypass for UI checks; this does not establish phone certificate trust. .NET transport tests validate the installation root, chain, server EKU, and hostname/IP SAN. Production has no plaintext or TLS-bypass mode.
 
 </details>
 
@@ -312,11 +346,11 @@ Coding agents must read [AGENTS.md](AGENTS.md); Claude also reads [CLAUDE.md](CL
 
 Run `./scripts/check-release-docs.ps1` before packaging. The GitHub **Release documentation** check also catches version/link mismatches and missing release documentation updates. Runtime checks, secret scans, and public asset verification remain part of the release procedure.
 
-Read the [security policy](.github/SECURITY.md) for private vulnerability reporting and trust boundaries. Approve only your own trusted browser: keyboard control grants broad access to your signed-in Windows session. Keep the app on a trusted Private LAN and verify certificate trust.
+Read the [security policy](.github/SECURITY.md) for private vulnerability reporting and trust boundaries. Approve only your own trusted browser: keyboard control grants broad access to your signed-in desktop session. Keep the app on a trusted Private LAN and verify certificate trust.
 
 ## Build and deploy
 
-Deploy the companion to the Windows PC you want to control. Its web app is bundled with it rather than hosted separately in the cloud.
+Deploy the companion to the computer you want to control. Its web app is bundled with it rather than hosted separately in the cloud. Windows packaging follows; the macOS and Ubuntu packaging commands are under [Shared backend development](#shared-backend-development-on-macoslinux).
 
 ```powershell
 ./scripts/stop.ps1 -Configuration Release

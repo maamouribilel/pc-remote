@@ -10,8 +10,8 @@
       <StackPanel>
         <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="1.08*" /><ColumnDefinition Width="16" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
           <Border Style="{StaticResource Panel}"><StackPanel>
-            <TextBlock Text="Pair your iPhone" Style="{StaticResource SectionTitle}" />
-            <TextBlock Text="Scan in Camera, open in Safari, then approve on this PC." Style="{StaticResource MutedText}" />
+            <TextBlock Text="Pair your phone" Style="{StaticResource SectionTitle}" />
+            <TextBlock Text="Scan with your phone's camera, open the link in its browser, then approve on this PC." Style="{StaticResource MutedText}" />
             <Border Width="230" Height="230" Background="White" CornerRadius="14" Padding="12" Margin="0,22,0,16"><Grid><TextBlock x:Name="QrPlaceholder" Text="Create a pairing link&#10;to show your QR code" Foreground="#536171" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" /><Image x:Name="PairQr" Stretch="Uniform" /></Grid></Border>
             <TextBlock x:Name="PairStatus" Style="{StaticResource MutedText}" TextAlignment="Center" MinHeight="21" Margin="0,0,0,14" />
             <Button Content="Create new pairing link" Click="NewPairing" Style="{StaticResource PrimaryButton}" MinHeight="50" />
@@ -27,11 +27,11 @@
           <TextBlock x:Name="NetworkNotice" Style="{StaticResource MutedText}" />
           <TextBlock x:Name="OtherAddresses" Style="{StaticResource MutedText}" Margin="0,8,0,16" />
           <Button Content="Configure Private LAN firewall (administrator prompt)…" Click="ConfigurePrivateFirewall" HorizontalAlignment="Left" Margin="0,0,0,20" />
-          <TextBlock Text="1. Export the public certificate profile to your iPhone." Style="{StaticResource MutedText}" />
-          <Button x:Name="Export" Content="Save iPhone certificate profile…" Click="ExportProfile" IsEnabled="False" HorizontalAlignment="Left" Margin="0,8,0,16" />
+          <TextBlock Text="1. Export the public trust profile to your phone (iPhone/iPad profile; other devices import pc-remote-root.cer)." Style="{StaticResource MutedText}" />
+          <Button x:Name="Export" Content="Save trust profile…" Click="ExportProfile" IsEnabled="False" HorizontalAlignment="Left" Margin="0,8,0,16" />
           <TextBlock Text="2. Install the profile, then enable full trust in Settings → General → About → Certificate Trust Settings. Confirm this fingerprint against the profile before trusting it." Style="{StaticResource MutedText}" />
           <TextBox x:Name="Fingerprint" IsReadOnly="True" TextWrapping="Wrap" Margin="0,8,0,16" />
-          <TextBlock Text="3. Scan the pairing QR or paste the complete link into Safari. Enter a device name, request pairing, then approve the request on this PC. Each browser, including the Home Screen app, may need its own approval." Style="{StaticResource MutedText}" />
+          <TextBlock Text="3. Scan the pairing QR or paste the complete link into the phone's browser. Enter a device name, request pairing, then approve the request on this PC. Each browser, including the Home Screen app, may need its own approval." Style="{StaticResource MutedText}" />
           <TextBox x:Name="PairLink" IsReadOnly="True" TextWrapping="Wrap" Margin="0,8,0,0" />
         </StackPanel></Expander>
         <Expander x:Name="Preferences" Header="Apps, audio, power &amp; preferences" Visibility="Collapsed" Margin="0,12,0,0"><StackPanel>

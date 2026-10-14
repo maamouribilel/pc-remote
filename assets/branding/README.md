@@ -4,14 +4,14 @@ The shared logo represents a phone controlling a desktop PC. The mint mark, grap
 
 Generated with the built-in image generation tool. PNG size conversion and multi-frame ICO packaging use Windows WPF in `scripts/generate-icons.ps1`. Run that script to regenerate the exports. The Windows executable, window icon, dashboard header, notification tray, installer, browser favicon, remote header, and web manifest use this identity. The 180px opaque Apple touch icon is explicitly linked with its size; versioned filenames avoid reuse of the previous icon URL. A separate padded 512px maskable icon keeps the symbol inside the safe circle.
 
-On the iPhone, open the PC address in Safari, then Share → Add to Home Screen → keep Open as Web App enabled → Add. If an existing Home Screen shortcut retains the old image, remove that shortcut and add it again. The Home Screen app may need PC approval separately from Safari. Actual iPhone icon display needs confirmation on the device.
+On an iPhone or iPad, open the companion's address in Safari, then Share → Add to Home Screen → keep Open as Web App enabled → Add; other browsers offer their own Add to Home Screen or Install option, which the project has not verified. If an existing Home Screen shortcut retains the old image, remove that shortcut and add it again. The Home Screen app may need PC approval separately from Safari. Actual iPhone icon display needs confirmation on the device.
 
 Apple references: https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html and https://support.apple.com/guide/iphone/iphea86e5236/ios
 
 ## Generation prompt
 
 Use case: logo-brand
-Asset type: final square application icon for PC Remote, shared by a Windows companion and iPhone Home Screen web app.
+Asset type: final square application icon for PC Remote, shared by the Windows, macOS and Ubuntu companions and the browser remote, including its Home Screen web app.
 Primary request: create a modern, immediately understandable logo showing a phone controlling a desktop computer. One single polished icon, not a presentation sheet.
 Style: minimal flat vector-like geometry, exceptionally clean thick strokes, rounded joins, strong readable silhouettes at 32 pixels. A large mint desktop monitor outline with a short centered stand; a smaller solid mint smartphone overlaps the lower right of the monitor. The phone has a dark inset screen and a simple white cursor arrow centered in its screen, signifying remote control. Keep the composition balanced and uncomplicated.
 Color palette: full-bleed uniform dark graphite #0b0f14 background, mint #5ee8be monitor and phone, white #f4f6f8 cursor.

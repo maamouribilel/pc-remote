@@ -6,14 +6,18 @@ Files under `%LOCALAPPDATA%\PcController\certificates\`:
 
 - `root.protected` / `server.protected`: PFX bytes protected with user-bound Windows DPAPI. The directory ACL permits the signed-in user and SYSTEM. Plain PFX buffers are zeroed after use. Windows Schannel uses temporary user key containers; .NET removes these on certificate disposal. A compromised process running as the same Windows user can access these keys, as it can other user-protected data.
 - `pc-remote-root.cer`: public root only.
-- `pc-remote.mobileconfig`: unsigned iPhone configuration profile containing that same public root. No private key, device credential or pairing secret is exported.
+- `pc-remote.mobileconfig`: unsigned iPhone/iPad configuration profile containing that same public root. No private key, device credential or pairing secret is exported. Other devices and browsers use `pc-remote-root.cer`.
 - `addresses.txt`: non-sensitive SAN address list used to decide when to regenerate the leaf.
 
 Trusting a private root allows your device to accept certificates it signs. Install only your own PC's public root, verify it against the PC's SHA-256 fingerprint, and remove it when no longer using this app. Do not import profiles from unknown PCs.
 
-## iPhone onboarding
+## Phone and browser onboarding
 
-1. Click **Save iPhone certificate profile…** in the PC setup window. Transfer the exported public `.mobileconfig` to your iPhone, for example as an attachment you send yourself and open in Apple Mail. Sending it is a manual user action; the app does not send email or upload it.
+Every device that opens the remote must trust this installation's public root. The iPhone path below is the one the project has verified on hardware. Other devices (Android phones and tablets, iPad, desktop browsers, Firefox with its own certificate store) import `pc-remote-root.cer` through their own certificate settings; the project has not verified those paths, and the same rules apply: compare the fingerprint first, never bypass a warning, and remove the root when you stop using the installation.
+
+### iPhone
+
+1. Click **Save trust profile…** (older versions: **Save iPhone certificate profile…**) in the companion's certificate setup. Transfer the exported public `.mobileconfig` to your iPhone, for example as an attachment you send yourself and open in Apple Mail. Sending it is a manual user action; the app does not send email or upload it.
 2. Open the attachment, then open Settings → General → VPN & Device Management → downloaded PC Remote profile. Review its certificate details and compare the SHA-256 fingerprint with the PC window. Install the profile. It is unsigned because no external profile-signing service is used; this is distinct from TLS trust.
 3. Open Settings → General → About → Certificate Trust Settings. Enable full trust for the **PC Remote Local CA** whose unique suffix matches your PC's profile.
 4. In Safari, open the exact `https://IP:8443` address shown by the app. A security warning is a failed test; do not treat clicking through it as onboarding success.
@@ -32,11 +36,11 @@ There is no online revocation service for this local CA. Device access revocatio
 
 ## Remove trust
 
-- iPhone: Settings → General → VPN & Device Management → PC Remote profile → Remove Profile. Confirm its root disappears from Certificate Trust Settings.
+- iPhone: Settings → General → VPN & Device Management → PC Remote profile → Remove Profile. Confirm its root disappears from Certificate Trust Settings. Other devices: remove the imported `pc-remote-root.cer` from the certificate store you added it to.
 - Windows, if you used the optional helper: `./scripts/trust-windows.ps1 -Action Remove`, as the same user. It targets this installation's thumbprint only; it never removes unrelated roots.
-- Keep `.cer` available until Windows trust cleanup is done. Removing application files does not remove iPhone trust. Uninstall removes application-owned startup/firewall entries but retains protected user data for reinstall.
+- Keep `.cer` available until Windows trust cleanup is done. Removing application files does not remove the trust you installed on phones or browsers. Uninstall removes application-owned startup/firewall entries but retains protected user data for reinstall.
 - Without the source helper, open `certmgr.msc` → Current User → Trusted Root Certification Authorities → Certificates. Compare the exact installation certificate thumbprint/fingerprint before removing only that root. The app never automatically installs Windows trust.
-- After trust is removed and the app has exited, retiring the installation may include deleting `%LOCALAPPDATA%\PcController`. This resets all its paired devices/settings and CA, so a future install requires new iPhone trust. Do not delete unrelated user directories.
+- After trust is removed and the app has exited, retiring the installation may include deleting `%LOCALAPPDATA%\PcController`. This resets all its paired devices/settings and CA, so a future install requires new trust on every device. Do not delete unrelated user directories.
 
 No Windows certificate store trust is automatically added by the companion. Verification used a temporary CurrentUser root entry, then removed it. Later re-imports on this host appeared successful in memory but were absent after reopening the store, including a native certutil attempt. The helper verifies persistence and reports failure. Earlier Edge UI runs passed with verification enabled; final UI-only QA used an explicit loopback test-context bypass, as documented in the README. .NET integration tests use a custom root store and verify the peer hostname without disabling verification. Windows root-store retention is an environmental issue; actual iPhone trust passes separately by user report.
 

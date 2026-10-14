@@ -1,6 +1,6 @@
 {
   "id": "/", "name": "PC Remote", "short_name": "PC Remote",
-  "description": "Control your paired Windows PC on your private LAN.",
+  "description": "Control your paired computer on your own network.",
   "start_url": "/", "scope": "/", "display": "standalone",
   "background_color": "#0b0f14", "theme_color": "#0b0f14",
   "icons": [

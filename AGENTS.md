@@ -7,7 +7,7 @@ Current public release: [v0.3.6 preview](https://github.com/maamouribilel/window
 
 ## Project and development
 
-PC Remote is a Windows .NET/WPF tray companion serving a bundled TypeScript browser remote over HTTPS/WSS on a trusted Private LAN. Since 0.3.0, releases add experimental Avalonia companions for macOS and Ubuntu/GNOME built on the shared host. Use the pinned toolchain and existing scripts described in `README.md`. There is no cloud backend, database, or required `.env` file.
+PC Remote is a .NET companion for the computer being controlled (Windows WPF tray app as the primary platform; experimental Avalonia companions for macOS and Ubuntu) serving a bundled TypeScript browser remote over HTTPS/WSS on a trusted local network. Since 0.3.0, releases add experimental Avalonia companions for macOS and Ubuntu/GNOME built on the shared host. Use the pinned toolchain and existing scripts described in `README.md`. There is no cloud backend, database, or required `.env` file.
 
 - Preserve PC-approved pairing, Windows user-bound credential protection, allowlisted commands, and input cleanup. Read `docs/protocol.md` before changing those paths.
 - Document actual behavior and evidence. Keep historical evidence intact; add a dated entry for new work. Never claim recording-adapter tests prove physical iPhone use or execution of power actions.
@@ -16,6 +16,8 @@ PC Remote is a Windows .NET/WPF tray companion serving a bundled TypeScript brow
 - Preserve separate HTTP budgets for unpaired peers and approved devices, plus reserved power-cancel/logout capacity. Recheck authentication and the original live session under the ownership lock after asynchronous request-body reads. Read `.github/SECURITY.md` for trust boundaries and private reporting.
 - Certificates must pass strict chain/name validation and carry server AKI/SKI extensions. Renew legacy server leaves without replacing the trusted root or remembered devices. Do not resolve compatibility failures by disabling certificate verification.
 
+
+- Public documentation and GitHub metadata describe every supported platform and browser with its actual status: Windows primary; macOS and Ubuntu experimental; iPhone Safari and its Home Screen app verified on hardware; Chromium-based browsers covered by automated checks at phone and desktop sizes; Android, iPad and Firefox untested. Never present the product as Windows-only or iPhone/Safari-only, and never claim a device, browser or platform that has not been verified. Keep companion UI text device-neutral except where a step is genuinely platform-specific.
 
 ## Portable backend, shared shell and platform development (Phases 1–5)
 

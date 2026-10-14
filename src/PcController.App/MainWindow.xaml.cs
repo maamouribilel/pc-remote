@@ -105,7 +105,7 @@ public partial class MainWindow : Window
             row.Children.Add(revoke);
             DeviceList.Children.Add(new Border { Child = row, Background = (Brush)FindResource("ControlBrush"), BorderBrush = (Brush)FindResource(host.Sessions.OwnerDeviceId == device.Id ? "AccentBrush" : "BorderBrush"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(12), Padding = new Thickness(16), Margin = new Thickness(0, 0, 0, 12) });
         }
-        if (devices.Length == 0) { var empty = new TextBlock { Text = "No paired devices. Create a link to pair your iPhone.", TextWrapping = TextWrapping.Wrap }; empty.SetResourceReference(StyleProperty, "MutedText"); DeviceList.Children.Add(empty); }
+        if (devices.Length == 0) { var empty = new TextBlock { Text = "No paired devices. Create a link to pair your phone.", TextWrapping = TextWrapping.Wrap }; empty.SetResourceReference(StyleProperty, "MutedText"); DeviceList.Children.Add(empty); }
     }
     private void NewPairing(object sender, RoutedEventArgs e) { host?.Pairing.IssueChallenge(); RefreshPairing(); }
     private void RefreshPcActions()
@@ -259,7 +259,7 @@ public partial class MainWindow : Window
     }
     private void ExportProfile(object sender, RoutedEventArgs e)
     {
-        var dialog = new SaveFileDialog { FileName = "pc-remote.mobileconfig", Filter = "iPhone certificate profile|*.mobileconfig" };
+        var dialog = new SaveFileDialog { FileName = "pc-remote.mobileconfig", Filter = "iPhone/iPad trust profile|*.mobileconfig" };
         if (profile != null && dialog.ShowDialog(this) == true)
         {
             try { if (!Path.GetFullPath(dialog.FileName).Equals(Path.GetFullPath(profile), StringComparison.OrdinalIgnoreCase)) File.Copy(profile, dialog.FileName, true); }

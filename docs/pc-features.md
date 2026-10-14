@@ -1,6 +1,6 @@
 # Apps, volume and power — version 0.2.0
 
-Refresh Safari or reopen the Home Screen app after updating the companion. The five tabs are Touchpad, Keyboard, Navigation, Media and PC.
+Reload the remote in your browser or reopen the Home Screen app after updating the companion. The five tabs are Touchpad, Keyboard, Navigation, Media and PC. This page describes the Windows companion; the macOS and Ubuntu companions offer the same tab with platform limits (macOS: sleep only; Ubuntu: what logind permits), listed in [release readiness](release-readiness.md).
 
 ## App launcher
 
