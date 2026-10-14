@@ -90,6 +90,11 @@ static void networkChanged(SCDynamicStoreRef store, CFArrayRef keys, void *info)
         if (!CFStringHasSuffix((CFStringRef)CFArrayGetValueAtIndex(keys, i), CFSTR("/LinkQuality"))) relevant = YES;
     if (relevant) invalidate_network();
 }
+// Test-only: whether a non-login-window application is frontmost (the session check's fallback).
+int pc_test_frontmost_regular(void) { @autoreleasepool {
+    NSRunningApplication *front=[NSWorkspace sharedWorkspace].frontmostApplication;
+    return front && front.processIdentifier>0 && ![front.bundleIdentifier isEqualToString:@"com.apple.loginwindow"];
+} }
 // Test-only: feeds one changed SystemConfiguration key through the real filter.
 int pc_test_network_key(const char *key) {
     unsigned long before = atomic_load(&networkGeneration);

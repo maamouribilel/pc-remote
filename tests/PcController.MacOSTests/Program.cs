@@ -72,9 +72,10 @@ if (OperatingSystem.IsMacOS())
     // On current macOS the system-wide AX focus query can fail (kAXErrorCannotComplete) for normal
     // front apps; an AX-trusted, active console session without Secure Input must still be interactive.
     var diagnostics = MacNative.pc_diagnostics();
-    if ((diagnostics & 1) != 0 && (diagnostics & 4) != 0 && (diagnostics & 8) == 0 && (diagnostics & 32) == 0)
+    // Hosted runners can have no ordinary frontmost app (or the login window); that is correctly not interactive.
+    if ((diagnostics & 1) != 0 && (diagnostics & 4) != 0 && (diagnostics & 8) == 0 && (diagnostics & 32) == 0 && MacNative.pc_test_frontmost_regular() == 1)
         Check(MacNative.pc_session() == 1, $"active console session is interactive (system-wide AX focus query {((diagnostics & 16) != 0 ? "succeeded" : "could not complete")})");
-    else Console.WriteLine("SKIP: interactive-session check needs an AX-trusted active console session without Secure Input");
+    else Console.WriteLine("SKIP: interactive-session check needs an AX-trusted active console session without Secure Input and an ordinary frontmost app");
     var (inputBefore, networkBefore) = (MacNative.pc_generation(), MacNative.pc_network_generation());
     MacNative.pc_test_notify(0);
     Check(MacNative.pc_generation() > inputBefore && MacNative.pc_network_generation() == networkBefore, "native Space/display event pauses input without network-trust change");
