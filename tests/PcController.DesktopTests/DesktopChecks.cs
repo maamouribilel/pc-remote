@@ -20,6 +20,11 @@ internal static class DesktopChecks
         check(networks.Read().PrivateAddresses.Length == 0 && !networks.Approve(candidate), "same-IP identity change and stale selection require new approval");
         networks.Approve(candidates[0]); networks.Invalidate();
         check(networks.Read().PrivateAddresses.Length == 0, "connectivity event removes session approval even with unchanged identity");
+        await using (var broken = new DesktopController("macos", new TrustedNetworks(() => []), _ => throw new IOException("Port 8443 is in use (fixture)."), observeNetworks: false, environment: new FakeEnvironment()))
+        {
+            await broken.RefreshAsync(); await broken.RefreshAsync();
+            check(broken.Server == null && broken.Message.Contains("Port 8443 is in use (fixture)."), "host setup failure stays visible across readiness refreshes");
+        }
         await EnvironmentChecks(check);
         await NetworkTrustChecks(check);
         await using (var blocked = new DesktopController("macos", networks, observeNetworks: false))

@@ -15,6 +15,9 @@
 #include <pthread.h>
 
 static atomic_ulong generation;
+static id layoutObserver; // Keyboard layout change observer (see cache_layout_on_main).
+static void refresh_layout(void);
+static void cache_layout_on_main(void);
 // Advances only when the trusted LAN may have changed (network keys, system sleep/wake, session
 // switch, power-off). Space and display transitions pause input via generation only.
 static atomic_ulong networkGeneration;
@@ -72,6 +75,9 @@ static void networkChanged(SCDynamicStoreRef store, CFArrayRef keys, void *info)
 }
 int pc_observe(void (*callback)(void)) {
     atomic_store(&unsafeCallback, callback);
+    refresh_layout();
+    if (!layoutObserver) layoutObserver = [[NSDistributedNotificationCenter defaultCenter] addObserverForName:(__bridge NSString *)kTISNotifySelectedKeyboardInputSourceChanged
+        object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *n) { (void)n; cache_layout_on_main(); }];
     if (observers) return networkStore != NULL;
     observers = [NSMutableArray array];
     atomic_store(&enforceGeneration, 1);
@@ -112,6 +118,7 @@ void pc_unobserve(void) {
     NSNotificationCenter *center = [NSWorkspace sharedWorkspace].notificationCenter;
     for (id observer in observers) [center removeObserver:observer];
     observers = nil;
+    if (layoutObserver) { [[NSDistributedNotificationCenter defaultCenter] removeObserver:layoutObserver]; layoutObserver = nil; }
     if (networkStore) { SCDynamicStoreSetDispatchQueue(networkStore, NULL); CFRelease(networkStore); networkStore = NULL; }
 }
 static int inTargetWindow(int pid, CGPoint point) {
@@ -205,20 +212,37 @@ static int layoutKey(TISInputSourceRef input, unsigned short character) {
     }
     return result;
 }
-int pc_command_key(unsigned short character) {
+// Text Input Source (TIS) APIs assert the main queue on current macOS: an off-main call traps
+// and never returns (host setup and phone shortcuts run on worker threads). Resolve the current
+// layout only on the main thread, at observe time and on every layout change, and answer
+// lookups from this cache on any thread. Same result as scanning keys 0-127 in order for the
+// first exact single-character match (Command map with cmdKey, plain map without modifiers).
+static _Atomic int commandKeys[128], plainKeys[128];
+static atomic_int layoutCached;
+static void cache_layout_on_main(void) {
+    int command[128], plain[128];
+    for(int i=0;i<128;i++) command[i]=plain[i]=-1;
     TISInputSourceRef input=TISCopyCurrentKeyboardLayoutInputSource();
-    int result=layoutKey(input, character); if(input) CFRelease(input); return result;
-}
-int pc_layout_key(unsigned short character) {
-    TISInputSourceRef input=TISCopyCurrentKeyboardLayoutInputSource(); if(!input) return -1;
-    CFDataRef data=TISGetInputSourceProperty(input,kTISPropertyUnicodeKeyLayoutData); int found=-1;
-    if(data) for(UInt16 key=0;key<128;key++) {
-        UInt32 dead=0; UniChar text[4]; UniCharCount count=0;
-        OSStatus status=UCKeyTranslate((const UCKeyboardLayout *)CFDataGetBytePtr(data),key,kUCKeyActionDown,0,LMGetKbdType(),kUCKeyTranslateNoDeadKeysMask,&dead,4,&count,text);
-        if(status==noErr && count==1 && text[0]==character) { found=key; break; }
+    CFDataRef data=input ? TISGetInputSourceProperty(input,kTISPropertyUnicodeKeyLayoutData) : NULL;
+    if(data) for(UInt16 key=0;key<128;key++) for(int pass=0;pass<2;pass++) {
+        UInt32 dead=0; UniChar text[4]; UniCharCount count=0; int *map=pass ? plain : command;
+        OSStatus status=UCKeyTranslate((const UCKeyboardLayout *)CFDataGetBytePtr(data),key,kUCKeyActionDown,pass ? 0 : cmdKey >> 8,LMGetKbdType(),kUCKeyTranslateNoDeadKeysMask,&dead,4,&count,text);
+        if(status==noErr && count==1 && text[0]<128 && map[text[0]]<0) map[text[0]]=key;
     }
-    CFRelease(input); return found;
+    if(input) CFRelease(input);
+    for(int i=0;i<128;i++) { atomic_store(&commandKeys[i],command[i]); atomic_store(&plainKeys[i],plain[i]); }
+    atomic_store(&layoutCached, data != NULL);
 }
+static void refresh_layout(void) {
+    if([NSThread isMainThread]) cache_layout_on_main();
+    else dispatch_async(dispatch_get_main_queue(), ^{ cache_layout_on_main(); });
+}
+static int cached_key(_Atomic int *map, unsigned short character) {
+    if([NSThread isMainThread]) cache_layout_on_main();
+    return character<128 && atomic_load(&layoutCached) ? atomic_load(&map[character]) : -1;
+}
+int pc_command_key(unsigned short character) { return cached_key(commandKeys, character); }
+int pc_layout_key(unsigned short character) { return cached_key(plainKeys, character); }
 
 int pc_test_layout_key(const char *identifier, unsigned short character) {
     @autoreleasepool {

@@ -64,6 +64,11 @@ if (OperatingSystem.IsMacOS())
     Check(MacNative.pc_test_layout_key("com.apple.keylayout.US", 'a') == 0 && MacNative.pc_test_layout_key("com.apple.keylayout.US", 'c') == 8, "ACTUAL US Command layout table resolution (no input source change)");
     Check(MacNative.pc_test_layout_key("com.apple.keylayout.French", 'a') == 12 && MacNative.pc_test_layout_key("com.apple.keylayout.French", 'c') == 8, "ACTUAL French AZERTY Command layout table resolution (no native app insertion claimed)");
     Check(new[] { 'c', 'v', 'a', 'z' }.All(c => MacNative.pc_command_key(c) >= 0), "ACTUAL current keyboard layout resolves common Command actions");
+    // Host setup and phone shortcuts resolve keys on worker threads. On current macOS the Text Input
+    // Source APIs trap off the main queue and never return, so lookups must come from the main-thread cache.
+    var (mainCommand, mainPlain) = (MacNative.pc_command_key('c'), MacNative.pc_layout_key('k'));
+    var worker = Task.Run(() => (MacNative.pc_command_key('c'), MacNative.pc_layout_key('k'), MacInput.ShortcutsAvailable));
+    Check(worker.Wait(TimeSpan.FromSeconds(5)) && worker.Result == (mainCommand, mainPlain, true), "keyboard layout lookups return the main-thread result from a worker thread without trapping");
     var (inputBefore, networkBefore) = (MacNative.pc_generation(), MacNative.pc_network_generation());
     MacNative.pc_test_notify(0);
     Check(MacNative.pc_generation() > inputBefore && MacNative.pc_network_generation() == networkBefore, "native Space/display event pauses input without network-trust change");

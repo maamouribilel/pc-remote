@@ -77,6 +77,7 @@ public sealed class DesktopController : IAsyncDisposable
     public CompanionServer? Server => lifecycle?.Server;
     public string Platform { get; }
     public string Message { get; private set; }
+    private string? hostFailure;
     public string Status => disposed ? "Stopped" : Server is not { } s ? "Setup required" : s.Sessions.Paused ? "Control paused" : s.Sessions.OwnerDeviceId == null ? "No active controller" : s.Sessions.ActiveSessionId == null ? "Controller connecting" : "Controller connected";
     public event Action? Changed;
     public event Action<ApprovalPrompt>? ApprovalRequested;
@@ -97,12 +98,13 @@ public sealed class DesktopController : IAsyncDisposable
             lifecycle.Updating += () => { DenyPrompts(); Changed?.Invoke(); };
             lifecycle.Ready += s =>
             {
+                hostFailure = null;
                 s.ApproveDeviceAsync = RequestApproval;
                 Message = s.Readiness.Message;
                 s.Pairing.Changed += Notify; s.Sessions.Changed += Notify;
                 Changed?.Invoke();
             };
-            lifecycle.Failed += m => { Message = m; Changed?.Invoke(); };
+            lifecycle.Failed += m => { hostFailure = m; Message = m; Changed?.Invoke(); };
         }
         if (observeNetworks) { NetworkChange.NetworkAddressChanged += NetworkChanged; NetworkChange.NetworkAvailabilityChanged += AvailabilityChanged; }
     }
@@ -151,6 +153,8 @@ public sealed class DesktopController : IAsyncDisposable
             {
                 var state = await Task.Run(environment.Inspect).ConfigureAwait(false);
                 InputReady = state.InputReady; StorageReady = state.StorageReady; Message = state.Message; refreshCapabilities |= state.Changed;
+                // Keep the last host setup failure visible until a host starts; the readiness text alone hides why.
+                if (state.StorageReady && Server == null && hostFailure != null) Message = hostFailure;
                 if (state.NetworkChanged) Networks.Invalidate();
                 if (state.Changed) { Server?.Sessions.Pause(true); DenyPrompts(); }
                 if (!state.InputReady) { Server?.Sessions.Pause(true); DenyPrompts(); }

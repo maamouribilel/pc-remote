@@ -55,5 +55,5 @@ public static class MacPermissions
     public static bool Accessibility => MacNative.pc_permission() != 0;
     public static bool Interactive => MacNative.pc_session() != 0;
     public static void OpenAccessibilitySettings() => MacNative.pc_onboard();
-    public const string Recovery = "Open System Settings → Privacy & Security → Accessibility (Device Control and Data Access on macOS 27), add this PC Remote.app and enable it. Quit and reopen the same app. After a rebuild, remove a stale entry and add the candidate again. Control remains paused until permission exists and you choose Resume. Secure Input/password fields temporarily block control.";
+    public const string Recovery = "Open System Settings → Privacy & Security → Accessibility (Device Control and Data Access on macOS 27), add this PC Remote.app and enable it, then quit and reopen it. After an update or rebuild, an existing PC Remote entry can look enabled but no longer apply: select it, remove it with −, add this app with + and reopen PC Remote. Control remains paused until permission exists and you choose Resume. Secure Input/password fields temporarily block control.";
 }

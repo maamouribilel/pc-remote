@@ -408,3 +408,26 @@ Afterwards, at the user's request:
 - 0.3.2 exited gracefully on SIGTERM (the 0.3.2 fix, observed natively on this installed build) and was moved to the Trash, not permanently deleted.
 - The application data directory and Keychain item were not touched.
 - 0.3.3 launched and keeps its listeners stopped until the user approves Keychain access for the new code identity. Accessibility must be re-enabled.
+
+## 2026-10-14 — macOS server never started once Accessibility was granted (fixed for 0.3.4)
+
+**User report on the installed 0.3.3 app.** After the user granted Accessibility, the banner said "macOS input ready", but the window showed *Setup required*, the address stayed unavailable and no listener ran. Read-only diagnosis on that Mac:
+
+- The tccd log showed the first Accessibility toggles failing with "Failed to match existing code requirement". The entry belonged to the previous ad-hoc build. The user removed and re-added the entry, and after a relaunch tccd granted `kTCCServiceAccessibility` and `kTCCServicePostEvent` (`authValue=2`).
+- A `sample` and `dotnet-stack` capture showed the host-setup worker stuck in `MacHostFactory.Create → MacInput.ShortcutsAvailable → pc_command_key → TSMGetInputSourceProperty`. On this macOS 27 build, HIToolbox's `islGetInputSourceListWithAdditions` calls `dispatch_assert_queue(main)`. Off the main queue the assertion traps, the .NET runtime's exception thread spins, and the call never returns.
+- The controller's refresh gate stayed held: no host, no retries and no visible error. Graceful Exit would also wait forever.
+- The same lookup runs for phone Copy/Paste/Select-all/Undo shortcuts and player shortcuts on Kestrel threads.
+- This path runs only when input is ready, which is why 0.3.2 and 0.3.3 reached *Local only* before Accessibility was granted.
+
+**Fix (macOS bridge and shell):**
+- The Command and plain keyboard maps are now resolved only on the main thread: when observation starts, on every selected-keyboard-layout change, and on any direct main-thread lookup. Worker threads read an atomic cache. Results are identical for ASCII characters (first key 0–127 with an exact single-character match); non-ASCII characters were never used by these callers.
+- A host-setup failure message now stays in the banner until a host starts.
+- The in-app Accessibility text explains that after an update an existing entry can look enabled but no longer apply.
+
+**Verification:**
+- The clang `-Werror` bridge build passes.
+- Mac adapter **63**: the new worker-thread lookup check passes, but a console process does not reproduce the trap (it passed against the old bridge too).
+- In the real native app (`--native-startup-check` with a running `NSApplication`), the new check passes with the fixed bridge. With the previous bridge the process hung and was still running after 40 s.
+- Desktop **86**, including a check that a host-setup failure stays visible across readiness refreshes.
+
+**Not established:** physical input with a paired phone and a real shortcut from the phone; behaviour on macOS versions without the main-queue assertion is expected to be unchanged (cache populated at startup).

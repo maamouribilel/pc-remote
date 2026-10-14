@@ -157,6 +157,14 @@ public sealed class NativeStartupCheckApp : DesktopApp
             var desktop = (IClassicDesktopStyleApplicationLifetime)ApplicationLifetime!;
             var window = (MainWindow)desktop.MainWindow!;
             Program.Check(window.IsVisible && window.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text?.Contains("No HTTPS listener") == true), "real platform shell startup with unavailable adapters");
+            if (OperatingSystem.IsMacOS())
+            {
+                // Inside a running NSApplication, macOS Text Input Source APIs trap off the main
+                // queue and never return; host setup and phone shortcuts query them from workers.
+                var onMain = PcController.MacOS.MacInput.ShortcutsAvailable;
+                var worker = Task.Run(() => PcController.MacOS.MacInput.ShortcutsAvailable);
+                Program.Check(worker.Wait(TimeSpan.FromSeconds(5)) && worker.Result == onMain, "native app: keyboard layout lookup from a worker thread returns the main-thread result without trapping");
+            }
             window.RequestExit();
         };
         timer.Start();
