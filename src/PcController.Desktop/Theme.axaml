@@ -1,8 +1,168 @@
 <Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <Style Selector="Window"><Setter Property="Background" Value="#0B0F14"/><Setter Property="Foreground" Value="#F4F6F8"/><Setter Property="FontSize" Value="16"/></Style>
-  <Style Selector="Button"><Setter Property="MinHeight" Value="44"/><Setter Property="Padding" Value="16,10"/><Setter Property="CornerRadius" Value="12"/><Setter Property="Background" Value="#171D25"/></Style>
-  <Style Selector="Button.primary"><Setter Property="Background" Value="#5EE8BE"/><Setter Property="Foreground" Value="#0B0F14"/></Style>
-  <Style Selector="TextBlock.secondary"><Setter Property="Foreground" Value="#A7B1BF"/><Setter Property="FontSize" Value="14"/></Style>
-  <Style Selector="TextBox"><Setter Property="MinHeight" Value="44"/></Style>
-  <Style Selector="ComboBox"><Setter Property="MinHeight" Value="44"/></Style>
+  <!-- Palette shared with the Windows WPF companion (src/PcController.App/App.xaml). Fluent keys
+       are overridden so hover, pressed, focus and disabled states keep the same dark theme. -->
+  <Styles.Resources>
+    <ResourceDictionary>
+      <SolidColorBrush x:Key="PcBackgroundBrush" Color="#0B0F14" />
+      <SolidColorBrush x:Key="PcSurfaceBrush" Color="#171D25" />
+      <SolidColorBrush x:Key="PcTextBrush" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="PcMutedBrush" Color="#A1ADBD" />
+      <SolidColorBrush x:Key="PcBorderBrush" Color="#3D4753" />
+      <SolidColorBrush x:Key="PcPanelBorderBrush" Color="#303B47" />
+      <SolidColorBrush x:Key="PcAccentBrush" Color="#5EE8BE" />
+      <SolidColorBrush x:Key="PcWarningBrush" Color="#F5C46B" />
+      <SolidColorBrush x:Key="PcErrorBrush" Color="#FFB5B1" />
+      <LinearGradientBrush x:Key="PcPanelBrush" StartPoint="0%,0%" EndPoint="100%,100%"><GradientStop Color="#171F28" Offset="0" /><GradientStop Color="#121920" Offset="1" /></LinearGradientBrush>
+      <LinearGradientBrush x:Key="PcControlBrush" StartPoint="0%,0%" EndPoint="100%,100%"><GradientStop Color="#272E37" Offset="0" /><GradientStop Color="#171D24" Offset="1" /></LinearGradientBrush>
+      <LinearGradientBrush x:Key="PcControlHoverBrush" StartPoint="0%,0%" EndPoint="100%,100%"><GradientStop Color="#2F3743" Offset="0" /><GradientStop Color="#1C232B" Offset="1" /></LinearGradientBrush>
+
+      <StaticResource x:Key="ButtonBackground" ResourceKey="PcControlBrush" />
+      <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="PcControlHoverBrush" />
+      <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#151A21" />
+      <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="#141920" />
+      <SolidColorBrush x:Key="ButtonForeground" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#DDE3EA" />
+      <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="#6B7685" />
+      <SolidColorBrush x:Key="ButtonBorderBrush" Color="#3D4753" />
+      <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#718091" />
+      <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#5EE8BE" />
+      <SolidColorBrush x:Key="ButtonBorderBrushDisabled" Color="#262D36" />
+
+      <SolidColorBrush x:Key="TextControlBackground" Color="#141B23" />
+      <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#18202A" />
+      <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#141B23" />
+      <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="#10151B" />
+      <SolidColorBrush x:Key="TextControlForeground" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="TextControlForegroundDisabled" Color="#8A95A5" />
+      <SolidColorBrush x:Key="TextControlBorderBrush" Color="#4C5764" />
+      <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#718091" />
+      <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#5EE8BE" />
+      <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="#2A323C" />
+      <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="#2E7A64" />
+      <SolidColorBrush x:Key="TextControlButtonForeground" Color="#A1ADBD" />
+      <SolidColorBrush x:Key="TextControlButtonForegroundPointerOver" Color="#F4F6F8" />
+
+      <SolidColorBrush x:Key="ComboBoxBackground" Color="#141B23" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#18202A" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#141B23" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundDisabled" Color="#10151B" />
+      <SolidColorBrush x:Key="ComboBoxBackgroundUnfocused" Color="#141B23" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#4C5764" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#718091" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="#5EE8BE" />
+      <SolidColorBrush x:Key="ComboBoxBorderBrushDisabled" Color="#2A323C" />
+      <SolidColorBrush x:Key="ComboBoxForeground" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="ComboBoxForegroundDisabled" Color="#8A95A5" />
+      <SolidColorBrush x:Key="ComboBoxPlaceHolderForeground" Color="#A1ADBD" />
+      <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground" Color="#A1ADBD" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#171D25" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#4C5764" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#303C48" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="#2A3440" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#23483F" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="#2A5649" />
+      <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPressed" Color="#23483F" />
+      <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPointerOver" Color="#F4F6F8" />
+
+      <SolidColorBrush x:Key="CheckBoxForegroundUnchecked" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPointerOver" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="CheckBoxForegroundChecked" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="CheckBoxForegroundCheckedPointerOver" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#718091" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="#A1ADBD" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUnchecked" Color="#141B23" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" Color="#18202A" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#5EE8BE" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="#7DF0CE" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="#4FD3AC" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeChecked" Color="#5EE8BE" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" Color="#7DF0CE" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="#071913" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver" Color="#071913" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPressed" Color="#071913" />
+
+      <SolidColorBrush x:Key="SliderTrackFill" Color="#3D4753" />
+      <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="#4C5764" />
+      <SolidColorBrush x:Key="SliderTrackFillPressed" Color="#4C5764" />
+      <SolidColorBrush x:Key="SliderTrackValueFill" Color="#5EE8BE" />
+      <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="#7DF0CE" />
+      <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="#4FD3AC" />
+      <SolidColorBrush x:Key="SliderThumbBackground" Color="#5EE8BE" />
+      <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="#7DF0CE" />
+      <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="#4FD3AC" />
+
+      <StaticResource x:Key="ExpanderHeaderBackground" ResourceKey="PcPanelBrush" />
+      <SolidColorBrush x:Key="ExpanderHeaderBackgroundPointerOver" Color="#1A222C" />
+      <SolidColorBrush x:Key="ExpanderHeaderBackgroundPressed" Color="#151C24" />
+      <SolidColorBrush x:Key="ExpanderHeaderForeground" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="ExpanderHeaderForegroundPointerOver" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="ExpanderHeaderForegroundPressed" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="ExpanderHeaderBorderBrush" Color="#303B47" />
+      <SolidColorBrush x:Key="ExpanderHeaderBorderBrushPointerOver" Color="#4C5764" />
+      <SolidColorBrush x:Key="ExpanderHeaderBorderBrushPressed" Color="#5EE8BE" />
+      <SolidColorBrush x:Key="ExpanderContentBackground" Color="#121920" />
+      <SolidColorBrush x:Key="ExpanderContentBorderBrush" Color="#303B47" />
+      <SolidColorBrush x:Key="ExpanderChevronForeground" Color="#A1ADBD" />
+      <SolidColorBrush x:Key="ExpanderChevronForegroundPointerOver" Color="#F4F6F8" />
+      <SolidColorBrush x:Key="ExpanderChevronBackground" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronBackgroundPointerOver" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronBackgroundPressed" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronBorderBrush" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronBorderBrushPointerOver" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronBorderBrushPressed" Color="Transparent" />
+      <Thickness x:Key="ExpanderHeaderPadding">20,14,20,14</Thickness>
+      <Thickness x:Key="ExpanderContentPadding">24,20,24,24</Thickness>
+    </ResourceDictionary>
+  </Styles.Resources>
+
+  <Style Selector="Window"><Setter Property="Background" Value="#0B0F14"/><Setter Property="Foreground" Value="#F4F6F8"/><Setter Property="FontSize" Value="14"/></Style>
+
+  <Style Selector="Button">
+    <Setter Property="MinHeight" Value="44"/><Setter Property="Padding" Value="16,10"/><Setter Property="CornerRadius" Value="12"/>
+    <Setter Property="BorderThickness" Value="1"/><Setter Property="FontSize" Value="14"/><Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/><Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <Style Selector="Button:disabled"><Setter Property="Cursor" Value="Arrow"/></Style>
+  <Style Selector="Button:focus-visible /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="BorderBrush" Value="#5EE8BE"/></Style>
+  <Style Selector="Button.primary"><Setter Property="Background" Value="#5EE8BE"/><Setter Property="Foreground" Value="#071913"/><Setter Property="BorderBrush" Value="#80F2D0"/></Style>
+  <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="#7DF0CE"/><Setter Property="Foreground" Value="#071913"/><Setter Property="BorderBrush" Value="#A5F6DE"/></Style>
+  <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="#4FD3AC"/><Setter Property="Foreground" Value="#071913"/><Setter Property="BorderBrush" Value="#4FD3AC"/></Style>
+  <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="#1F3A33"/><Setter Property="Foreground" Value="#6E8C83"/><Setter Property="BorderBrush" Value="#1F3A33"/></Style>
+  <Style Selector="Button.danger"><Setter Property="Foreground" Value="#FFB5B1"/></Style>
+  <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Foreground" Value="#FFD0CD"/><Setter Property="BorderBrush" Value="#B86B66"/></Style>
+  <Style Selector="Button.danger-primary"><Setter Property="Background" Value="#F0857D"/><Setter Property="Foreground" Value="#2A0B09"/><Setter Property="BorderBrush" Value="#F5A39D"/></Style>
+  <Style Selector="Button.danger-primary:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="#F59C95"/><Setter Property="Foreground" Value="#2A0B09"/><Setter Property="BorderBrush" Value="#F8B9B4"/></Style>
+  <Style Selector="Button.danger-primary:pressed /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="#E06F67"/><Setter Property="Foreground" Value="#2A0B09"/></Style>
+  <Style Selector="Button.compact"><Setter Property="MinHeight" Value="36"/><Setter Property="Padding" Value="14,6"/><Setter Property="FontWeight" Value="Normal"/></Style>
+  <Style Selector="Button.icon"><Setter Property="Padding" Value="10"/><Setter Property="MinWidth" Value="44"/></Style>
+
+  <Style Selector="TextBox"><Setter Property="MinHeight" Value="44"/><Setter Property="CornerRadius" Value="10"/><Setter Property="VerticalContentAlignment" Value="Center"/><Setter Property="Padding" Value="12,8"/><Setter Property="FontSize" Value="14"/></Style>
+  <Style Selector="TextBox.mono"><Setter Property="FontFamily" Value="Menlo, DejaVu Sans Mono, Ubuntu Mono, monospace"/><Setter Property="FontSize" Value="13"/></Style>
+  <Style Selector="ComboBox"><Setter Property="MinHeight" Value="44"/><Setter Property="CornerRadius" Value="10"/><Setter Property="VerticalContentAlignment" Value="Center"/><Setter Property="Padding" Value="12,8"/></Style>
+  <Style Selector="NumericUpDown"><Setter Property="MinHeight" Value="44"/><Setter Property="CornerRadius" Value="10"/><Setter Property="VerticalContentAlignment" Value="Center"/></Style>
+  <Style Selector="CheckBox"><Setter Property="MinHeight" Value="36"/><Setter Property="FontSize" Value="14"/></Style>
+  <Style Selector="Slider"><Setter Property="MinHeight" Value="44"/></Style>
+
+  <Style Selector="Expander"><Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="CornerRadius" Value="14"/><Setter Property="FontSize" Value="14"/></Style>
+
+  <Style Selector="Border.card"><Setter Property="Background" Value="{DynamicResource PcPanelBrush}"/><Setter Property="BorderBrush" Value="#303B47"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="16"/><Setter Property="Padding" Value="24"/></Style>
+  <Style Selector="Border.row"><Setter Property="Background" Value="{DynamicResource PcControlBrush}"/><Setter Property="BorderBrush" Value="#3D4753"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="12"/><Setter Property="Padding" Value="16,12"/></Style>
+  <Style Selector="Border.row.active"><Setter Property="BorderBrush" Value="#5EE8BE"/></Style>
+  <Style Selector="Border.group"><Setter Property="Background" Value="#141B23"/><Setter Property="BorderBrush" Value="#2A333E"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="12"/><Setter Property="Padding" Value="18"/></Style>
+  <Style Selector="Border.notice"><Setter Property="Background" Value="#141B23"/><Setter Property="BorderBrush" Value="#3D4753"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="12"/><Setter Property="Padding" Value="16,12"/></Style>
+  <Style Selector="Border.notice.warning"><Setter Property="Background" Value="#211C12"/><Setter Property="BorderBrush" Value="#6B5524"/></Style>
+  <Style Selector="Border.notice.ready"><Setter Property="Background" Value="#102620"/><Setter Property="BorderBrush" Value="#2C6B58"/></Style>
+
+  <Style Selector="TextBlock.secondary"><Setter Property="Foreground" Value="#A1ADBD"/><Setter Property="FontSize" Value="14"/><Setter Property="LineHeight" Value="21"/></Style>
+  <Style Selector="TextBlock.caption"><Setter Property="Foreground" Value="#A1ADBD"/><Setter Property="FontSize" Value="13"/></Style>
+  <Style Selector="TextBlock.title"><Setter Property="FontSize" Value="22"/><Setter Property="FontWeight" Value="Bold"/></Style>
+  <Style Selector="TextBlock.label"><Setter Property="Foreground" Value="#A1ADBD"/><Setter Property="FontSize" Value="13"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
+  <Style Selector="TextBlock.accent"><Setter Property="Foreground" Value="#5EE8BE"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
+  <Style Selector="TextBlock.dialog-title"><Setter Property="FontSize" Value="20"/><Setter Property="FontWeight" Value="Bold"/></Style>
+  <Style Selector="TextBlock.subheading"><Setter Property="FontSize" Value="16"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
 </Styles>

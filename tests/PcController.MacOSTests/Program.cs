@@ -69,6 +69,19 @@ if (OperatingSystem.IsMacOS())
     Check(MacNative.pc_generation() > inputBefore && MacNative.pc_network_generation() == networkBefore, "native Space/display event pauses input without network-trust change");
     MacNative.pc_test_notify(1);
     Check(MacNative.pc_generation() > inputBefore + 1 && MacNative.pc_network_generation() > networkBefore, "native network/sleep/session event advances both input and network-trust generations");
+    var lockDirectory = Path.Combine("/private/tmp", "PcMacLock-" + Guid.NewGuid().ToString("N"));
+    try
+    {
+        using (var first = SingleInstance.TryAcquire(lockDirectory))
+        {
+            Check(first != null && File.GetUnixFileMode(Path.Combine(lockDirectory, "instance.lock")) == (UnixFileMode.UserRead | UnixFileMode.UserWrite), "instance lock is 0600 although the variadic open mode is unreliable on arm64");
+            using var second = SingleInstance.TryAcquire(lockDirectory);
+            Check(second == null, "second Mac instance is refused while the lock is held");
+        }
+        using var restarted = SingleInstance.TryAcquire(lockDirectory);
+        Check(restarted != null, "released Mac instance lock can be acquired again");
+    }
+    finally { Directory.Delete(lockDirectory, true); }
 }
 if (args.Contains("--storage") || args.Contains("--storage-only"))
 {

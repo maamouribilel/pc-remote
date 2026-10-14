@@ -219,3 +219,53 @@ Hosted runs on `8fc1d1c`: the `final` dispatch [38474378271](https://github.com/
 Local verification used the same independent script as 0.3.0: checksums, manifest provenance (`candidate: false`, `sourceDirty: false`, revision `8fc1d1c`), extracted macOS seals, native architectures, ARM64 native and Intel Rosetta-emulated `--package-info` (`0.3.1+8fc1d1c`, .NET 10.0.13), Windows/Ubuntu informational revisions, licenses and secret scans. The shipped macOS bridge exports the network-trust generation, and the shell contains the new loopback explanation. After publication, all nine public URLs returned HTTP 200 to anonymous downloads with matching sizes and SHA-256 digests. The public `SHA256SUMS.txt` is byte-identical, GitHub's asset digests match, and the rendered release notes and README were checked in a browser.
 
 On the user's Mac, the verified public Apple Silicon ZIP replaced the earlier 0.3.0 installation in `/Applications` (the old bundle was moved aside, and the application data directory was not touched). The seal and `--package-info` passed and the app was launched. Because the code identity changed again, the user must re-approve Keychain access and re-enable Accessibility. Real Space/full-screen/display/Secure Input transitions with a connected phone remain the outstanding manual check for this fix.
+
+## 2026-10-14 — bug fixes and macOS/Linux window redesign (unreleased, after 0.3.1)
+
+Source changes on `main` after v0.3.1. Version stays **0.3.1**; no package was built or published, and the v0.3.1 tag and assets are unchanged. A review of the host, desktop shell, native bridges and phone remote found the defects below. Each fix has a regression check unless stated otherwise.
+
+**Host and core**
+- A `server.protected` leaf issued by a different root (for example after `root.protected` was lost on Windows) kept being served while the UI showed the new root's fingerprint and profile. The leaf is now reissued unless its issuer and authority key identifier match the current root. Remembered devices and the root are untouched.
+- Request bodies with lone surrogate escapes (`"\ud800"`) parsed but threw when read, producing 500 errors or internal .NET messages. They now return `400 invalid_request`.
+- A device approved on the PC whose browser never collected the credential (ticket expired, a new pairing link, or shutdown) stayed listed as remembered for 30 days. It is now removed.
+- The 30-second power countdown and the app-launch rate limit used the wall clock, so a clock step could run a power action early or block launches. Both are now monotonic; `executeAt` is display-only. The power confirmation token is compared in constant time.
+- A throwing `Ready` handler could leave a disposed server published. The lifecycle now clears it.
+
+**Phone remote**
+- Holding two repeat keys (for example two arrows) sent about 16 repeats per second against the PC's 10-per-second session bound, which paused control. Only the newest held key now repeats, every 150 ms. The browser regression check fails on the old code and passes now.
+- A ping timeout left a dead connection looking usable until the browser's close timeout; it now disconnects and retries immediately.
+- Power confirmation expiry and the countdown compare PC times using the HTTP `Date` header offset, not the phone's clock.
+- The `launch_rate_limit` message is now shown instead of the global "wait one minute" message.
+- Unpaired heartbeats no longer erase pairing errors or reopen a closed panel.
+- `powerMessage` no longer overwrites newer feedback on every heartbeat.
+- The volume slider no longer stops updating after a drag that ends on its starting value.
+- Background retries keep **Take over** in place, and **Forget this browser** asks for confirmation.
+- Duplicate reconnect timers are cleared.
+
+**macOS/Linux shell**
+- macOS logout, restart, shutdown and Quit were cancelled the first time (Avalonia answered `NSTerminateCancel`). Cleanup now runs synchronously and cancels only when input cleanup fails.
+- macOS ignored SIGTERM. SIGTERM, SIGINT and SIGHUP now request graceful Exit on both platforms. Natively verified: the fixture stopped its listener and removed its temporary data.
+- Resume right after a permission grant could consume the one-shot change and keep the stale `permission-required` host. It now forces a capability rebuild.
+- Unexpected exceptions in timer, open and exit handlers now pause control with a message instead of terminating the app.
+- Overlapping Exit, OS-shutdown and lifetime disposals share one cleanup, which can be retried after a failure.
+- Network approval runs off the UI thread.
+- The GTK text checkbox re-reads the real mode after a refused change.
+- A failed Exit keeps the keep-running choice.
+- The macOS single-instance lock sets 0600 with `fchmod`, because the variadic `open` mode is unreliable on arm64.
+
+**Linux native bridge**
+- logind session lookup falls back to `GetSession("auto")` when `GetSessionByPID` fails, which happens for apps started from GNOME Shell, a terminal or autostart in user scopes.
+- NetworkManager access-point, statistics and Wi-Fi bitrate/scan property updates no longer pause control or revoke LAN approval; a roaming (`ActiveAccessPoint`) change still does.
+- Portal `Notify*` calls use a private copy of the session path taken under its mutex.
+
+**Window redesign**
+- The Avalonia window now follows the Windows dashboard and palette; see [desktop-shell.md](desktop-shell.md#window-layout-2026-10-14). The production title is `PC Remote 0.3.1 · experimental preview` instead of "development shell".
+
+**Results (macOS 27 Apple Silicon unless stated)**
+- Release build zero warnings/errors; the full Windows solution cross-builds with zero warnings/errors.
+- Portable **272** (7 new), desktop **79** (5 new, including the real platform composition with Keychain consent and the permission banner; volume slider and QR assertions updated), Mac adapter **62** (3 new single-instance lock checks), real disposable Keychain storage **85**, browser **6** (two-key repeat assertion added), browser capabilities, strict TLS and Mac TLS (Python 3.13), npm/NuGet audit (no advisories), release-documentation check.
+- Headless Skia renders were taken at 1000×820, 600 wide and fully expanded, for the setup-required, missing-permission and fixture states on both platform variants.
+- The native visible fixture window started on macOS and exited gracefully on SIGTERM. Screen capture was not permitted in this session, so native appearance was not photographed.
+- Isolated Ubuntu 24.04.5 ARM64 container (SDK 10.0.402): the bridge compiles with `-Werror` (production and test seams). Linux faults **88**, private Xvfb X11 **41**, private fake-portal/MPRIS/logind **31** (including the new NetworkManager noise/roaming check) and disposable keyring storage passed.
+
+**Not established:** Windows execution of the host changes, real GNOME (x64, X11 or Wayland) session lookup and NetworkManager behaviour, the macOS logout/restart path and native appearance on a real display, Linux rendering on a real desktop, and physical-phone/LAN use of the remote fixes. The new GetSession fallback and NetworkManager filter are container/fixture evidence only.

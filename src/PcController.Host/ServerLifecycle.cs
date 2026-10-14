@@ -42,6 +42,7 @@ public sealed class ServerLifecycle(Func<NetworkSnapshot, CompanionServer> creat
             }
             catch (Exception exception)
             {
+                if (ReferenceEquals(Server, next)) Server = null; // A throwing Ready handler must not leave a disposed server published.
                 if (next != null) await next.DisposeAsync().ConfigureAwait(false);
                 Failed?.Invoke(exception is IOException or UnauthorizedAccessException or InvalidOperationException
                     ? "HTTPS setup failed: " + exception.Message + " Control remains paused; resolve setup and retry."

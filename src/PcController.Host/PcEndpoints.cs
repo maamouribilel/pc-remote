@@ -9,7 +9,7 @@ namespace PcController.Host;
 
 public sealed partial class CompanionServer
 {
-    private DateTimeOffset nextLaunch;
+    private long nextLaunchTick; // Monotonic: a wall-clock step back must not block launches.
     private object? PublicPower() => Power.Pending is { } pending ? new { action = pending.Action, executeAt = pending.ExecuteAt } : null;
     private void MapPcEndpoints()
     {
@@ -24,8 +24,8 @@ public sealed partial class CompanionServer
             if (!StringField(body, "id", out var id) || id.Length != 32) return Error("invalid_app", 400);
             var entry = Launcher.Find(id);
             if (entry == null) return Error("invalid_app", 400);
-            if (DateTimeOffset.UtcNow < nextLaunch) return Error("launch_rate_limit", 429);
-            nextLaunch = DateTimeOffset.UtcNow.AddSeconds(2);
+            if (Environment.TickCount64 < nextLaunchTick) return Error("launch_rate_limit", 429);
+            nextLaunchTick = Environment.TickCount64 + 2_000;
             Input.ReleaseAll();
             var result = PcActions.Launch(entry);
             MediaSettings.Save(entry.Profile);
@@ -98,7 +98,7 @@ public sealed partial class CompanionServer
     private void CheckPower()
     {
         var pending = Power.Pending;
-        if (pending == null || pending.ExecuteAt > DateTimeOffset.UtcNow) return;
+        if (pending == null || !Power.IsDue(pending)) return;
         PendingPower? due = null;
         void Take()
         {

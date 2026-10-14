@@ -36,6 +36,7 @@ public sealed class PairingService(IDeviceRepository devices, Func<DateTimeOffse
         lock (gate)
         {
             if (closed) throw new InvalidOperationException("pair_closed");
+            DiscardUnclaimed();
             pending = null; credential = null; approved = null; state = "none";
             challenge = new(RandomToken(), Now.AddMinutes(2));
             Changed?.Invoke();
@@ -84,7 +85,7 @@ public sealed class PairingService(IDeviceRepository devices, Func<DateTimeOffse
         lock (gate)
         {
             if (ticket.Length != 64 || pending is not { } p || !Matches(p.Ticket, ticket)) return new("pair_invalid");
-            if (p.Expires <= Now) { credential = null; return new("pair_expired"); }
+            if (p.Expires <= Now) { DiscardUnclaimed(); credential = null; approved = null; return new("pair_expired"); }
             if (state != "approved") return new(state);
             if (credential == null || Authenticate(credential) == null) return new("revoked");
             var result = new PairingClaim("approved", credential, approved);
@@ -95,7 +96,16 @@ public sealed class PairingService(IDeviceRepository devices, Func<DateTimeOffse
     }
     public void Close()
     {
-        lock (gate) { closed = true; challenge = null; credential = null; approved = null; state = "denied"; Changed?.Invoke(); }
+        lock (gate) { closed = true; DiscardUnclaimed(); challenge = null; credential = null; approved = null; state = "denied"; Changed?.Invoke(); }
+    }
+    // An approval whose credential never reached the browser must not stay listed as a
+    // remembered device. Nobody holds its credential, so a failed removal is harmless.
+    private void DiscardUnclaimed()
+    {
+        if (state != "approved" || approved is not { } record) return;
+        state = "expired";
+        try { devices.Revoke(record.Id); }
+        catch { } // Storage faults must not break shutdown or a new pairing link.
     }
     public DeviceRecord? Authenticate(string token)
     {

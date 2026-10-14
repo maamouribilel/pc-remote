@@ -28,7 +28,22 @@ python3 scripts/portable.py tls
 
 Install the pinned Playwright Chromium browser first (`cd src/remote && npx playwright install chromium`). PowerShell 7 also supports `./scripts/test.ps1 -Desktop`. Run HTTP fixture suites sequentially: they share loopback port 8443. `PcController.Portable.slnx` now includes Desktop and the isolated DesktopTests runner. The full solution still builds Windows WPF and native regressions.
 
-Normal startup opens an accessible setup window with a menu-bar/tray icon, Open, Pause/Resume, Release input and Exit actions. The macOS application menu provides Open and native Settings (Command-comma), opening Preferences; native Hide/Quit remain. The window is the default way to reach all actions. Keep-running-on-close is opt-in after checking the menu-bar icon; Linux retains a minimized taskbar window even when this option is selected, so a missing tray host cannot strand the app. Open restores a minimized window. Use **Exit** to stop the host and deny pending approvals. Native Quit also disposes the controller. There is no start-at-login setting yet.
+Normal startup opens an accessible setup window with a menu-bar/tray icon, Open, Pause/Resume, Release input and Exit actions. The macOS application menu provides Open and native Settings (Command-comma), opening Preferences; native Hide/Quit remain. The window is the default way to reach all actions. Keep-running-on-close is opt-in after checking the menu-bar icon; Linux retains a minimized taskbar window even when this option is selected, so a missing tray host cannot strand the app. Open restores a minimized window. Use **Exit** to stop the host and deny pending approvals. Native Quit, logout, restart and shutdown dispose the controller synchronously and are cancelled only when input cleanup fails (the logout/restart path has not yet been exercised on a real session) (earlier builds always cancelled the first request, so macOS reported that PC Remote stopped the logout). SIGTERM, SIGINT and SIGHUP request the same graceful Exit on macOS and Linux. Start-at-login is available in Preferences (see Phase 5 below).
+
+### Window layout (2026-10-14)
+
+The window follows the Windows companion's dashboard and palette (`Theme.axaml` ports the WPF colours and overrides the Fluent hover, pressed, focus and disabled states):
+
+- **Header:** logo, product name, a status dot and text (*Setup required*, *Local only · approve a network for your phone* or *Secure LAN ready*), and **Settings**, which opens or closes Preferences (macOS Command-comma does the same).
+- **Readiness banner:** the platform/readiness message, amber when setup, input permission or storage needs attention. While input permission is missing it also offers the permission action.
+- **Pair your iPhone:** the QR code in a white well, the link expiry, **Create new pairing link**, and the connection address with **Copy** and a scope explanation.
+- **Control:** owner status (*No active controller*, *Connecting/Controlling: device*, *Control paused*, input failure), **Pause/Resume control** (primary when paused) and **Release input**.
+- **Trusted network:** approval state, interface selection, **Approve network…** (primary while LAN is blocked) and **Block LAN**.
+- **Paired devices:** one row per remembered device with expiry and **Revoke**; the controlling device is highlighted.
+- **Expandable sections:** *Certificate & iPhone setup* (numbered steps, trust-profile export, the SHA-256 fingerprint grouped in byte pairs as iOS shows it, and the manual link with Copy), *Permissions & platform setup*, and *Preferences* (pointer sensitivity and system volume sliders, natural scrolling, media profile, app launcher, power controls, keep running, sign-in startup and **Quit PC Remote**). Guidance sections open once when first needed and are not reopened after a person collapses them.
+- **Footer:** what closing the window does with the current keep-running choice.
+
+Below 880 px wide the dashboard and Preferences use one column. Read-only fields are only reassigned when their value changes, so a selection survives the one-second refresh. The volume slider commits when the drag, click or key interaction ends, like the Windows slider. Automation IDs from earlier builds are unchanged; the QR image is `pairing-qr` and the volume slider `system-volume` (the separate *Set volume* button was removed). Confirmation dialogs share one layout with Cancel before the action; power confirmations use a destructive style. The production title is `PC Remote <version> · experimental preview`.
 
 ## Readiness and network trust
 

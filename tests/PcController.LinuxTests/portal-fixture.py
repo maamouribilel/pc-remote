@@ -118,6 +118,16 @@ def closure():
         secondary.call_sync('org.freedesktop.DBus', '/org/freedesktop/DBus', 'org.freedesktop.DBus', 'RequestName' if requested else 'ReleaseName', GLib.Variant('(su)', ('org.mpris.MediaPlayer2.pc_remote_secondary', 0)) if requested else GLib.Variant('(s)', ('org.mpris.MediaPlayer2.pc_remote_secondary',)), None, Gio.DBusCallFlags.NONE, 1000, None)
         secondary_owned = requested
         (scratch / 'mpris-secondary-ready').write_text(str(requested))
+    signals = scratch / 'nm-signals'
+    if signals.exists():
+        signals.unlink()
+        # Periodic scan/strength/bitrate/counter noise first, then one real roaming change.
+        def changed(path, iface, values):
+            bus.emit_signal(None, path, 'org.freedesktop.DBus.Properties', 'PropertiesChanged', GLib.Variant('(sa{sv}as)', (iface, values, [])))
+        changed('/org/freedesktop/NetworkManager/AccessPoint/1', 'org.freedesktop.NetworkManager.AccessPoint', {'Strength': GLib.Variant('y', 61), 'LastSeen': GLib.Variant('i', 42)})
+        changed('/org/freedesktop/NetworkManager/Devices/2', 'org.freedesktop.NetworkManager.Device.Wireless', {'Bitrate': GLib.Variant('u', 866000), 'LastScan': GLib.Variant('x', 42)})
+        changed('/org/freedesktop/NetworkManager/Devices/2', 'org.freedesktop.NetworkManager.Device.Statistics', {'RxBytes': GLib.Variant('t', 1024)})
+        changed('/org/freedesktop/NetworkManager/Devices/2', 'org.freedesktop.NetworkManager.Device.Wireless', {'ActiveAccessPoint': GLib.Variant('o', '/org/freedesktop/NetworkManager/AccessPoint/2')})
     marker = scratch / 'portal-close'
     if marker.exists():
         marker.unlink()

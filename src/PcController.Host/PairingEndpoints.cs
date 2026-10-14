@@ -32,6 +32,7 @@ public sealed partial class CompanionServer
     private static async Task<JsonDocument?> JsonBody(HttpContext context, string[] fields)
     {
         if (!string.Equals(context.Request.ContentType?.Split(';')[0].Trim(), "application/json", StringComparison.OrdinalIgnoreCase)) return null;
+        JsonDocument? document = null;
         try
         {
             // Independently bounded for chunked bodies as well as Content-Length.
@@ -43,14 +44,18 @@ public sealed partial class CompanionServer
                 length += read;
             }
             if (length > 1024) return null;
-            var document = JsonDocument.Parse(bytes.AsMemory(0, length), new JsonDocumentOptions { MaxDepth = 4 });
+            document = JsonDocument.Parse(bytes.AsMemory(0, length), new JsonDocumentOptions { MaxDepth = 4 });
             if (document.RootElement.ValueKind != JsonValueKind.Object) { document.Dispose(); return null; }
             var names = document.RootElement.EnumerateObject().Select(p => p.Name).ToArray();
             if (names.Length != fields.Length || names.Distinct().Count() != fields.Length || names.Except(fields).Any())
             { document.Dispose(); return null; }
+            // Lone surrogate escapes parse but throw when decoded. Decode every string once
+            // here so handlers can read fields without turning malformed input into a 500.
+            foreach (var property in document.RootElement.EnumerateObject())
+                if (property.Value.ValueKind == JsonValueKind.String) _ = property.Value.GetString();
             return document;
         }
-        catch (Exception exception) when (exception is JsonException or IOException) { return null; }
+        catch (Exception exception) when (exception is JsonException or IOException or InvalidOperationException) { document?.Dispose(); return null; }
     }
     private void MapPairingEndpoints()
     {

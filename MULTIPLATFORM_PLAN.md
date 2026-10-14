@@ -566,3 +566,28 @@ The final staging command `.tools/phase5-refresh-guides.py` refreshed only revie
 - **Hosted CI on `62644b2`:** run 38471786573 passed every job on Windows, macOS and Ubuntu x64 (desktop 74 on all three, Mac adapter 59 on macOS). **Version 0.3.1** synchronizes shared/Windows versions, packaging/installer defaults, README, both agent files, release/download/readiness guides, platform guides and `.github/SECURITY.md`; final assets follow the same `final` dispatch, verification, tag and publication procedure as 0.3.0.
 - **Published 2026-10-13:** [v0.3.1 pre-release](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.1), annotated tag at `8fc1d1c`. The final dispatch 38474378271 supplied the assets. Push run 38474378406 passed on attempt 2: the first attempt hit a transient macOS NuGet audit command error, while the same audit passed in five parallel jobs and locally. Two flaky fixtures found on the way were fixed (Windows browser snapshot replacement); the `35bad7c` dispatch artifacts were discarded. Final digests and public verification are in the [0.3.1 publication evidence](docs/release-evidence.md#version-031-publication-and-public-verification-2026-10-13). Phase 4 remains **In progress**; all native/manual gaps remain open.
 - **Post-release test maintenance:** CI on the docs-only commit `9575681` (run 38476213816) failed one private Xvfb check (`Ctrl A layout resolved and Unicode replacement`) that sampled the GTK target once after 300 ms; no product code had changed. All remaining end-state X11 checks (text, pointer, held and released state) now poll for up to 5 s; the auto-repeat check stays single-sample by design. Published v0.3.1 assets are unaffected.
+
+### 2026-10-14 — Defect sweep and macOS/Linux window redesign (unreleased)
+
+- **Implemented:** host, phone-remote, shell and native-bridge fixes, plus the Avalonia window redesign matching the Windows dashboard. Details and the per-fix list are in [release evidence](docs/release-evidence.md#2026-10-14--bug-fixes-and-macoslinux-window-redesign-unreleased-after-031); the layout is in [desktop-shell.md](docs/desktop-shell.md#window-layout-2026-10-14). The version stays 0.3.1 and nothing was packaged or published.
+- **Changed files:**
+  - Core: `PairingService`, `PcActions`.
+  - Host: `LocalCertificates`, `PairingEndpoints`, `PcEndpoints`, `ServerLifecycle`.
+  - Desktop: `MainWindow`, `Theme.axaml`, `DesktopApp`, `DesktopController`, `DesktopEnvironment`.
+  - Platform: macOS `SingleInstance`, Linux `native/bridge.c`.
+  - Remote: `keyboard.ts`, `main.ts`, `pc.ts`.
+  - Tests in PortableTests, DesktopTests, LinuxTests (portal fixture) and `tests/remote/mouse.spec.ts`.
+  - Docs: `docs/protocol.md` (key repeat cadence) and `docs/desktop-shell.md`.
+- **Environment:** macOS 27 Apple Silicon, plus an isolated Ubuntu 24.04.5 ARM64 SDK 10.0.402 container (no GNOME, no native input).
+- **Results:**
+  - Portable 272, desktop 79, Mac adapter 62, Keychain storage 85, browser 6, browser capabilities, strict TLS and Mac TLS, and audits pass. The release-doc check passes, and the full Windows solution cross-builds cleanly.
+  - Container results: Linux faults 88, Xvfb X11 41, fake portal 31 (new NetworkManager noise/roaming check) and keyring storage.
+  - The native macOS fixture window started and exits gracefully on SIGTERM.
+  - The new browser two-key repeat check fails on the previous `keyboard.ts`.
+- **Pending:**
+  - Windows runtime checks and the real WPF app.
+  - Real GNOME x64 X11/Wayland session lookup and NetworkManager signal behaviour.
+  - Real macOS logout/restart, native appearance on a display, and installed-app checks.
+  - Physical phone/LAN use of the remote fixes.
+  - Hosted CI has not run on these changes.
+  - Phase 4 remains **In progress**.

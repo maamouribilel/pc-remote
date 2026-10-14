@@ -28,6 +28,9 @@ internal static class PcActionChecks
         }
         prepared = power.Prepare("sleep","phone","session"); power.Confirm(prepared.Token,"phone","session"); power.Cancel(); now = now.AddMinutes(1);
         check(power.TakeDue("phone","session") == null,"cancel prevents the scheduled action after its original deadline");
+        // Production uses a monotonic countdown; a wall-clock step cannot make it due early.
+        var monotonic = new PowerQueue(); var monotonicTicket = monotonic.Prepare("sleep","phone","session"); var scheduled = monotonic.Confirm(monotonicTicket.Token,"phone","session");
+        check(monotonic.TakeDue("phone","session") == null && !monotonic.IsDue(scheduled) && !monotonic.IsDue(scheduled with { }) && monotonic.Pending == scheduled,"monotonic countdown is not due immediately and ignores stale pending records");
         var sessions = new SessionOwnership(); var reservation = sessions.Reserve("phone",false); var executions = 0;
         check(!sessions.ExecuteDevice("phone",reservation.Session.Id,() => executions++),"HTTP PC actions require a connected controller");
         sessions.Connect("phone",reservation.Ticket);

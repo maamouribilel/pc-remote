@@ -7,7 +7,8 @@ type Volume = { available: boolean; level: number; muted: boolean };
 type PendingPower = { action: string; executeAt: string };
 const labels: Record<string, string> = { sleep: 'Sleep', restart: 'Restart', shutdown: 'Shut down' };
 
-export function setupPc(api: Api, release: () => void, profile: (value: string) => void, selectTab: (id: string) => void) {
+// serverNow() estimates the PC clock: expiry and countdown times come from the PC, not this phone.
+export function setupPc(api: Api, release: () => void, profile: (value: string) => void, selectTab: (id: string) => void, serverNow: () => number = Date.now) {
   const panel = document.getElementById('pc-controls')!;
   const apps = document.getElementById('launcher-apps')!;
   const feedback = document.getElementById('pc-feedback')!;
@@ -25,16 +26,17 @@ export function setupPc(api: Api, release: () => void, profile: (value: string) 
   let latestVolume: Volume = { available: false, level: 0, muted: false };
   let pending: PendingPower | null = null;
   let ticket: { token: string; session: string; expires: number; action: string } | undefined;
+  let lastPowerMessage = '';
 
   function update() {
     panel.inert = !enabled; panel.classList.toggle('disabled', !enabled);
     volume.disabled = !enabled || !capabilities.volume || !latestVolume.available || savingVolume;
     for (const button of apps.querySelectorAll<HTMLButtonElement>('button')) button.disabled = !enabled || !capabilities.launcher || launching || button.dataset.available !== 'true';
     for (const button of document.querySelectorAll<HTMLButtonElement>('[data-power]')) button.disabled = !enabled || !capabilities.powerActions.includes(button.dataset.power!) || preparing || pending !== null;
-    confirm.disabled = !enabled || preparing || !ticket || ticket.expires <= Date.now() || ticket.session !== session;
+    confirm.disabled = !enabled || preparing || !ticket || ticket.expires <= serverNow() || ticket.session !== session;
     cancel.disabled = !enabled || !pending;
     countdown.hidden = !pending;
-    if (pending) countdownText.textContent = `${labels[pending.action] ?? 'Power action'} in ${Math.max(0, Math.ceil((Date.parse(pending.executeAt) - Date.now()) / 1000))} seconds. Keep this app open, or cancel below.`;
+    if (pending) countdownText.textContent = `${labels[pending.action] ?? 'Power action'} in ${Math.max(0, Math.ceil((Date.parse(pending.executeAt) - serverNow()) / 1000))} seconds. Keep this app open, or cancel below.`;
   }
   function applyVolume(value: Volume) {
     latestVolume = value;
@@ -89,6 +91,9 @@ export function setupPc(api: Api, release: () => void, profile: (value: string) 
     finally { loading = false; update(); if (enabled && current !== session) void refresh(); }
   }
   volume.addEventListener('input', () => { editingVolume = true; volumeValue.textContent = `${volume.value}%`; });
+  // No change event follows a drag that ends on the starting value; stop editing so PC updates apply again.
+  for (const type of ['pointerup', 'pointercancel', 'blur'])
+    volume.addEventListener(type, () => { if (editingVolume && !savingVolume && Number(volume.value) === latestVolume.level) { editingVolume = false; applyVolume(latestVolume); } });
   volume.addEventListener('change', async () => {
     if (!enabled || !capabilities.volume || savingVolume) return;
     release(); savingVolume = true; editingVolume = false; update(); volumeFeedback.textContent = `Setting ${platformLabels(capabilities).system} volume…`;
@@ -131,7 +136,12 @@ export function setupPc(api: Api, release: () => void, profile: (value: string) 
   function sync(value: Record<string, any>) {
     if (value.volume) applyVolume(value.volume);
     if ('power' in value) pending = value.power;
-    if (value.powerMessage) feedback.textContent = value.powerMessage;
+    // The PC repeats its last power message on every heartbeat; show it only when it changes
+    // so it does not overwrite newer launch or load feedback.
+    if (typeof value.powerMessage === 'string' && value.powerMessage !== lastPowerMessage) {
+      lastPowerMessage = value.powerMessage;
+      if (value.powerMessage) feedback.textContent = value.powerMessage;
+    }
     update();
   }
   document.getElementById('tab-pc')!.addEventListener('click', refresh);

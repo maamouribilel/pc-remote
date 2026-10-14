@@ -35,15 +35,25 @@ internal sealed class UiChecks : IDisposable
         check(NativeMenu.GetMenu(Application.Current!)!.Items.OfType<NativeMenuItem>().Any(i => i.Header == "Open PC Remote"), "application menu is configured before native initialization");
         window = new MainWindow(controller); window.Show(); Dispatcher.UIThread.RunJobs();
         Button Find(Window owner, string id) => owner.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == id);
-        check(window.IsVisible && window.Title!.Contains("development"), "headless shell opens with development identity");
+        check(window.IsVisible && window.Title == "PC Remote", "headless shell opens with the product identity");
         check(!Find(window, "new-pairing").IsEnabled && !Find(window, "release").IsEnabled && !Find(window, "pause").IsEnabled, "setup-required shell disables unavailable host actions");
         var featurePreferences = window.GetVisualDescendants().OfType<Expander>().Single(e => Equals(e.Header, "Preferences"));
         featurePreferences.IsExpanded = true; Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
-        check(!Find(window, "add-app").IsEnabled && !Find(window, "set-volume").IsEnabled && !Find(window, "save-startup").IsEnabled && new[] { "sleep", "restart", "shutdown" }.All(a => !Find(window, "power-" + a).IsEnabled), "uncomposed shell disables feature and login integrations");
+        T FindControl<T>(Window owner, string id) where T : Control => owner.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetAutomationId(c) == id);
+        check(!Find(window, "add-app").IsEnabled && !FindControl<Slider>(window, "system-volume").IsEnabled && !Find(window, "save-startup").IsEnabled && new[] { "sleep", "restart", "shutdown" }.All(a => !Find(window, "power-" + a).IsEnabled), "uncomposed shell disables feature and login integrations");
         featurePreferences.IsExpanded = false; Dispatcher.UIThread.RunJobs();
         check(!Find(window, "approve-network").IsEnabled, "network approval requires an explicitly selected observable candidate");
         check(!window.GetVisualDescendants().OfType<Button>().Any(b => AutomationProperties.GetAutomationId(b) == "authorize-keychain"), "Keychain consent is offered only by a real Mac storage environment");
         check(window.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text?.Contains("Keychain") == true), "shell explains secure storage/native setup requirement");
+        // The real Mac composition adds Keychain consent and permission onboarding; build it with a platform environment.
+        var environment = new DesktopChecks.FakeEnvironment();
+        var macController = new DesktopController("macos", new TrustedNetworks(() => []), observeNetworks: false, environment: environment);
+        var macWindow = new MainWindow(macController); macWindow.Show(); Dispatcher.UIThread.RunJobs(); macWindow.UpdateLayout();
+        check(Find(macWindow, "authorize-keychain") != null && Find(macWindow, "accessibility") != null && !Find(macWindow, "banner-permission").IsVisible, "platform composition builds Keychain consent and permission onboarding; banner action hidden while input is ready");
+        environment.State = new(true, false, true, "Accessibility is required for pointer and keyboard control.");
+        macController.RefreshAsync().GetAwaiter().GetResult(); Dispatcher.UIThread.RunJobs(); macWindow.UpdateLayout();
+        check(Find(macWindow, "banner-permission").IsVisible && macWindow.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == "Accessibility is required for pointer and keyboard control."), "missing input permission shows the readiness message with its permission action");
+        macWindow.Close(); macWindow.Close(); macController.DisposeAsync().AsTask().GetAwaiter().GetResult();
         var allowed = new ApprovalPrompt(new("test", "Disposable browser", DateTimeOffset.UtcNow.AddMinutes(1)), "loopback fixture");
         var approve = new ApprovalWindow(allowed); approve.Show(); Dispatcher.UIThread.RunJobs();
         Find(approve, "approve-browser").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -70,7 +80,7 @@ internal sealed class UiChecks : IDisposable
             fixture.RefreshAsync().GetAwaiter().GetResult();
             check(fixture.Server != null, "fixture dashboard host starts: " + fixture.Status);
             var dashboard = new MainWindow(fixture); dashboard.Show(); Dispatcher.UIThread.RunJobs(); dashboard.UpdateLayout();
-            check(dashboard.GetVisualDescendants().OfType<Image>().Any(i => i.Source != null && i.IsVisible), "fixture dashboard renders actual short-lived pairing QR (visual images=" + string.Join(",", dashboard.GetVisualDescendants().OfType<Image>().Select(i => $"{i.IsVisible}/{i.Source != null}")) + "; active link=" + (fixture.Server!.PairingAddress != null) + ")");
+            check(dashboard.GetVisualDescendants().OfType<Image>().Any(i => AutomationProperties.GetAutomationId(i) == "pairing-qr" && i.Source != null && i.IsVisible), "fixture dashboard renders actual short-lived pairing QR (active link=" + (fixture.Server!.PairingAddress != null) + ")");
             check(dashboard.GetVisualDescendants().OfType<TextBlock>().Any(t => AutomationProperties.GetAutomationId(t) == "address-scope" && t.Text!.Contains("Only this computer")), "loopback-only address explains how to approve a network for the phone");
             var before = fixture.Server!.PairingAddress;
             Find(dashboard, "new-pairing").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Dispatcher.UIThread.RunJobs();
@@ -79,6 +89,10 @@ internal sealed class UiChecks : IDisposable
             check(fixture.Server.Sessions.Paused && Equals(Find(dashboard, "pause").Content, "Resume control"), "dashboard Pause button updates host and accessible Resume label");
             Find(dashboard, "pause").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Dispatcher.UIThread.RunJobs();
             check(!fixture.Server.Sessions.Paused, "dashboard Resume button resumes host");
+            var addressBox = dashboard.GetVisualDescendants().OfType<TextBox>().Single(t => AutomationProperties.GetAutomationId(t) == "address");
+            // Any controller change re-renders the dashboard; it must not reset the person's selection.
+            addressBox.SelectAll(); var selection = addressBox.SelectionEnd; fixture.NewPairing(); Dispatcher.UIThread.RunJobs(); dashboard.UpdateLayout();
+            check(addressBox.SelectionEnd == selection && selection > 0 && Find(dashboard, "copy-address") != null, "address refresh keeps a selection and offers Copy");
             Find(dashboard, "release").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             check(input.Events.Last() == "release", "dashboard Release button cleans input");
             var request = fixture.Server.Pairing.Request(fixture.Server.Pairing.CurrentChallenge!.Value, "UI revoke fixture"); fixture.Server.Pairing.Decide(request.Ticket, true);

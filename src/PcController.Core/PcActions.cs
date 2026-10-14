@@ -21,7 +21,11 @@ public sealed class PowerQueue(Func<DateTimeOffset>? clock = null)
     private readonly object gate = new();
     private PowerPreparation? preparation;
     private PendingPower? pending;
+    // ExecuteAt is for display. The countdown itself is monotonic, so a wall-clock step
+    // (NTP correction, manual change) cannot shorten the cancellable 30 seconds.
+    private long dueTick;
     private DateTimeOffset Now => clock?.Invoke() ?? DateTimeOffset.UtcNow;
+    private bool Due(PendingPower value) => clock != null ? value.ExecuteAt <= Now : Environment.TickCount64 >= dueTick;
     public PendingPower? Pending { get { lock (gate) return pending; } }
     public static bool Supported(string action) => action is "sleep" or "restart" or "shutdown";
     public PowerPreparation Prepare(string action, string device, string session)
@@ -37,9 +41,10 @@ public sealed class PowerQueue(Func<DateTimeOffset>? clock = null)
     {
         lock (gate)
         {
-            if (preparation is not { } value || value.Token != token || value.Device != device || value.Session != session || value.Expires <= Now)
+            if (preparation is not { } value || !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(System.Text.Encoding.UTF8.GetBytes(value.Token), System.Text.Encoding.UTF8.GetBytes(token)) ||
+                value.Device != device || value.Session != session || value.Expires <= Now)
                 throw new InvalidOperationException("confirmation_expired");
-            preparation = null;
+            preparation = null; dueTick = Environment.TickCount64 + 30_000;
             return pending = new(value.Action, device, session, Now.AddSeconds(30));
         }
     }
@@ -50,11 +55,12 @@ public sealed class PowerQueue(Func<DateTimeOffset>? clock = null)
             if ((preparation != null && preparation.Session != "local" && preparation.Session != session) || (pending != null && pending.Session != "local" && pending.Session != session))
             { preparation = null; pending = null; }
     }
+    public bool IsDue(PendingPower value) { lock (gate) return ReferenceEquals(value, pending) && Due(value); }
     public PendingPower? TakeDue(string device, string session)
     {
         lock (gate)
         {
-            if (pending is not { } value || value.Device != device || value.Session != session || value.ExecuteAt > Now) return null;
+            if (pending is not { } value || value.Device != device || value.Session != session || !Due(value)) return null;
             pending = null; return value;
         }
     }

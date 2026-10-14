@@ -31,8 +31,10 @@ public class LocalCertificates : ILocalCertificates
             var namesPath = Path.Combine(directory, "addresses.txt");
             var leafPath = Path.Combine(directory, "server.protected");
             leaf = File.Exists(leafPath) ? Load(leafPath) : null;
+            // A leaf from a different root would keep serving a chain that the exported
+            // profile and fingerprint no longer describe, so it is reissued like a legacy leaf.
             if (leaf == null || leaf.NotAfter.ToUniversalTime() < DateTime.UtcNow.AddDays(14) ||
-                leaf.Extensions["2.5.29.35"] == null || leaf.Extensions["2.5.29.14"] == null ||
+                leaf.Extensions["2.5.29.35"] == null || leaf.Extensions["2.5.29.14"] == null || !IssuedByRoot(leaf) ||
                 !File.Exists(namesPath) || !File.ReadAllLines(namesPath).SequenceEqual(names))
             {
                 leaf?.Dispose();
@@ -49,6 +51,9 @@ public class LocalCertificates : ILocalCertificates
         catch { leaf?.Dispose(); Root.Dispose(); throw; }
     }
 
+    private bool IssuedByRoot(X509Certificate2 leaf) =>
+        leaf.IssuerName.RawData.AsSpan().SequenceEqual(Root.SubjectName.RawData) &&
+        leaf.Extensions["2.5.29.35"]!.RawData.AsSpan().SequenceEqual(X509AuthorityKeyIdentifierExtension.CreateFromCertificate(Root, true, false).RawData);
     private X509Certificate2 Generate(Func<X509Certificate2> create)
     {
         using var certificate = create();

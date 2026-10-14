@@ -47,6 +47,13 @@ internal static class PortalChecks
             foreach (var action in new[] { "sleep", "restart", "shutdown" }) new LinuxPcActions().Power(action);
             features = File.ReadAllLines(Path.Combine(scratch, "feature-events"));
             Program.Check(features.Contains("[\"Suspend\", false]") && features.Contains("[\"Reboot\", false]") && features.Contains("[\"PowerOff\", false]"), "native power requests reach ONLY private fake logind with interactive=false");
+            var quiet = LinuxNative.pc_linux_generation();
+            File.WriteAllText(Path.Combine(scratch, "nm-signals"), "emit");
+            var signalDeadline = DateTime.UtcNow.AddSeconds(3);
+            while (LinuxNative.pc_linux_generation() == quiet && DateTime.UtcNow < signalDeadline) await Task.Delay(20);
+            await Task.Delay(200); // D-Bus keeps one sender's order: the noise was handled before the roaming change.
+            Program.Check(LinuxNative.pc_linux_generation() == quiet + 1, "NetworkManager scan/strength/bitrate/counter updates do not pause control; a roaming change still does");
+            Program.Check(LinuxNative.pc_linux_arm(LinuxNative.pc_linux_generation()) == 1, "re-arm after the roaming change for the closure checks");
             input.Button("left", true); input.Key("Shift", true);
             File.WriteAllText(Path.Combine(scratch, "portal-close"), "close");
             var deadline = DateTime.UtcNow.AddSeconds(3);

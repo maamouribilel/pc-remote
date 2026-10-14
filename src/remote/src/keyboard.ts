@@ -37,12 +37,18 @@ export function setupKeyboard(send: (type: string, payload: object) => number | 
       if (!enabled || !capabilities.keyboard || held.has(key)) return;
       if (!send('key.down', { key })) return;
       held.add(key);
+      // The PC allows ten repeats per second per session. Only the newest held key
+      // repeats (like a physical keyboard), at under seven per second so Wi-Fi bursts
+      // of delayed repeats stay within that bound instead of pausing control.
       function repeat() {
         if (!held.has(key) || !enabled) return;
         if (!send('key.down', { key })) { releaseAll(); return; }
-        repeatTimers.set(key, setTimeout(repeat, 125));
+        repeatTimers.set(key, setTimeout(repeat, 150));
       }
-      if (button.dataset.repeat === 'true') repeatTimers.set(key, setTimeout(repeat, 400));
+      if (button.dataset.repeat === 'true') {
+        for (const timer of repeatTimers.values()) clearTimeout(timer);
+        repeatTimers.clear(); repeatTimers.set(key, setTimeout(repeat, 400));
+      }
     }
     button.addEventListener('pointerdown', event => { event.preventDefault(); button.setPointerCapture(event.pointerId); begin(); });
     button.addEventListener('pointerup', () => endKey(key));

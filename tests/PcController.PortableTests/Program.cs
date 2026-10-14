@@ -66,6 +66,15 @@ using (var first = new LocalCertificates(testDirectory, [IPAddress.Loopback], ne
     chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
     chain.ChainPolicy.ApplicationPolicy.Add(new Oid("1.3.6.1.5.5.7.3.1"));
     Check(chain.Build(first.Server), "leaf chain and server EKU validate against installation root");
+    // Same addresses as the last leaf: only the issuer mismatch can trigger renewal here.
+    File.Delete(Path.Combine(testDirectory, "root.protected"));
+    using var reset = new LocalCertificates(testDirectory, [IPAddress.Loopback, IPAddress.Parse("192.0.2.10")], new TestProtectedStorage(), new TestCertificateKeys());
+    using var resetChain = new X509Chain();
+    resetChain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+    resetChain.ChainPolicy.CustomTrustStore.Add(reset.Root);
+    resetChain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+    Check(reset.Renewed && reset.Fingerprint != first.Fingerprint && reset.Server.Issuer == reset.Root.Subject && resetChain.Build(reset.Server),
+        "a leaf issued by a replaced root is reissued so the served chain matches the exported root");
 }
 // Clean up only the unique, explicitly created test directory.
 Directory.Delete(testDirectory, true);

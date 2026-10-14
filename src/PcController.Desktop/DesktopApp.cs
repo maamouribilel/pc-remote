@@ -32,10 +32,6 @@ public class DesktopApp : Application
     public static void InitializeTheme(Application application)
     {
         application.Name = "PC Remote";
-        application.Resources["ExpanderContentBackground"] = new SolidColorBrush(Color.Parse("#171D25"));
-        application.Resources["ExpanderHeaderBackground"] = new SolidColorBrush(Color.Parse("#171D25"));
-        application.Resources["ExpanderHeaderBorderBrush"] = new SolidColorBrush(Color.Parse("#27323F"));
-        application.Resources["ExpanderContentBorderBrush"] = new SolidColorBrush(Color.Parse("#27323F"));
         application.RequestedThemeVariant = ThemeVariant.Dark;
         application.Styles.Add(new FluentTheme());
         application.Styles.Add(new StyleInclude(new Uri("avares://PcController.Desktop/")) { Source = new Uri("avares://PcController.Desktop/Theme.axaml") });
@@ -60,7 +56,7 @@ public class DesktopApp : Application
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or DllNotFoundException or InvalidOperationException)
         { return new("macos", new TrustedNetworks(), setupMessage: "macOS setup unavailable: " + e.Message); }
     }
-    protected virtual string WindowTitle => "PC Remote · development shell";
+    protected virtual string WindowTitle => $"PC Remote {typeof(DesktopApp).Assembly.GetName().Version?.ToString(3)} · experimental preview";
     protected virtual void ShutdownCleanup() { }
     public override void OnFrameworkInitializationCompleted()
     {
@@ -71,15 +67,28 @@ public class DesktopApp : Application
             var signals = new List<PosixSignalRegistration>();
             var window = new MainWindow(controller) { Title = WindowTitle };
             shellWindow = window; desktop.MainWindow = window;
-            if (OperatingSystem.IsLinux())
-                foreach (var signal in new[] { PosixSignal.SIGTERM, PosixSignal.SIGINT, PosixSignal.SIGHUP })
-                    signals.Add(PosixSignalRegistration.Create(signal, context => { context.Cancel = true; Dispatcher.UIThread.Post(window.RequestExit); }));
+            // kill, Ctrl+C and terminal hangup request the same graceful Exit on macOS and Linux
+            // (macOS previously ignored SIGTERM). Failed input cleanup keeps the window open.
+            foreach (var signal in new[] { PosixSignal.SIGTERM, PosixSignal.SIGINT, PosixSignal.SIGHUP })
+                signals.Add(PosixSignalRegistration.Create(signal, context => { context.Cancel = true; Dispatcher.UIThread.Post(window.RequestExit); }));
             window.ExitRequested += async () =>
             {
-                try { await controller.DisposeAsync(); desktop.Shutdown(); }
-                catch (InputFailureException) { window.CancelExit(); }
+                try { await controller.DisposeAsync(); }
+                catch (InputFailureException) { window.CancelExit(); return; }
+                // Input was released before any later disposal fault; exiting is still safe.
+                catch (Exception) { }
+                desktop.Shutdown();
             };
-            desktop.ShutdownRequested += (_, e) => { e.Cancel = true; window.RequestExit(); };
+            // macOS asks synchronously for logout, restart, shutdown and Quit. Cancelling makes
+            // macOS report that PC Remote stopped the logout, so clean up now and cancel only
+            // when input cleanup fails. Marking the window as exiting first lets its Closing pass.
+            desktop.ShutdownRequested += (_, e) =>
+            {
+                window.PrepareExit();
+                try { Task.Run(async () => await controller.DisposeAsync()).GetAwaiter().GetResult(); }
+                catch (InputFailureException) { e.Cancel = true; window.CancelExit(); }
+                catch (Exception) { }
+            };
             // The window always remains reachable. Hide-on-close is opt-in only after
             // a person verifies the icon; Linux can expose a tray API without a visible host.
             var menu = new NativeMenu();
@@ -95,7 +104,10 @@ public class DesktopApp : Application
                 Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://PcController.Desktop/Assets/tray.ico"))) };
             tray.Clicked += (_, _) => window.Open();
             TrayIcon.SetIcons(this, new TrayIcons { tray });
-            desktop.Exit += (_, _) => { foreach (var signal in signals) signal.Dispose(); controller.Changed -= UpdateMenu; tray.Dispose(); Task.Run(async () => await controller.DisposeAsync()).GetAwaiter().GetResult(); ShutdownCleanup(); };
+            desktop.Exit += (_, _) => { foreach (var signal in signals) signal.Dispose(); controller.Changed -= UpdateMenu; tray.Dispose();
+                // The window is gone; a cleanup fault here cannot be retried and must not throw from the lifetime event.
+                try { Task.Run(async () => await controller.DisposeAsync()).GetAwaiter().GetResult(); } catch (Exception) { }
+                ShutdownCleanup(); };
         }
         base.OnFrameworkInitializationCompleted();
     }

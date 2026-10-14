@@ -53,6 +53,7 @@ public sealed class DesktopController : IAsyncDisposable
         finally { onboardingGate.Release(); }
     }
     public bool HasLinuxTextMode => environment is LinuxDesktopEnvironment;
+    public bool LinuxGtkTextEnabled => (environment as LinuxDesktopEnvironment)?.GtkTextEnabled == true;
     public void EnableLinuxGtkText(bool enabled)
     {
         Server?.Sessions.Pause(true); DenyPrompts();
@@ -135,17 +136,19 @@ public sealed class DesktopController : IAsyncDisposable
         Networks.Invalidate(); Server?.Sessions.Pause(true); DenyPrompts();
         await RefreshAsync().ConfigureAwait(false);
     }
-    public async Task RefreshAsync()
+    // force rebuilds the host's capability snapshot even when this Inspect sees no change,
+    // for callers that already consumed the one-shot change (Resume).
+    public async Task RefreshAsync(bool force = false)
     {
         await refreshGate.WaitAsync().ConfigureAwait(false);
         try
         {
             if (disposed) return;
-            var refreshCapabilities = false;
+            var refreshCapabilities = force;
             if (environment != null)
             {
                 var state = await Task.Run(environment.Inspect).ConfigureAwait(false);
-                InputReady = state.InputReady; StorageReady = state.StorageReady; Message = state.Message; refreshCapabilities = state.Changed;
+                InputReady = state.InputReady; StorageReady = state.StorageReady; Message = state.Message; refreshCapabilities |= state.Changed;
                 if (state.NetworkChanged) Networks.Invalidate();
                 if (state.Changed) { Server?.Sessions.Pause(true); DenyPrompts(); }
                 if (!state.InputReady) { Server?.Sessions.Pause(true); DenyPrompts(); }
@@ -161,7 +164,8 @@ public sealed class DesktopController : IAsyncDisposable
     }
     public async Task ApproveNetworkAsync(NetworkCandidate candidate)
     {
-        if (!Networks.Approve(candidate)) { Message = "Network changed. Refresh and approve the current interface."; Changed?.Invoke(); return; }
+        // Approval re-reads interfaces (and Wi-Fi identity processes); keep that off the UI thread.
+        if (!await Task.Run(() => Networks.Approve(candidate)).ConfigureAwait(false)) { Message = "Network changed. Refresh and approve the current interface."; Changed?.Invoke(); return; }
         await RefreshAsync().ConfigureAwait(false);
     }
     public async Task BlockLanAsync() { Networks.Invalidate(); Server?.Sessions.Pause(true); DenyPrompts(); await RefreshAsync().ConfigureAwait(false); }
@@ -175,7 +179,13 @@ public sealed class DesktopController : IAsyncDisposable
         {
             var state = environment.Inspect(); inspected = state; InputReady = state.InputReady;
             if (!state.InputReady || !state.StorageReady || state.Changed)
-            { if (state.NetworkChanged || !state.StorageReady) Networks.Invalidate(); s.Sessions.Pause(true); Message = state.Message; _ = RefreshAsync(); Changed?.Invoke(); return; }
+            {
+                if (state.NetworkChanged || !state.StorageReady) Networks.Invalidate();
+                s.Sessions.Pause(true); Message = state.Message;
+                // This Inspect consumed the change; the refresh must still rebuild capabilities
+                // (e.g. Accessibility just granted) instead of keeping the stale host.
+                _ = RefreshAsync(force: state.Changed); Changed?.Invoke(); return;
+            }
         }
         if (TryReleaseInput())
         {
@@ -224,7 +234,27 @@ public sealed class DesktopController : IAsyncDisposable
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException) { Message = e.Message; }
         Changed?.Invoke();
     }
-    public async ValueTask DisposeAsync()
+    // Unexpected faults (outside the handled storage/input paths) fail closed: pause and explain.
+    public void ReportFailure(Exception exception)
+    {
+        try { Server?.Sessions.Pause(true); } catch (Exception) { }
+        DenyPrompts();
+        Message = "Unexpected error: " + exception.Message + " Control is paused; check setup and choose Resume when ready.";
+        Changed?.Invoke();
+    }
+    private readonly object disposeGate = new();
+    private Task? disposal;
+    // Exit, OS logout/Quit and the lifetime's Exit event can overlap; they share one disposal.
+    // A failed cleanup can be retried.
+    public ValueTask DisposeAsync()
+    {
+        lock (disposeGate)
+        {
+            if (disposal == null || disposal.IsFaulted || disposal.IsCanceled) disposal = DisposeCoreAsync();
+            return new(disposal);
+        }
+    }
+    private async Task DisposeCoreAsync()
     {
         if (disposed) return;
         Server?.Sessions.Pause(true);

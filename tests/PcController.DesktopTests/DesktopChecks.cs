@@ -133,10 +133,20 @@ internal static class DesktopChecks
             check(environment.Authorizations == 2 && controller.StorageReady && controller.Server!.Certificates.Fingerprint == root && controller.Server.Sessions.Paused, "approved OS storage consent rechecks storage, retains root and stays paused");
             environment.State = new(true, true, true, "Storage restored"); await controller.RefreshAsync();
             check(controller.Server!.Certificates.Fingerprint == root && controller.Server.Sessions.Paused, "storage recovery retains root and requires deliberate Resume");
+            environment.State = new(true, false, true, "Accessibility required"); await controller.RefreshAsync();
+            var unready = controller.Server!;
+            // Permission granted, then Resume before the periodic refresh sees it: Resume's own
+            // Inspect consumes the change, so its refresh must still rebuild the capabilities.
+            environment.State = new(true, true, true, "Accessibility granted");
+            controller.PauseResume(); await controller.RefreshAsync();
+            check(!unready.Capabilities.InputEnabled && controller.Server != unready && controller.Server!.Capabilities.InputEnabled && controller.Server.Sessions.Paused,
+                "Resume right after a permission grant rebuilds the host with ready capabilities and stays paused");
             environment.FailCleanup = true;
             try { await controller.DisposeAsync(); throw new Exception("Exit accepted failed cleanup"); }
             catch (InputFailureException) { check(controller.Server != null && controller.Server.Sessions.Paused, "failed native cleanup keeps graceful Exit open and paused"); }
             environment.FailCleanup = false;
+            await controller.DisposeAsync(); var repeated = controller.DisposeAsync();
+            check(repeated.IsCompletedSuccessfully && controller.Server == null, "Exit can be retried after failed cleanup; later Exit/OS shutdown disposals reuse the completed cleanup");
         }
         finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
     }
@@ -177,7 +187,7 @@ internal static class DesktopChecks
         public void Onboard() { }
         public void Dispose() { }
     }
-    private sealed class FakeEnvironment : IDesktopEnvironment
+    internal sealed class FakeEnvironment : IDesktopEnvironment
     {
         public DesktopEnvironmentState State = new(false, true, true, "Ready");
         public bool NetworkEvent = true;

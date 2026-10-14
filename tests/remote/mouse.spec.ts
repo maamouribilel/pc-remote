@@ -129,6 +129,18 @@ test('approved real WSS gestures preserve ordering and release on cancellation a
   await expect.poll(() => events().filter(e => e === 'key:ArrowDown:True').length).toBeGreaterThanOrEqual(3);
   await touch('touchEnd', []);
   await expect.poll(() => events().includes('key:ArrowDown:False')).toBe(true);
+  // Two held repeat keys must stay within the PC's ten-repeats-per-second session bound,
+  // which otherwise pauses control and closes the session with input_failed.
+  const center = (box: { x: number; y: number; width: number; height: number }, id: number) => ({ id, x: box.x + box.width / 2, y: box.y + box.height / 2 });
+  const upBox = (await page.getByRole('button', { name: 'Up arrow', exact: true }).boundingBox())!;
+  const rightBox = (await page.getByRole('button', { name: 'Right arrow', exact: true }).boundingBox())!;
+  await touch('touchStart', [center(upBox, 1)]);
+  await touch('touchStart', [center(upBox, 1), center(rightBox, 2)]);
+  await page.waitForTimeout(2500);
+  await expect(page.locator('#state')).toHaveText('Connected securely');
+  await touch('touchEnd', []);
+  await expect.poll(() => events().includes('key:ArrowUp:False') && events().includes('key:ArrowRight:False')).toBe(true);
+  expect(events().filter(e => e === 'key:ArrowRight:True').length).toBeGreaterThanOrEqual(3);
   await page.locator('#tab-media').click();
   const profile = page.locator('#media-profile');
   await expect(profile).toHaveValue('General');

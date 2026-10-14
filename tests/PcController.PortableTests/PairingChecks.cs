@@ -40,6 +40,12 @@ internal static class PairingChecks
             check(Fails(() => pairing.Request(pairing.IssueChallenge().Value, "Phone"), "pair_rate_limit"), "pairing attempts rate limited");
             now = now.AddMinutes(2); request = pairing.Request(pairing.IssueChallenge().Value, "Phone"); now = now.AddMinutes(3); pairing.Decide(request.Ticket, true);
             check(pairing.Claim(request.Ticket).State == "pair_expired" && store.List().Length == 0, "late PC approval cannot resurrect an expired ticket");
+            now = now.AddMinutes(2); request = pairing.Request(pairing.IssueChallenge().Value, "Unclaimed phone"); pairing.Decide(request.Ticket, true);
+            check(store.List().Length == 1, "PC approval stores the device before the browser claims it");
+            now = now.AddMinutes(3);
+            check(pairing.Claim(request.Ticket).State == "pair_expired" && store.List().Length == 0, "approved device that never claimed its credential is not remembered after expiry");
+            request = pairing.Request(pairing.IssueChallenge().Value, "Replaced phone"); pairing.Decide(request.Ticket, true); pairing.IssueChallenge();
+            check(store.List().Length == 0 && pairing.Claim(request.Ticket).State == "pair_invalid", "a new pairing link discards an approved but unclaimed device");
             var failing = new PairingService(new FailedDeviceRepository());
             var failedRequest = failing.Request(failing.IssueChallenge().Value, "Storage fixture");
             failing.Decide(failedRequest.Ticket, true);
@@ -103,6 +109,13 @@ internal static class PairingChecks
             check((await Post("/api/pair/request", "{}", badOrigin)).StatusCode == HttpStatusCode.Forbidden, "HTTP mutation exact Origin enforcement");
         foreach (var json in new[] { "{", "{}", "{\"challenge\":null,\"name\":\"Phone\"}", "{\"challenge\":\"x\",\"challenge\":\"x\",\"name\":\"Phone\"}", new string('x', 1025) })
             check((await Post("/api/pair/request", json)).StatusCode == HttpStatusCode.BadRequest, "bounded malformed pairing HTTP rejected");
+        // Lone surrogate escapes parse but cannot be decoded; they must be a plain 400, never a 500 or an internal message.
+        foreach (var json in new[] { "{\"\\udc00\":1,\"name\":\"Phone\"}", "{\"challenge\":\"\\ud800\",\"name\":\"Phone\"}" })
+        {
+            var invalid = await Post("/api/pair/request", json);
+            using var reply = await Json(invalid);
+            check(invalid.StatusCode == HttpStatusCode.BadRequest && reply.RootElement.GetProperty("error").GetString() == "invalid_request", "undecodable JSON string rejected as invalid_request");
+        }
         var challenge = server.Pairing.CurrentChallenge!.Value;
         var response = await Post("/api/pair/request", JsonSerializer.Serialize(new { challenge, name = "Integration phone" }));
         check(response.StatusCode == HttpStatusCode.Accepted, "real HTTPS pairing waits for PC decision");

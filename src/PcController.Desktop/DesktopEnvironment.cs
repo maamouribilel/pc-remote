@@ -42,6 +42,7 @@ internal sealed class MacDesktopEnvironment(MacHostFactory factory) : IDesktopEn
 internal sealed class LinuxDesktopEnvironment(LinuxHostFactory factory) : IDesktopEnvironment
 {
     public bool NeedsPortalConsent => factory.Backend == LinuxBackend.WaylandPortal;
+    public bool GtkTextEnabled => factory.Input.GtkTextEnabled;
     private readonly LinuxEnvironment environment = new(factory);
     public event Action? UnsafeChanged { add => environment.UnsafeChanged += value; remove => environment.UnsafeChanged -= value; }
     public DesktopEnvironmentState Inspect()

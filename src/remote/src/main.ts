@@ -33,6 +33,8 @@ let attempts = 0, seq = 0, generation = 0;
 let authenticated = false, pairing = false;
 let controlReady = false, lastPing = 0;
 let capabilities: Capabilities = unavailable;
+// PC clock minus phone clock, from the HTTP Date header. Power deadlines are PC times.
+let serverOffset = 0;
 function sendControl(type: string, payload: object): number | false {
   if (!supports(capabilities, type, payload) || !controlReady || socket?.readyState !== WebSocket.OPEN) return false;
   if (socket.bufferedAmount > 16384) { socket.close(); return false; }
@@ -44,7 +46,7 @@ const controls = setupTouchpad((type, payload) => Boolean(sendControl(type, payl
 const keyboard = setupKeyboard((type, payload) => controls.flush() ? sendControl(type, payload) : false, controls.release);
 const media = setupMedia((type, payload) => controls.flush() ? sendControl(type, payload) : false, controls.release);
 const tabs = setupTabs(controls.release);
-const pc = setupPc(api, controls.release, media.profile, tabs.select);
+const pc = setupPc(api, controls.release, media.profile, tabs.select, () => Date.now() + serverOffset);
 const connectionPanel = setupConnectionPanel(controls.release);
 function applyCapabilities(value: Capabilities) {
   capabilities = value; renderLabels(value); keyboard.setCapabilities(value); media.setCapabilities(value); pc.setCapabilities(value);
@@ -55,12 +57,13 @@ function enableControl(auth: boolean) {
 }
 const releaseButton = element<HTMLButtonElement>('release');
 let pending: { sequence: number; started: number } | undefined;
-function display(message: string, connected = false, explanation?: string) {
+// reopen=false lets heartbeats keep an explanation visible without undoing a manual close.
+function display(message: string, connected = false, explanation?: string, reopen = true) {
   state.textContent = message; dot.classList.toggle('connected', connected);
   button.disabled = !connected || pending !== undefined;
   error.hidden = !explanation; error.textContent = explanation ?? '';
   releaseButton.disabled = !controlReady;
-  if (explanation) connectionPanel.open(true);
+  if (explanation) { if (reopen) connectionPanel.open(true); }
   else if (controlReady) connectionPanel.closeAutomatic();
 }
 function clearTimers() { clearTimeout(reconnect); clearTimeout(deadline); clearInterval(heartbeat); clearTimeout(poll); }
@@ -68,11 +71,15 @@ async function api(path: string, body?: object) {
   const response = await fetch(path, { method: body === undefined ? 'GET' : 'POST',
     headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body), cache: 'no-store', signal: AbortSignal.timeout(5000) });
-  if (response.status === 429) throw new Error('Too many requests. Wait one minute and try again.');
-  const result = await response.json();
+  const date = Date.parse(response.headers.get('Date') ?? '');
+  if (Number.isFinite(date)) serverOffset = date - Date.now();
+  // Only the global limiter means "wait a minute"; endpoint limits carry their own code.
+  const result = response.status === 429 ? await response.json().catch(() => ({})) : await response.json();
+  if (response.status === 429 && result.error !== 'launch_rate_limit') throw new Error('Too many requests. Wait one minute and try again.');
   return { ...result, ok: response.ok };
 }
 function retry() {
+  clearTimeout(reconnect);
   if (!document.hidden) reconnect = setTimeout(connect, Math.min(1000 * 2 ** attempts++, 15000) + Math.random() * 300);
 }
 function ping() {
@@ -80,7 +87,16 @@ function ping() {
   pending = { sequence: ++seq, started: performance.now() }; button.disabled = true;
   lastPing = performance.now();
   socket.send(JSON.stringify({ v: 1, seq, type: 'ping', payload: {} }));
-  deadline = setTimeout(() => { display('Connection timed out', false, 'Check the PC and Wi-Fi.'); socket?.close(); }, 5000);
+  // A silently dead path may not fire onclose until the browser's own close timeout.
+  // Detach the socket first so its late onclose is ignored, then reconnect now.
+  deadline = setTimeout(() => { const current = socket; socket = undefined; disconnected('Connection timed out. Check the PC and Wi-Fi.'); current?.close(); }, 5000);
+}
+function disconnected(explanation?: string) {
+  clearTimeout(deadline); clearInterval(heartbeat); pending = undefined;
+  controlReady = false; controls.setEnabled(false); keyboard.setEnabled(false); media.setEnabled(false); pc.setConnection(false);
+  transport.textContent = 'Disconnected';
+  display(document.hidden ? 'Suspended' : 'Disconnected · retrying', false, explanation);
+  retry();
 }
 function openSocket(auth: boolean, version: number) {
   const current = new WebSocket(`wss://${location.host}/${auth ? 'control' : 'diagnostics'}/ws`);
@@ -104,18 +120,15 @@ function openSocket(auth: boolean, version: number) {
       pc.setConnection(auth, reply.session); if (auth) pc.sync(reply.payload ?? {});
       enableControl(auth);
       if (pairing) display('Waiting for PC approval', true);
-      else display(auth ? (Object.values(capabilities).some(v => v === true) || Object.values(capabilities.mediaActions).some(a => a.length) ? 'Connected securely' : 'Connected · controls unavailable') : 'Secure transport · unpaired', true);
+      // Unpaired heartbeats keep the last pairing explanation visible until the person acts.
+      else display(auth ? (Object.values(capabilities).some(v => v === true) || Object.values(capabilities.mediaActions).some(a => a.length) ? 'Connected securely' : 'Connected · controls unavailable') : 'Secure transport · unpaired', true,
+        auth || error.hidden ? undefined : error.textContent ?? undefined, false);
     } catch { display('Invalid server reply'); current.close(); }
   };
   current.onerror = () => { if (socket === current) display('Connection failed', false, 'Check certificate trust, the Private firewall rule, and Wi-Fi client isolation.'); };
   current.onclose = event => {
     if (socket !== current || version !== generation) return;
-    clearTimeout(deadline); clearInterval(heartbeat); pending = undefined;
-    controlReady = false; controls.setEnabled(false); keyboard.setEnabled(false); media.setEnabled(false); pc.setConnection(false);
-    transport.textContent = 'Disconnected';
-    display(document.hidden ? 'Suspended' : 'Disconnected · retrying', false,
-      event.reason === 'input_failed' ? 'Input is unavailable or failed. Check permissions and readiness in the companion.' : undefined);
-    retry();
+    disconnected(event.reason === 'input_failed' ? 'Input is unavailable or failed. Check permissions and readiness in the companion.' : undefined);
   };
 }
 async function pollApproval(version: number) {
@@ -138,7 +151,8 @@ async function pollApproval(version: number) {
 async function connect(take = false) {
   controls.release(); controlReady = false; controls.setEnabled(false); keyboard.setEnabled(false); media.setEnabled(false); pc.setConnection(false);
   const version = ++generation; clearTimers(); socket?.close(); socket = undefined; pending = undefined;
-  takeover.hidden = true;
+  // Background retries keep Take over in place so the layout never shifts Forget under a tap.
+  if (take) takeover.hidden = true;
   if (document.hidden) return;
   if (location.protocol !== 'https:') { display('HTTPS required', false, 'Use the trusted HTTPS address displayed on the PC.'); return; }
   display('Connecting…');
@@ -148,6 +162,7 @@ async function connect(take = false) {
     if (status.protocol !== 1) { applyCapabilities(unavailable); display('Unsupported companion protocol', false, 'Use a compatible companion and browser remote.'); return; }
     const wasAuthenticated = authenticated;
     authenticated = status.authenticated; form.hidden = authenticated; forget.hidden = !authenticated;
+    if (!authenticated) takeover.hidden = true;
     if (authenticated && !wasAuthenticated) { (document.getElementById('connection-details') as HTMLDetailsElement).open = false; connectionPanel.close(); }
     if (!authenticated) connectionPanel.open(true);
     applyCapabilities(authenticated ? readCapabilities(status) : unavailable);
@@ -160,17 +175,17 @@ async function connect(take = false) {
       const claim = await api('/api/session/claim', { takeover: take });
       if (version !== generation || document.hidden) return;
       if (!claim.ok) {
-        if (claim.error === 'unauthenticated') { display('Pairing expired or revoked'); retry(); return; }
+        if (claim.error === 'unauthenticated') { takeover.hidden = true; display('Pairing expired or revoked'); retry(); return; }
         takeover.hidden = claim.error !== 'controller_busy';
         display(claim.error === 'paused' ? `Paused on ${labels(capabilities).computer}` : 'Another controller is active', false,
           claim.error === 'paused' ? `Resume control on the ${labels(capabilities).computer}.` : 'Take over only when you intend to replace the current controller.');
         retry(); return;
       }
-      openSocket(true, version);
+      takeover.hidden = true; openSocket(true, version);
     } else { openSocket(false, version); await pollApproval(version); }
   } catch (reason) {
     if (version !== generation) return;
-    display('Connection failed', false, String(reason)); retry();
+    takeover.hidden = true; display('Connection failed', false, String(reason)); retry();
   }
 }
 form.addEventListener('submit', async event => {
@@ -187,7 +202,10 @@ form.addEventListener('submit', async event => {
 });
 button.addEventListener('click', ping);
 takeover.addEventListener('click', () => connect(true));
-forget.addEventListener('click', async () => { try { await api('/api/logout', {}); connect(); } catch { display('Could not forget browser', false, 'Reconnect and try again.'); } });
+forget.addEventListener('click', async () => {
+  if (!window.confirm('Forget this browser? You will need to pair it with the PC again.')) return;
+  try { await api('/api/logout', {}); connect(); } catch { display('Could not forget browser', false, 'Reconnect and try again.'); }
+});
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { controls.release(); controlReady = false; controls.setEnabled(false); keyboard.setEnabled(false); media.setEnabled(false); pc.setConnection(false); generation++; clearTimers(); socket?.close(); display('Suspended'); } else connect();
 });

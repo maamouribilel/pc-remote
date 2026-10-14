@@ -76,9 +76,32 @@ static int session_ready(void) {
     if (screen) { g_variant_get(screen, "(b)", &screen_locked); g_variant_unref(screen); }
     return !screen_locked;
 }
+// NetworkManager reports access-point scans, signal strength, link bitrate and traffic
+// counters as PropertiesChanged every few seconds. They are not connectivity changes, so
+// they must not pause control or revoke LAN approval. Address, gateway, SSID and BSSID
+// changes are still detected by the managed interface identity check.
+static int network_noise(const char *path, const char *signal, GVariant *params) {
+    if (strcmp(signal, "PropertiesChanged") || !g_str_has_prefix(path, "/org/freedesktop/NetworkManager") ||
+        !g_variant_is_of_type(params, G_VARIANT_TYPE("(sa{sv}as)"))) return 0;
+    const char *name; GVariant *properties, *invalidated;
+    g_variant_get(params, "(&s@a{sv}@as)", &name, &properties, &invalidated);
+    int noise = !strcmp(name, "org.freedesktop.NetworkManager.AccessPoint") || !strcmp(name, "org.freedesktop.NetworkManager.Device.Statistics");
+    if (!noise && !strcmp(name, "org.freedesktop.NetworkManager.Device.Wireless") && g_variant_n_children(invalidated) == 0) {
+        noise = 1;
+        GVariantIter iter; const char *key; GVariant *value;
+        g_variant_iter_init(&iter, properties);
+        while (g_variant_iter_next(&iter, "{&sv}", &key, &value)) {
+            if (strcmp(key, "Bitrate") && strcmp(key, "LastScan") && strcmp(key, "AccessPoints")) noise = 0;
+            g_variant_unref(value);
+        }
+    }
+    g_variant_unref(properties); g_variant_unref(invalidated);
+    return noise;
+}
 static void signal_changed(GDBusConnection *c, const char *sender, const char *path,
                            const char *iface, const char *signal, GVariant *params, void *data) {
     (void)c; (void)sender; (void)iface; (void)data;
+    if (network_noise(path, signal, params)) return;
     if (!strcmp(signal, "Closed")) {
         g_mutex_lock(&portal_mutex);
         int current = portal_path && !strcmp(path, portal_path);
@@ -127,6 +150,11 @@ static void *observe(void *unused) {
     if (system_bus) {
         GVariant *r = call(system_bus, "org.freedesktop.login1", "/org/freedesktop/login1", "org.freedesktop.login1.Manager", "GetSessionByPID",
                             g_variant_new("(u)", (guint)getpid()), G_VARIANT_TYPE("(o)"));
+        // Apps started from GNOME Shell, a terminal or autostart run in systemd user scopes
+        // outside any logind session. "auto" then resolves to the user's display session,
+        // which session_ready() still requires to be local, active, unlocked and GNOME.
+        if (!r) r = call(system_bus, "org.freedesktop.login1", "/org/freedesktop/login1", "org.freedesktop.login1.Manager", "GetSession",
+                         g_variant_new("(s)", "auto"), G_VARIANT_TYPE("(o)"));
         if (r) { g_variant_get(r, "(o)", &session_path); g_variant_unref(r); }
         subscriptions[2] = subscribe(system_bus, "org.freedesktop.login1", "org.freedesktop.DBus.Properties", "PropertiesChanged", session_path);
         subscriptions[3] = subscribe(system_bus, "org.freedesktop.login1", "org.freedesktop.login1.Manager", "PrepareForSleep", NULL);
@@ -361,18 +389,24 @@ int pc_linux_event(int type, int code, double x, double y, int down) {
         }
         return 0;
     }
-    if (!atomic_load(&portal_live) || !portal_path) return 0;
+    // Releases can run on other threads while consent/close replaces the portal session;
+    // use a private copy so a concurrent close_portal() cannot free the path mid-call.
+    g_mutex_lock(&portal_mutex);
+    char *session = atomic_load(&portal_live) && portal_path ? g_strdup(portal_path) : NULL;
+    g_mutex_unlock(&portal_mutex);
+    if (!session) return 0;
     const char *method; GVariant *args;
-    if (type == 1) { method = "NotifyPointerMotion"; args = g_variant_new("(o@a{sv}dd)", portal_path, empty(), x, y); }
-    else if (type == 2) { method = "NotifyPointerButton"; args = g_variant_new("(o@a{sv}iu)", portal_path, empty(), code == 1 ? 272 : 273, (guint)down); }
-    else if (type == 3) { method = "NotifyKeyboardKeysym"; args = g_variant_new("(o@a{sv}iu)", portal_path, empty(), code, (guint)down); }
+    if (type == 1) { method = "NotifyPointerMotion"; args = g_variant_new("(o@a{sv}dd)", session, empty(), x, y); }
+    else if (type == 2) { method = "NotifyPointerButton"; args = g_variant_new("(o@a{sv}iu)", session, empty(), code == 1 ? 272 : 273, (guint)down); }
+    else if (type == 3) { method = "NotifyKeyboardKeysym"; args = g_variant_new("(o@a{sv}iu)", session, empty(), code, (guint)down); }
     else if (type == 4) {
         int ok = 1;
-        if (x) { GVariant *r = call(bus, PORTAL, ROOT, RD, "NotifyPointerAxisDiscrete", g_variant_new("(o@a{sv}ui)", portal_path, empty(), 1u, (int)x), NULL); ok &= r != NULL; if (r) g_variant_unref(r); }
-        if (y) { GVariant *r = call(bus, PORTAL, ROOT, RD, "NotifyPointerAxisDiscrete", g_variant_new("(o@a{sv}ui)", portal_path, empty(), 0u, (int)y), NULL); ok &= r != NULL; if (r) g_variant_unref(r); }
-        return ok;
-    } else return 0;
+        if (x) { GVariant *r = call(bus, PORTAL, ROOT, RD, "NotifyPointerAxisDiscrete", g_variant_new("(o@a{sv}ui)", session, empty(), 1u, (int)x), NULL); ok &= r != NULL; if (r) g_variant_unref(r); }
+        if (y) { GVariant *r = call(bus, PORTAL, ROOT, RD, "NotifyPointerAxisDiscrete", g_variant_new("(o@a{sv}ui)", session, empty(), 0u, (int)y), NULL); ok &= r != NULL; if (r) g_variant_unref(r); }
+        g_free(session); return ok;
+    } else { g_free(session); return 0; }
     GVariant *r = call(bus, PORTAL, ROOT, RD, method, args, NULL);
+    g_free(session);
     if (!r) return 0;
     g_variant_unref(r); return 1;
 }
