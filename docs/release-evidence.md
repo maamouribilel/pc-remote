@@ -269,3 +269,25 @@ Source changes on `main` after v0.3.1. Version stays **0.3.1**; no package was b
 - Isolated Ubuntu 24.04.5 ARM64 container (SDK 10.0.402): the bridge compiles with `-Werror` (production and test seams). Linux faults **88**, private Xvfb X11 **41**, private fake-portal/MPRIS/logind **31** (including the new NetworkManager noise/roaming check) and disposable keyring storage passed.
 
 **Not established:** Windows execution of the host changes, real GNOME (x64, X11 or Wayland) session lookup and NetworkManager behaviour, the macOS logout/restart path and native appearance on a real display, Linux rendering on a real desktop, and physical-phone/LAN use of the remote fixes. The new GetSession fallback and NetworkManager filter are container/fixture evidence only.
+
+## Version 0.3.2 — bug fixes and macOS/Linux window redesign (2026-10-14)
+
+Preview release of the fixes and the macOS/Linux window redesign described in the [2026-10-14 entry](#2026-10-14--bug-fixes-and-macoslinux-window-redesign-unreleased-after-031). The shared host fixes also ship in the Windows companion; its WPF window is unchanged. All 0.3.x builds bundle .NET 10.0.13. On 2026-10-14 the public advisory feed had no advisories for the bundled 10.0.13 runtime packages (`scripts/audit-runtime.py`), and the npm/NuGet audits were clean.
+
+**Hosted CI on fix commit `0601761`** (run [38539382226](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38539382226)) passed every job:
+- Windows validation: default **151**, security **185**, pairing **193**, lifecycle **158**, PC feature **180**, browser **6**, strict TLS, provisional packaging and content checks.
+- Portable on Windows, macOS and Ubuntu x64: shared **272** and desktop **79** each. Mac adapter **62** on macOS; Linux faults **88** on Ubuntu.
+- Ubuntu x64 isolated: private Xvfb/GTK **41**, private portal/MPRIS/logind **31** (including the NetworkManager noise/roaming check) and disposable keyring/strict TLS.
+- All three provisional packages.
+
+The release commit's own runs, the final assets and their digests are recorded in the publication entry that follows.
+
+**Not established for 0.3.2:**
+- Windows installation, iPhone use or power execution.
+- The real GNOME (x64, X11 and Wayland) session lookup and NetworkManager behaviour.
+- Real macOS logout and restart with the app running.
+- Native appearance of the redesigned window on a real display (only headless renders and native startup were checked).
+- Gatekeeper and the installed Keychain-update dialog.
+- Intel hardware.
+- Physical-phone and LAN use of the phone-remote fixes.
+- Every earlier 0.3.x gap.

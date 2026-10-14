@@ -10,7 +10,7 @@ A touchpad, keyboard, media remote, and app launcher in Safari.<br>
 Pair on your PC, connect over your home network, and keep control within reach.<br>
 <sub>New since 0.3.0: experimental macOS and Ubuntu builds for testers.</sub>
 
-[![Download](https://img.shields.io/badge/Download-v0.3.1_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.1)
+[![Download](https://img.shields.io/badge/Download-v0.3.2_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.2)
 [![Windows](https://img.shields.io/badge/Windows-x64-0078D4?style=flat-square)](#download)
 [![macOS and Ubuntu](https://img.shields.io/badge/macOS_%2B_Ubuntu-experimental-8A8F98?style=flat-square)](#experimental-macos-and-ubuntu-builds)
 [![.NET](https://img.shields.io/badge/.NET-10-512BD4?style=flat-square)](#tech-stack)
@@ -19,7 +19,7 @@ Pair on your PC, connect over your home network, and keep control within reach.<
 [![Transport](https://img.shields.io/badge/Transport-HTTPS_%2B_WSS-5EE8BE?style=flat-square)](docs/protocol.md)
 [![License](https://img.shields.io/badge/License-MIT-5EE8BE?style=flat-square)](LICENSE)
 
-**[Download for Windows](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.1/PCRemote-0.3.1-win-x64-setup.exe)** · **[All versions](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)** · **[Watch the walkthrough](#walkthrough)** · **[Build from source](#getting-started)**
+**[Download for Windows](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.2/PCRemote-0.3.2-win-x64-setup.exe)** · **[All versions](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)** · **[Watch the walkthrough](#walkthrough)** · **[Build from source](#getting-started)**
 
 <img src="docs/assets/desktop-controls.jpg" alt="The actual Windows companion showing power, pointer, and media preferences" width="900">
 
@@ -37,24 +37,26 @@ PC Remote runs as a Windows notification-tray companion and serves its own brows
 
 ## Download
 
-**[Download PC Remote v0.3.1 for Windows x64 →](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.1/PCRemote-0.3.1-win-x64-setup.exe)**
+**[Download PC Remote v0.3.2 for Windows x64 →](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.2/PCRemote-0.3.2-win-x64-setup.exe)**
 
 | Download | Choose this for |
 | :--- | :--- |
-| **[Windows installer](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.1/PCRemote-0.3.1-win-x64-setup.exe)** | Recommended: Start menu shortcuts and an uninstall entry |
-| **[Portable ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.1/PCRemote-0.3.1-win-x64.zip)** | Extract the complete archive, then run `PCRemote-win-x64/PcController.App.exe` |
-| **[macOS Apple Silicon](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.1/PCRemote-0.3.1-osx-arm64.zip)** · experimental | Extract and keep `PC Remote.app` in a stable folder. Unsigned; read the [macOS guide](docs/macos-setup.md) first |
-| **[macOS Intel](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.1/PCRemote-0.3.1-osx-x64.zip)** · experimental | Built for Intel Macs; not yet run on Intel hardware |
-| **[Ubuntu 24.04 x64 / GNOME](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.1/PCRemote-0.3.1-linux-x64.tar.gz)** · experimental | Extract and run `PCRemote-linux-x64/PcController.Desktop` as your desktop user; read the [Linux guide](docs/linux-setup.md) |
-| **[SHA-256 checksums](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.1/SHA256SUMS.txt)** | Verify every download, including the per-platform build manifests |
+| **[Windows installer](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.2/PCRemote-0.3.2-win-x64-setup.exe)** | Recommended: Start menu shortcuts and an uninstall entry |
+| **[Portable ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.2/PCRemote-0.3.2-win-x64.zip)** | Extract the complete archive, then run `PCRemote-win-x64/PcController.App.exe` |
+| **[macOS Apple Silicon](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.2/PCRemote-0.3.2-osx-arm64.zip)** · experimental | Extract and keep `PC Remote.app` in a stable folder. Unsigned; read the [macOS guide](docs/macos-setup.md) first |
+| **[macOS Intel](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.2/PCRemote-0.3.2-osx-x64.zip)** · experimental | Built for Intel Macs; not yet run on Intel hardware |
+| **[Ubuntu 24.04 x64 / GNOME](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.2/PCRemote-0.3.2-linux-x64.tar.gz)** · experimental | Extract and run `PCRemote-linux-x64/PcController.Desktop` as your desktop user; read the [Linux guide](docs/linux-setup.md) |
+| **[SHA-256 checksums](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.2/SHA256SUMS.txt)** | Verify every download, including the per-platform build manifests |
 
-**[Release notes for v0.3.1](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.1)** · **[Browse every published version](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)**
+**[Release notes for v0.3.2](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.2)** · **[Browse every published version](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)**
 
 On GitHub, open **Releases**, select the version you want, and expand **Assets**. GitHub's automatic **Source code** archives are for developers. See [download and version instructions](docs/releases.md).
 
-Version 0.3.1 is a public preview. The Windows companion targets Windows 10 1809 or later, x64; Windows 11 is the tested desktop OS. The app and installer are unsigned, and the remaining manual checks are documented in the [release checklist](docs/release-checklist.md). After installation, follow the [iPhone setup guide](docs/setup.md).
+Version 0.3.2 is a public preview. The Windows companion targets Windows 10 1809 or later, x64; Windows 11 is the tested desktop OS. The app and installer are unsigned, and the remaining manual checks are documented in the [release checklist](docs/release-checklist.md). After installation, follow the [iPhone setup guide](docs/setup.md).
 
-**New in 0.3.1:** the experimental macOS companion keeps your approved network when you switch Spaces, take a player full-screen, the display sleeps or a password field enables Secure Input. Version 0.3.0 dropped the approval on those events, so the address fell back to `localhost` and the phone disconnected. Windows and Ubuntu behavior is unchanged.
+**New in 0.3.2:** the experimental macOS and Ubuntu companions get a redesigned window that matches the Windows dashboard (pairing QR and address with Copy, Control, Trusted network and Paired devices cards, sliders in Preferences). Fixes for every platform: holding two arrow keys on the phone no longer pauses control; a dropped connection reconnects immediately; pairing errors stay visible; power confirmation works when the phone and PC clocks differ; a device approved on the PC but never completed on the phone is no longer listed as paired; a server certificate left from a replaced root is reissued; malformed requests are rejected cleanly. On macOS, logout/restart/Quit are no longer blocked and `kill` exits gracefully; Resume right after granting Accessibility now enables control. On Ubuntu, Wi-Fi signal updates no longer pause control or revoke LAN approval, and starting from the GNOME menu finds the desktop session.
+
+**Since 0.3.1:** the macOS companion keeps your approved network across Space, full-screen, display sleep and Secure Input changes.
 
 **Security update for Windows (since 0.3.0):** 0.3.x bundles .NET **10.0.13** from Microsoft's 2026-10-13 security release (including CVE-2026-58280); the .NET 10.0.12 runtime in 0.2.1 is affected, so updating is recommended. PC actions now also bind to the original connected session before reading a request body.
 
@@ -280,7 +282,7 @@ The browser fixture script needs Python 3.9+ on Windows too; strict TLS needs Py
 
 See the [initial publication validation results](docs/publication-checks.md) for build, browser, transport, desktop, packaging, documentation, and secret-scan evidence.
 
-The [v0.3.1 release evidence](docs/release-evidence.md#version-031--macos-lan-approval-fix-2026-10-13) and the earlier [v0.3.0 entry](docs/release-evidence.md#version-030--experimental-macos-and-ubuntu-preview-2026-10-13) record actual local and hosted CI results and remaining gaps. GitHub's **Security and regression checks** workflow runs portable build/security/TLS checks on Windows, macOS and Linux, Windows regressions and browser tests, isolated Linux checks and per-platform packaging. Hosted runs are automated evidence; they do not establish physical-phone, installed-app or native desktop acceptance.
+The [v0.3.2 release evidence](docs/release-evidence.md#version-032--bug-fixes-and-macoslinux-window-redesign-2026-10-14), the [v0.3.1 entry](docs/release-evidence.md#version-031--macos-lan-approval-fix-2026-10-13) and the earlier [v0.3.0 entry](docs/release-evidence.md#version-030--experimental-macos-and-ubuntu-preview-2026-10-13) record actual local and hosted CI results and remaining gaps. GitHub's **Security and regression checks** workflow runs portable build/security/TLS checks on Windows, macOS and Linux, Windows regressions and browser tests, isolated Linux checks and per-platform packaging. Hosted runs are automated evidence; they do not establish physical-phone, installed-app or native desktop acceptance.
 
 For strict certificate interoperability, run `./scripts/test-certificate.ps1` with **Python 3.13+** available. It uses only Python's standard library and checks valid trust, incorrect-host rejection, and untrusted-certificate rejection. CI includes this check; Python is a validation tool and is not needed to run the packaged app.
 
@@ -318,7 +320,7 @@ Deploy the companion to the Windows PC you want to control. Its web app is bundl
 
 ```powershell
 ./scripts/stop.ps1 -Configuration Release
-./scripts/package.ps1 -Version 0.3.1
+./scripts/package.ps1 -Version 0.3.2
 Get-Content ./artifacts/latest-release.txt
 ```
 
@@ -326,8 +328,8 @@ Packaging obtains the verified local Inno Setup compiler if needed, rebuilds Rel
 
 | Output | Use |
 | :--- | :--- |
-| `PCRemote-0.3.1-win-x64-setup.exe` | Per-user installation, Start menu shortcut, uninstall entry |
-| `PCRemote-0.3.1-win-x64.zip` | Portable distribution; keep the executable and adjacent files together |
+| `PCRemote-0.3.2-win-x64-setup.exe` | Per-user installation, Start menu shortcut, uninstall entry |
+| `PCRemote-0.3.2-win-x64.zip` | Portable distribution; keep the executable and adjacent files together |
 | `PCRemote-win-x64/` | App, bundled runtime, web assets, documentation, license notices |
 | `SHA256SUMS.txt` | Installer and archive hashes |
 
