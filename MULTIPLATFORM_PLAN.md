@@ -596,3 +596,8 @@ The final staging command `.tools/phase5-refresh-guides.py` refreshed only revie
   - Final digests and public verification are in the [0.3.2 publication evidence](docs/release-evidence.md#version-032-publication-and-public-verification-2026-10-14).
   - Phase 4 remains **In progress**, and all native/manual gaps remain open.
 - **Published 2026-10-14 as 0.3.3:** [v0.3.3 pre-release](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.3), annotated tag at `8313089`; macOS/Ubuntu setup-state fixes (address preview before LAN approval, empty-state refresh, permission section only on real problems). Hosted CI passed on fix commit `bc4ff3f` and version commit `8313089`, and the final dispatch 38599277310 supplied the assets. Evidence: [0.3.3 publication](docs/release-evidence.md#version-033-publication-and-public-verification-2026-10-14). Phase 4 remains **In progress**.
+- **Published 2026-10-14 as 0.3.4:** [v0.3.4 pre-release](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.4), with the annotated tag at `c36c69c`.
+  - Fix: on the installed 0.3.3 app, with Accessibility granted, the macOS host setup trapped in an off-main-thread Text Input Source call and never started. Keyboard-layout lookups now come from a main-thread cache, and a native-app check reproduces the old hang.
+  - Hosted CI passed on `f527b88` and `c36c69c`. The `c36c69c` push run passed after re-running one Windows Playwright page-setup timeout.
+  - The final dispatch 38614827128 supplied the assets. Evidence: [0.3.4 publication](docs/release-evidence.md#version-034-publication-and-public-verification-2026-10-14).
+  - Phase 4 remains **In progress**.

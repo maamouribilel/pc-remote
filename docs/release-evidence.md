@@ -449,3 +449,43 @@ On release day the runtime advisory feed again had no advisories for .NET 10.0.1
 - Every earlier 0.3.x gap.
 
 The final assets and digests follow in the publication entry.
+
+
+### Version 0.3.4 publication and public verification (2026-10-14)
+
+Published as a **pre-release**: [v0.3.4](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.4). The annotated tag `v0.3.4` points to commit `c36c69ca683c31c8c287dfefc295a8dfa00e3ca7`. Earlier tags and assets were not changed.
+
+Hosted runs on `c36c69c`:
+- The `final` dispatch [38614827128](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38614827128) passed every job and supplied the assets.
+- The push run [38614817206](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38614817206) passed every job on attempt 2. On attempt 1, the Windows portable job's capability-compatibility browser test timed out while Playwright was *setting up the page* (30 s), before the test body ran. The same test passed in the final run on this commit. No product code for Windows or the remote changed in this release, and only that job was re-run.
+- The documentation runs for the commit and for the tag ([38617881726](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38617881726)) passed.
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `PCRemote-0.3.4-win-x64-setup.exe` | 62,698,315 | `5a750365bc3b1b9b1f8233f7f03b237b80b6469544ddd7fdb9fe16ba6bcd0c78` |
+| `PCRemote-0.3.4-win-x64.zip` | 89,739,616 | `650329209d5db53298526a4488be390bb7268f28998be638851950d2d7043d45` |
+| `PCRemote-0.3.4-osx-arm64.zip` | 60,697,601 | `7ba027a88df39aad5fcaf92fa89229d580d2bd2b17145d3aefa3fef140ac07f5` |
+| `PCRemote-0.3.4-osx-x64.zip` | 63,406,692 | `c4f63329ffe52cfc7ed801de655582185aac002a3ae941bb907110aa4480b220` |
+| `PCRemote-0.3.4-linux-x64.tar.gz` | 60,556,923 | `3f091abaccd45101be592740705b377bb60175e85cb02d3a174545b681d36574` |
+| `PCRemote-0.3.4-osx-arm64-manifest.json` | 109,626 | `ddfc8c0efad6c6e8f2c9f60b76290a1bd4ac03af11b557811f60acdf22de77e1` |
+| `PCRemote-0.3.4-osx-x64-manifest.json` | 109,624 | `8fc00f346671d142ffcf2046c3890f8c84e0a770e60f90613430f6e7113bbd17` |
+| `PCRemote-0.3.4-linux-x64-manifest.json` | 50,478 | `fff9f7fd86113d87cd5247436900adf6fc36ba15a9e7aacc3afbd8a64e79c62c` |
+| `SHA256SUMS.txt` | 791 | covers the eight files above |
+
+Local verification of the downloaded workflow artifacts used the same independent script as earlier releases:
+- Checksums match.
+- Manifest provenance: `candidate: false`, `sourceDirty: false`, revision `c36c69c`, version 0.3.4. Every extracted file matches its manifest inventory.
+- The extracted macOS seals verify and native architectures are correct.
+- `--package-info` reports `0.3.4+c36c69c` and .NET 10.0.13: natively on Apple Silicon, and for Intel under Rosetta emulation only.
+- Byte-pattern checks (not runtime verification) confirm both macOS bridges contain the layout-change observer and the shell contains the new Accessibility text.
+- License notices are present, there are no PDB or private files, and the Gitleaks scan is clean.
+
+After publication, all nine public URLs returned HTTP 200 to anonymous downloads, with matching sizes and SHA-256 digests. The public `SHA256SUMS.txt` is byte-identical, GitHub's asset digests match, and the README on `main` links only v0.3.4 assets.
+
+Afterwards, at the user's request:
+- The user had already force-quit the stuck 0.3.3 app.
+- The verified public Apple Silicon ZIP replaced 0.3.3 in `/Applications`. The SHA-256 matched, the seal verified before and after installation, and `--package-info` reported `0.3.4+c36c69c`.
+- 0.3.3 was moved to the Trash, not permanently deleted.
+- The application data directory and the Keychain item were not touched.
+- 0.3.4 launched. It needs Keychain approval and a re-added Accessibility entry for its new code identity.
+- Native server start with Accessibility granted on the installed app remains to be observed.
