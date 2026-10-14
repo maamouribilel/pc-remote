@@ -337,3 +337,31 @@ The documentation commit `dd547d2` that recorded this publication passed the Sec
 - The app launched and keeps its listeners stopped until the user approves Keychain access for the new code identity; Accessibility must be re-enabled for this build.
 
 The gaps listed under [Version 0.3.2](#version-032--bug-fixes-and-macoslinux-window-redesign-2026-10-14) remain open.
+
+## Version 0.3.3 — clearer macOS/Ubuntu setup state (2026-10-14)
+
+After installing 0.3.2, the user reported seeing `https://localhost:8443` instead of the Mac's router-assigned address. A read-only check on that Mac showed the companion listening only on `127.0.0.1:8443`, with `en0` at a private address selected but not yet approved. That is the designed, session-only LAN approval, not a fault.
+
+The same screenshot showed two display defects in the 0.3.2 window, and review found a third:
+- The paired-devices empty state kept the "no host" text after setup completed.
+- The permissions section opened on every launch, because the window rendered before the host's first refresh.
+- The "no platform host" setup text briefly showed at startup.
+
+Fixes in this release (macOS/Ubuntu window only):
+- Before approval, the address and Trusted network cards name the selected (or only) interface and the exact `https://<address>:8443` the phone will use. The host stays loopback-only until explicit approval.
+- The device empty state refreshes when the host becomes available.
+- The permissions section opens only for a real missing permission or locked storage.
+- A composed host shows *Starting secure setup…* until its first refresh.
+
+Windows behavior is unchanged from 0.3.2.
+
+**Results:**
+- Desktop UI checks **85** (6 new). Because the user's installed app held loopback port 8443 on this Mac, the 8443-dependent suites ran in an isolated Ubuntu 24.04 ARM64 container: shared **272**, desktop **85**, Linux faults **88**; the address-preview render was also taken there.
+- Hosted CI on fix commit `bc4ff3f` (run [38597846729](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38597846729)) passed every job:
+  - Windows default 151, security 185, pairing 193, lifecycle 158, PC feature 180, browser 6.
+  - Shared 272 and desktop 85 on Windows, macOS and Ubuntu x64; Mac adapter 62; Linux faults 88.
+  - Ubuntu x64 isolated suites.
+  - All provisional packages.
+- On release day the runtime advisory feed still had no advisories for .NET 10.0.13.
+
+**Not established:** the 0.3.2 gaps remain, including native appearance on a real display, real macOS logout, real GNOME, Windows installation and physical-phone/LAN use. The final assets and digests follow in the publication entry.

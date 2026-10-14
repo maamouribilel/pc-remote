@@ -4,7 +4,7 @@ Since version **0.3.0**, releases publish this companion as **experimental** App
 
 ## Install the preview
 
-1. Download `PCRemote-0.3.2-osx-arm64.zip` (Apple Silicon) or `PCRemote-0.3.2-osx-x64.zip` (Intel, not yet run on Intel hardware) and `SHA256SUMS.txt` from the [v0.3.2 release](releases.md). Compare `shasum -a 256 <zip>` with the matching line.
+1. Download `PCRemote-0.3.3-osx-arm64.zip` (Apple Silicon) or `PCRemote-0.3.3-osx-x64.zip` (Intel, not yet run on Intel hardware) and `SHA256SUMS.txt` from the [v0.3.3 release](releases.md). Compare `shasum -a 256 <zip>` with the matching line.
 2. Extract with Finder or `ditto -x -k <zip> <folder>`. Do not use `unzip`: the flat .NET bundle keeps required code-signature metadata in extended attributes that `unzip` does not restore. `codesign --verify --deep --strict 'PC Remote.app'` should succeed.
 3. Move `PC Remote.app` to a stable folder such as `/Applications` before the first launch, so Accessibility, Keychain access and optional login registration refer to one location.
 4. The app has only a local ad-hoc seal (no Developer ID or notarization). Gatekeeper is expected to block the first launch of the downloaded app; after confirming its source and checksum, choose **Open Anyway** under **System Settings → Privacy & Security**. These prompts were not observed for this release.

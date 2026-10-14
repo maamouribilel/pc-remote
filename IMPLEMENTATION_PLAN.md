@@ -526,3 +526,6 @@ Release 0.3.1 — 2026-10-13:
 
 Release 0.3.2 — 2026-10-14:
 - Shared host fixes (leaf reissued when not issued by the current root, undecodable JSON strings rejected as 400, approved-but-unclaimed devices discarded, monotonic power countdown and launch limit) also ship in the Windows companion; the WPF UI is unchanged. Hosted `windows-latest` CI is the Windows evidence; no installation, physical iPhone, reboot, uninstall or power acceptance was performed. Phone remote: two held repeat keys no longer pause control. See docs/release-evidence.md.
+
+Release 0.3.3 — 2026-10-14:
+- macOS/Ubuntu window only: phone-address preview before LAN approval, paired-devices empty-state refresh, permissions section opened only for real problems, no startup "no host" flash. Windows behavior unchanged from 0.3.2; Windows physical/installed acceptance remains open.

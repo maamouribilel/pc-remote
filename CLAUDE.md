@@ -2,13 +2,13 @@
 
 Read and follow [AGENTS.md](AGENTS.md) before editing this repository. It is the shared source of project, validation, security, and publishing instructions. Also read [README.md](README.md), [release publishing](docs/releases.md), and the [release checklist](docs/release-checklist.md) when preparing a release.
 
-Current app version: `0.3.2`.
-Current public release: [v0.3.2 preview](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.2) — Windows companion plus experimental macOS ARM64/Intel and Ubuntu 24.04 x64 archives.
+Current app version: `0.3.3`.
+Current public release: [v0.3.3 preview](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.3) — Windows companion plus experimental macOS ARM64/Intel and Ubuntu 24.04 x64 archives.
 
 
 ## Portable backend, shared shell and platform development (Phases 1–5)
 
-- Version 0.3.2 distributes the Windows WPF companion as the primary platform plus experimental macOS/Ubuntu archives of the shared shell. `PcController.Host` and `PcController.Core` target `net10.0`; WPF/UI and native Windows integration stay in App/Windows. Read `docs/portable-host.md` and the dated `MULTIPLATFORM_PLAN.md` execution log before continuing the migration.
+- Version 0.3.3 distributes the Windows WPF companion as the primary platform plus experimental macOS/Ubuntu archives of the shared shell. `PcController.Host` and `PcController.Core` target `net10.0`; WPF/UI and native Windows integration stay in App/Windows. Read `docs/portable-host.md` and the dated `MULTIPLATFORM_PLAN.md` execution log before continuing the migration.
 - Shared host startup requires explicit `HostServices`; use `WindowsHostFactory` for the WPF companion. Keep DPAPI formats, ACLs, Schannel key loading, trusted roots and remembered devices intact. Certificate issuance/renewal is separate from OS key storage. Never substitute temporary test storage or recording adapters in production.
 - Pointer/media/launcher preferences live in Host; Windows paths, discovery, shortcut/media key mappings and native APIs remain adapters. Preserve v1 wire semantics and the additive authenticated capability contract. The browser now consumes additive authenticated v1 capabilities/readiness; preserve independent action gating and Windows legacy compatibility.
 - Use the pinned SDK 10.0.402 (runtime 10.0.13, updated 2026-10-13 for the .NET security release including CVE-2026-58280), Node 24.21.0 and npm 11.19.0. `python3 scripts/portable.py build`, `test`, `audit`, and `tls` support native macOS/Linux tools; strict TLS needs Python 3.13+. PowerShell 7 build/test automatically select portable projects off Windows; use `-Portable` on Windows. Keep the full Windows solution/regression job.
