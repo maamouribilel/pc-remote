@@ -8,7 +8,11 @@ internal static class MacNative
     [DllImport(Library)] internal static extern int pc_permission();
     [DllImport(Library)] internal static extern void pc_onboard();
     [DllImport(Library)] internal static extern int pc_session();
+    [DllImport(Library)] internal static extern int pc_session_state();
+    [DllImport(Library)] internal static extern int pc_focus_status();
     [DllImport(Library)] internal static extern int pc_test_network_key([MarshalAs(UnmanagedType.LPUTF8Str)] string key);
+    [DllImport(Library)] internal static extern int pc_test_airport([MarshalAs(UnmanagedType.LPUTF8Str)] string key, [MarshalAs(UnmanagedType.LPUTF8Str)] string association);
+    [DllImport(Library)] internal static extern int pc_test_airport_key([MarshalAs(UnmanagedType.LPUTF8Str)] string key);
     [DllImport(Library)] internal static extern int pc_test_frontmost_regular();
     [DllImport(Library)] internal static extern int pc_frontmost();
     [DllImport(Library)] internal static extern int pc_test_activate(int pid);
@@ -56,6 +60,20 @@ public static class MacPermissions
 {
     public static bool Accessibility => MacNative.pc_permission() != 0;
     public static bool Interactive => MacNative.pc_session() != 0;
+    // 0 interactive; otherwise the first blocking reason (see pc_session_state in bridge.m).
+    public static int SessionState => MacNative.pc_session_state();
+    public static int FocusStatus => MacNative.pc_focus_status();
     public static void OpenAccessibilitySettings() => MacNative.pc_onboard();
+    // Accessibility is granted but macOS reports a state in which input must not be posted. Name it, so
+    // the person can act on it instead of guessing between a password field, the lock screen and sleep.
+    public static string SessionBlocked(int state, int focusStatus) => "Control is paused: " + state switch
+    {
+        1 => "PC Remote is running as root, which is never allowed.",
+        2 => "macOS reported system or display sleep, a user switch or a pending power-off and no wake yet. Wake or unlock this Mac; if it is already awake, quit and reopen PC Remote.",
+        3 => "another app has Secure Input enabled (a password field, Terminal's Secure Keyboard Entry, a password prompt or the lock screen). Leave that field or close that prompt, then choose Resume.",
+        4 => "this is not the console session (another user is at the screen). Switch back to this user, then choose Resume.",
+        5 => "the login screen is in front. Sign in, then choose Resume.",
+        _ => "no application is focused. Click a window on this desktop, then choose Resume.",
+    } + " Accessibility permission is granted." + (focusStatus is 0 or -25204 ? "" : $" (The Accessibility focus query reports error {focusStatus}, so the frontmost application is used instead.)");
     public const string Recovery = "Open System Settings → Privacy & Security → Accessibility (Device Control and Data Access on macOS 27), add this PC Remote.app and enable it, then quit and reopen it. After an update or rebuild, an existing PC Remote entry can look enabled but no longer apply: select it, remove it with −, add this app with + and reopen PC Remote. Control remains paused until permission exists and you choose Resume. Secure Input/password fields temporarily block control.";
 }

@@ -40,37 +40,45 @@ void pc_onboard(void) {
     [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"]];
 }
 int pc_test_activate(int pid) { @autoreleasepool { return [[NSRunningApplication runningApplicationWithProcessIdentifier:pid] activateWithOptions:NSApplicationActivateAllWindows]; } }
-int pc_frontmost(void) {
+static atomic_int focusStatus; // Last system-wide AX focused-application result, for readiness text.
+// The system-wide focus query can fail for ordinary front apps (kAXErrorCannotComplete with
+// Chromium/Electron apps and PC Remote itself) and stays kAXErrorAPIDisabled in a process that was
+// already running when Accessibility was granted. Permission itself is rechecked live by
+// pc_permission before every post, so a failed query falls back to the frontmost application,
+// which needs no AX round trip and still names the login window.
+static pid_t focused_pid(void) {
+    AXUIElementRef system=AXUIElementCreateSystemWide(); CFTypeRef app=NULL; pid_t pid=0;
+    AXError status=AXUIElementCopyAttributeValue(system,kAXFocusedApplicationAttribute,&app);
+    atomic_store(&focusStatus, status);
+    if(status==kAXErrorSuccess && app) AXUIElementGetPid((AXUIElementRef)app,&pid);
+    if(app) CFRelease(app); CFRelease(system);
+    if(status!=kAXErrorSuccess || pid<=0) { NSRunningApplication *front=[NSWorkspace sharedWorkspace].frontmostApplication; pid=front ? front.processIdentifier : 0; }
+    return pid;
+}
+int pc_frontmost(void) { @autoreleasepool {
     // AX is a live IPC query. NSRunningApplication's time-varying properties can
     // remain cached until its main run loop advances (not present in CLI smoke).
-    AXUIElementRef system=AXUIElementCreateSystemWide(); CFTypeRef app=NULL; pid_t pid=0;
-    if(AXUIElementCopyAttributeValue(system,kAXFocusedApplicationAttribute,&app)==kAXErrorSuccess && app)
-        AXUIElementGetPid((AXUIElementRef)app,&pid);
-    if(app) CFRelease(app); CFRelease(system); return pid;
-}
-int pc_session(void) { @autoreleasepool {
-    if (getuid() == 0 || atomic_load(&inactive) || IsSecureEventInputEnabled()) return 0;
+    return focused_pid();
+} }
+int pc_focus_status(void) { return atomic_load(&focusStatus); }
+// Why the session is not an interactive remote target: 0 interactive, 1 root, 2 asleep/inactive
+// (system or display sleep, session switch or power-off reported without a wake yet), 3 Secure
+// Input, 4 not the console session, 5 login window in front, 6 no focused application.
+int pc_session_state(void) { @autoreleasepool {
+    if (getuid() == 0) return 1;
+    if (atomic_load(&inactive)) return 2;
+    if (IsSecureEventInputEnabled()) return 3;
     CFDictionaryRef session = CGSessionCopyCurrentDictionary();
-    if (!session) return 0;
+    if (!session) return 4;
     BOOL active = [((__bridge NSDictionary *)session)[(__bridge NSString *)kCGSessionOnConsoleKey] boolValue];
     CFRelease(session);
+    if (!active) return 4;
     // Login UI and secure input are never remote targets. Poll again before every post.
-    AXUIElementRef system=AXUIElementCreateSystemWide(); CFTypeRef focused=NULL;
-    AXError status=AXUIElementCopyAttributeValue(system, kAXFocusedApplicationAttribute, &focused);
-    pid_t pid=0; if(status==kAXErrorSuccess && focused) AXUIElementGetPid((AXUIElementRef)focused, &pid);
-    if(focused) CFRelease(focused); CFRelease(system);
-    NSString *focusedBundle=pid ? [NSRunningApplication runningApplicationWithProcessIdentifier:pid].bundleIdentifier : nil;
-    // On current macOS the system-wide focus query can fail with kAXErrorCannotComplete for
-    // ordinary front apps (observed with Chromium/Electron apps and PC Remote itself) while
-    // per-app AX works. Use the frontmost application then; it needs no AX round trip. Other
-    // AX errors (no permission) still fail, and Secure Input above still blocks password
-    // fields, including the lock screen.
-    if(status==kAXErrorCannotComplete) {
-        NSRunningApplication *front=[NSWorkspace sharedWorkspace].frontmostApplication;
-        pid=front.processIdentifier; focusedBundle=front.bundleIdentifier;
-    } else if(status!=kAXErrorSuccess) return 0;
-    return active && pid>0 && ![focusedBundle isEqualToString:@"com.apple.loginwindow"];
+    pid_t pid=focused_pid();
+    if (pid<=0) return 6;
+    return [[NSRunningApplication runningApplicationWithProcessIdentifier:pid].bundleIdentifier isEqualToString:@"com.apple.loginwindow"] ? 5 : 0;
 } }
+int pc_session(void) { return pc_session_state() == 0; }
 int pc_diagnostics(void) {
     int bits=(AXIsProcessTrusted()?1:0) | (CGPreflightPostEventAccess()?2:0) | (IsSecureEventInputEnabled()?8:0) | (atomic_load(&inactive)?32:0);
     CFDictionaryRef session=CGSessionCopyCurrentDictionary();
@@ -79,17 +87,74 @@ int pc_diagnostics(void) {
     if(AXUIElementCopyAttributeValue(system,kAXFocusedApplicationAttribute,&focused)==kAXErrorSuccess && focused) bits|=16;
     if(focused) CFRelease(focused); CFRelease(system); return bits;
 }
+// The AirPort record (State:/Network/Interface/<if>/AirPort) also carries Busy/BusyUI scan flags,
+// AWDLRealTimeMode, BluetoothAudioInUse, AutoJoinTimestamp and similar fields that change during
+// normal use without any network change. The joined network name (SSID_STR) identifies the
+// network: moving between access points or bands of the same network (BSSID, CHANNEL) is roaming
+// inside the approved LAN, while a different name, address, route or configuration still revokes.
+// Remember the name per record and revoke LAN approval only when it differs. Values stay in memory
+// for comparison only and are never logged or exported.
+static NSMutableDictionary *associations;
+static NSString *association(SCDynamicStoreRef store, CFStringRef key) {
+    CFPropertyListRef value = store ? SCDynamicStoreCopyValue(store, key) : NULL;
+    NSDictionary *airport = value && CFGetTypeID(value) == CFDictionaryGetTypeID() ? (__bridge NSDictionary *)value : nil;
+    id ssid = airport[@"SSID_STR"];
+    NSString *current = airport ? ([ssid isKindOfClass:NSString.class] ? ssid : @"") : @"";
+    if (value) CFRelease(value);
+    return current;
+}
+static BOOL association_changed(NSString *key, NSString *current) {
+    @synchronized(associations) {
+        NSString *previous = associations[key];
+        associations[key] = current;
+        return previous == nil || ![previous isEqualToString:current];
+    }
+}
+static void prime_associations(SCDynamicStoreRef store) {
+    associations = [NSMutableDictionary dictionary];
+    CFArrayRef keys = SCDynamicStoreCopyKeyList(store, CFSTR("State:/Network/Interface/.*/AirPort"));
+    for (CFIndex i = 0; keys && i < CFArrayGetCount(keys); i++) {
+        CFStringRef key = CFArrayGetValueAtIndex(keys, i);
+        association_changed((__bridge NSString *)key, association(store, key));
+    }
+    if (keys) CFRelease(keys);
+}
+// macOS 27 publishes the record and each of its fields as separate keys
+// (State:/Network/Interface/en0/AirPort and .../AirPort/BSSID, .../AirPort/Busy, ...), all in one
+// burst that recurs every few minutes on the user's Wi-Fi (observed 2026-10-14 at 21:50:50,
+// 22:06:49 and 22:14:48; each dropped the LAN before this filter). Every such key is judged by
+// the record's association.
+static NSString *airport_record_key(CFStringRef key) {
+    NSString *name = (__bridge NSString *)key;
+    NSRange marker = [name rangeOfString:@"/AirPort"];
+    if (marker.location == NSNotFound || ![name hasPrefix:@"State:/Network/Interface/"]) return nil;
+    NSString *rest = [name substringFromIndex:marker.location + marker.length];
+    return rest.length == 0 || [rest hasPrefix:@"/"] ? [name substringToIndex:marker.location + marker.length] : nil;
+}
 static void networkChanged(SCDynamicStoreRef store, CFArrayRef keys, void *info) {
-    (void)store; (void)info;
+    (void)info;
     // Wi-Fi signal quality (State:/Network/Interface/<if>/LinkQuality) updates every few seconds
     // and is not a connectivity change; revoking approval on it dropped the LAN within seconds.
-    // Any other changed key (addresses, routes, AirPort association, configuration) still counts.
+    // An AirPort record (or field) update counts only when the association changed (see above).
+    // Any other changed key (addresses, routes, services, configuration) still counts.
     CFIndex count = keys ? CFArrayGetCount(keys) : 0;
     BOOL relevant = count == 0;
-    for (CFIndex i = 0; i < count && !relevant; i++)
-        if (!CFStringHasSuffix((CFStringRef)CFArrayGetValueAtIndex(keys, i), CFSTR("/LinkQuality"))) relevant = YES;
+    for (CFIndex i = 0; i < count && !relevant; i++) {
+        CFStringRef key = CFArrayGetValueAtIndex(keys, i);
+        if (CFStringHasSuffix(key, CFSTR("/LinkQuality"))) continue;
+        NSString *record = airport_record_key(key);
+        if (record && store) { if (association_changed(record, association(store, (__bridge CFStringRef)record))) relevant = YES; continue; }
+        relevant = YES;
+    }
     if (relevant) invalidate_network();
 }
+// Test-only: whether a changed key is judged by the Wi-Fi association rather than revoking outright.
+int pc_test_airport_key(const char *key) { @autoreleasepool { return airport_record_key((__bridge CFStringRef)[NSString stringWithUTF8String:key]) != nil; } }
+// Test-only: feeds a synthetic association for an AirPort key through the real comparison.
+int pc_test_airport(const char *key, const char *value) { @autoreleasepool {
+    if (!associations) associations = [NSMutableDictionary dictionary];
+    return association_changed([NSString stringWithUTF8String:key], [NSString stringWithUTF8String:value]);
+} }
 // Test-only: whether a non-login-window application is frontmost (the session check's fallback).
 int pc_test_frontmost_regular(void) { @autoreleasepool {
     NSRunningApplication *front=[NSWorkspace sharedWorkspace].frontmostApplication;
@@ -135,6 +200,7 @@ int pc_observe(void (*callback)(void)) {
     }]];
     networkStore = SCDynamicStoreCreate(NULL, CFSTR("PC Remote network lifecycle"), networkChanged, NULL);
     if (!networkStore) return 0;
+    prime_associations(networkStore);
     NSArray *patterns = @[@"State:/Network/.*", @"Setup:/Network/.*"];
     if (!SCDynamicStoreSetNotificationKeys(networkStore, NULL, (__bridge CFArrayRef)patterns) ||
         !SCDynamicStoreSetDispatchQueue(networkStore, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0))) {

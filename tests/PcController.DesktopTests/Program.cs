@@ -52,6 +52,10 @@ internal sealed class UiChecks : IDisposable
         var macController = new DesktopController("macos", new TrustedNetworks(() => []), observeNetworks: false, environment: environment);
         var macWindow = new MainWindow(macController); macWindow.Show(); Dispatcher.UIThread.RunJobs(); macWindow.UpdateLayout();
         check(!Find(macWindow, "banner-permission").IsVisible && !Section(macWindow, "Permissions & platform setup").IsExpanded, "banner action hidden and permissions section closed while no permission problem is known");
+        environment.State = new(true, false, true, "Control is paused: Secure Input (fixture).") { PermissionReady = true, CapabilitiesChanged = false, NetworkChanged = false };
+        macController.RefreshAsync().GetAwaiter().GetResult(); Dispatcher.UIThread.RunJobs(); macWindow.UpdateLayout();
+        check(!Find(macWindow, "banner-permission").IsVisible && !Section(macWindow, "Permissions & platform setup").IsExpanded && macWindow.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == "Control is paused: Secure Input (fixture)."),
+            "a Secure Input/login-screen pause shows its own message without the permission action or opening the permissions section");
         environment.State = new(true, false, true, "Accessibility is required for pointer and keyboard control.");
         macController.RefreshAsync().GetAwaiter().GetResult(); Dispatcher.UIThread.RunJobs(); macWindow.UpdateLayout();
         check(Find(macWindow, "banner-permission").IsVisible && macWindow.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == "Accessibility is required for pointer and keyboard control."), "missing input permission shows the readiness message with its permission action");

@@ -125,8 +125,27 @@ internal static class DesktopChecks
             check(first.Sessions.Paused, "native generation change racing Resume cannot enable ownership"); environment.FailArm = false;
             environment.NetworkEvent = false; environment.NotifyUnsafe(); environment.NetworkEvent = true;
             check(first.Sessions.Paused, "pause-only native lifecycle callback (Space/display) still pauses synchronously before async refresh");
+            // A pending phone approval and the running host survive pause-only transitions (Space/full-screen,
+            // display sleep, Secure Input). Earlier versions denied the request and replaced the host, which
+            // also discarded the pairing link; showing the approval dialog from a full-screen app switches
+            // Spaces, so every phone request was denied.
+            ApprovalPrompt? prompt = null; controller.ApprovalRequested += p => prompt = p;
+            var transient = first.Pairing.Request(first.Pairing.CurrentChallenge!.Value, "Transient fixture");
+            var decision = first.ApproveDeviceAsync!(transient, "fixture");
+            check(prompt != null && !prompt.Finished, "pairing request reaches the shell approval prompt");
+            var pending = prompt!;
+            environment.State = new(true, true, true, "Space changed") { NetworkChanged = false, CapabilitiesChanged = false };
+            environment.NetworkEvent = false; environment.NotifyUnsafe(); await controller.RefreshAsync(); environment.NetworkEvent = true;
+            check(controller.Server == first && first.Sessions.Paused && !pending.Finished, "Space/display transition pauses but keeps the host and the pending approval");
+            environment.State = new(true, false, true, "Secure Input active") { NetworkChanged = false, CapabilitiesChanged = false, PermissionReady = true };
+            await controller.RefreshAsync();
+            check(controller.Server == first && !controller.InputReady && controller.PermissionReady && controller.Message == "Secure Input active" && !pending.Finished,
+                "Secure Input/login-screen pause keeps the host, pairing link and pending approval and reports the permission as granted");
+            environment.State = new(true, true, true, "Ready") { NetworkChanged = false, CapabilitiesChanged = false }; await controller.RefreshAsync();
+            check(controller.Server == first && controller.InputReady && first.Sessions.Paused && !pending.Finished, "session recovery keeps the same paused host until Resume");
+            pending.Decide(true); check(await decision, "the approval can still be granted after the transient pauses");
             environment.State = new(true, false, true, "Permission lost"); await controller.RefreshAsync();
-            check(first != controller.Server && controller.Server!.Sessions.Paused && !controller.InputReady && !controller.Server.Capabilities.InputEnabled, "permission loss replaces host paused without native input capability");
+            check(first != controller.Server && controller.Server!.Sessions.Paused && !controller.InputReady && !controller.PermissionReady && !controller.Server.Capabilities.InputEnabled, "permission loss replaces host paused without native input capability");
             // PauseResume schedules an un-awaited refresh that may replace the host; let it settle first.
             controller.PauseResume(); await controller.RefreshAsync(); check(controller.Server?.Sessions.Paused == true, "missing permission cannot Resume");
             environment.State = new(true, true, false, "Keychain locked"); await controller.RefreshAsync();

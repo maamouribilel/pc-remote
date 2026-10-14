@@ -77,6 +77,9 @@ if (OperatingSystem.IsMacOS())
     if (Environment.GetEnvironmentVariable("CI") != "true" && (diagnostics & 1) != 0 && (diagnostics & 4) != 0 && (diagnostics & 8) == 0 && (diagnostics & 32) == 0 && MacNative.pc_test_frontmost_regular() == 1)
         Check(MacNative.pc_session() == 1, $"active console session is interactive (system-wide AX focus query {((diagnostics & 16) != 0 ? "succeeded" : "could not complete")})");
     else Console.WriteLine("SKIP: interactive-session check needs a local AX-trusted active console session without Secure Input and an ordinary frontmost app");
+    Check((MacNative.pc_session_state() == 0) == (MacNative.pc_session() == 1), $"session state reason {MacNative.pc_session_state()} agrees with the interactive check (focus query {MacNative.pc_focus_status()})");
+    Check(MacPermissions.SessionBlocked(3, 0).Contains("Secure Input") && !MacPermissions.SessionBlocked(3, -25204).Contains("error") && MacPermissions.SessionBlocked(6, -25211).Contains("error -25211") && MacPermissions.SessionBlocked(2, 0).Contains("quit and reopen"),
+        "session block messages name the reason and only unexpected focus-query errors");
     var (inputBefore, networkBefore) = (MacNative.pc_generation(), MacNative.pc_network_generation());
     MacNative.pc_test_notify(0);
     Check(MacNative.pc_generation() > inputBefore && MacNative.pc_network_generation() == networkBefore, "native Space/display event pauses input without network-trust change");
@@ -84,7 +87,15 @@ if (OperatingSystem.IsMacOS())
     Check(MacNative.pc_generation() > inputBefore + 1 && MacNative.pc_network_generation() > networkBefore, "native network/sleep/session event advances both input and network-trust generations");
     // Wi-Fi LinkQuality changes every few seconds; it must not revoke LAN approval (it did before 0.3.5).
     Check(MacNative.pc_test_network_key("State:/Network/Interface/en0/LinkQuality") == 0 && MacNative.pc_test_network_key("State:/Network/Interface/en0/AirPort") == 1
-        && MacNative.pc_test_network_key("State:/Network/Global/IPv4") == 1, "Wi-Fi signal-quality updates keep LAN approval; association and address changes still revoke it");
+        && MacNative.pc_test_network_key("State:/Network/Global/IPv4") == 1, "Wi-Fi signal-quality updates keep LAN approval; a first AirPort record and address changes still revoke it");
+    // The AirPort record also changes for scans, AWDL, Bluetooth audio, auto-join timestamps and access-point roaming; only a changed network name revokes.
+    Check(MacNative.pc_test_airport("State:/Network/Interface/test0/AirPort", "home") == 1 && MacNative.pc_test_airport("State:/Network/Interface/test0/AirPort", "home") == 0
+        && MacNative.pc_test_airport("State:/Network/Interface/test0/AirPort", "office") == 1 && MacNative.pc_test_airport("State:/Network/Interface/test0/AirPort", "office") == 0,
+        "AirPort record updates keep LAN approval unless the joined network name changed");
+    Check(MacNative.pc_test_airport_key("State:/Network/Interface/en0/AirPort") == 1 && MacNative.pc_test_airport_key("State:/Network/Interface/en0/AirPort/BSSID") == 1
+        && MacNative.pc_test_airport_key("State:/Network/Interface/en0/AirPort/AutoJoinTimestamp") == 1 && MacNative.pc_test_airport_key("State:/Network/Interface/en0/IPv4") == 0
+        && MacNative.pc_test_airport_key("State:/Network/Global/IPv4") == 0 && MacNative.pc_test_airport_key("Setup:/Network/Interface/en0/AirPort") == 0,
+        "every AirPort record field key is judged by the association; address, global and setup keys still revoke");
     var lockDirectory = Path.Combine("/private/tmp", "PcMacLock-" + Guid.NewGuid().ToString("N"));
     try
     {

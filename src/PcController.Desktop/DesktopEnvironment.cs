@@ -6,6 +6,13 @@ public sealed record DesktopEnvironmentState(bool Changed, bool InputReady, bool
 {
     // Whether the trusted LAN may have changed. Platforms without the distinction treat every change as one.
     public bool NetworkChanged { get; init; } = Changed;
+    // Whether the platform input permission exists. Platforms without the distinction equate it with
+    // input readiness; macOS keeps it while Secure Input, the login screen or an inactive session
+    // only pauses control, so the shell offers onboarding only for a missing permission.
+    public bool PermissionReady { get; init; } = InputReady;
+    // Whether the host's capability snapshot must be rebuilt (permission or mode change). Pause-only
+    // transitions (Space/display/Secure Input) keep the running host, its pairing link and prompts.
+    public bool CapabilitiesChanged { get; init; } = Changed;
 }
 public interface IDesktopEnvironment : IDisposable
 {
@@ -28,7 +35,8 @@ internal sealed class MacDesktopEnvironment(MacHostFactory factory) : IDesktopEn
     public DesktopEnvironmentState Inspect()
     {
         var state = environment.Inspect();
-        return new(state.Changed, state.Ready, state.StorageReady, state.Message, state.Revision) { NetworkChanged = state.NetworkChanged };
+        return new(state.Changed, state.Ready, state.StorageReady, state.Message, state.Revision)
+        { NetworkChanged = state.NetworkChanged, PermissionReady = state.PermissionReady, CapabilitiesChanged = state.CapabilitiesChanged };
     }
     public bool NetworkChangedSinceInspect => environment.NetworkChangedSinceInspect;
     public void Arm(DesktopEnvironmentState inspected) => environment.Arm(inspected.Revision);

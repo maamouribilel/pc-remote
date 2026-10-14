@@ -29,7 +29,10 @@ public sealed class MacHostFactory
         var certificates = new LocalCertificates(Path.Combine(DirectoryPath, "certificates"), network.PrivateAddresses.Append(IPAddress.Loopback).ToArray(), Storage, new MacCertificateKeys());
         try
         {
-            var ready = MacPermissions.Accessibility && MacPermissions.Interactive;
+            // Capabilities and readiness follow the Accessibility permission only. Secure Input,
+            // the login screen and an inactive session are transient: native posting rechecks
+            // them before every event and the shell pauses, so they never rebuild the host.
+            var ready = MacPermissions.Accessibility;
             var server = new CompanionServer(new(network, certificates, new ProtectedDevices(DirectoryPath, Storage),
                 new PointerSettings(DirectoryPath), new MediaSettings(DirectoryPath), new LauncherSettings(DirectoryPath, new MacLauncherPlatform()), Input, new MacPcActions(), Capabilities(ready) with { Shortcuts = ready && MacInput.ShortcutsAvailable, PowerActions = ready && MacNative.pc_can_sleep() != 0 ? new HashSet<string> { "sleep" } : new HashSet<string>() },
                 Path.Combine(AppContext.BaseDirectory, "wwwroot"), new("ready", ready ? "ready" : "permission-required", network.PrivateAddresses.Length > 0 ? "approved" : "loopback", ready ? "macOS input/media ready. System audio requires a writable output; focus the selected player. Sleep is permission-dependent; restart/shutdown unavailable." : MacPermissions.Recovery)));
@@ -46,7 +49,7 @@ public sealed class MacEnvironment : IDisposable
 {
     private readonly MacHostFactory factory;
     private ulong generation, networkGeneration;
-    private bool ready;
+    private bool ready, permission;
     private readonly object gate = new();
     private readonly MacNative.UnsafeCallback callback;
     public event Action? UnsafeChanged;
@@ -68,18 +71,25 @@ public sealed class MacEnvironment : IDisposable
     }
     // Synchronous check for the unsafe callback: did a network-trust event occur since the last Inspect?
     public bool NetworkChangedSinceInspect { get { lock (gate) return MacNative.pc_network_generation() != networkGeneration; } }
-    public (bool Changed, bool NetworkChanged, bool Ready, bool StorageReady, ulong Revision, string Message) Inspect()
+    // Changed: pause and release (any lifecycle generation, permission or session transition).
+    // CapabilitiesChanged: only the Accessibility permission flipped, so the host's capability
+    // snapshot must be rebuilt. PermissionReady distinguishes a missing permission (onboarding)
+    // from a transient Secure Input/login/inactive-session block (wait, then Resume).
+    public (bool Changed, bool NetworkChanged, bool Ready, bool StorageReady, ulong Revision, string Message, bool PermissionReady, bool CapabilitiesChanged) Inspect()
     {
         lock (gate)
         {
             var current = MacNative.pc_generation(); var changed = current != generation; generation = current;
             var network = MacNative.pc_network_generation(); var networkChanged = network != networkGeneration; networkGeneration = network;
-            var available = MacPermissions.Accessibility && MacPermissions.Interactive;
+            var granted = MacPermissions.Accessibility;
+            var session = granted ? MacPermissions.SessionState : -1;
+            var available = granted && session == 0;
             string message; var storageReady = true;
-            try { factory.Storage.Probe(); message = available ? "macOS input ready. Choose Resume after reviewing the target application." : MacPermissions.Recovery; }
+            try { factory.Storage.Probe(); message = available ? "macOS input ready. Choose Resume after reviewing the target application." : granted ? MacPermissions.SessionBlocked(session, MacPermissions.FocusStatus) : MacPermissions.Recovery; }
             catch (IOException e) { available = false; storageReady = false; message = e.Message; }
             changed |= ready != available; ready = available;
-            return (changed, networkChanged, available, storageReady, current, message);
+            var capabilitiesChanged = permission != granted; permission = granted;
+            return (changed, networkChanged, available, storageReady, current, message, granted, capabilitiesChanged);
         }
     }
     public void Arm(ulong inspectedRevision)

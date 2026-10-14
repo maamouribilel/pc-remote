@@ -446,7 +446,8 @@ public sealed class MainWindow : Window
         Set(readiness, controller.Message);
         Paint(readinessDot, attention ? "#F5C46B" : "#5EE8BE");
         readinessBanner.Classes.Set("warning", attention); readinessBanner.Classes.Set("ready", !attention);
-        if (permissionBanner != null) permissionBanner.IsVisible = !controller.InputReady;
+        // Onboarding only helps while the permission is missing; a Secure Input/login/inactive pause explains itself.
+        if (permissionBanner != null) permissionBanner.IsVisible = !controller.PermissionReady;
 
         Set(fingerprint, server == null ? "Available after secure certificate setup" : Grouped(server.Certificates.Fingerprint));
         Set(address, server?.ConnectionAddress ?? "Unavailable — secure storage setup required");
@@ -530,8 +531,8 @@ public sealed class MainWindow : Window
         }
         // Expand guidance once, when it is first needed, without fighting a person who collapses it.
         if (!certificateShown && server != null && records.Length == 0) { certificateShown = true; certificateExpander.IsExpanded = true; }
-        // Only a real permission/storage problem opens the section; a host that is still starting does not.
-        if (!permissionsShown && (!controller.InputReady || !controller.StorageReady)) { permissionsShown = true; permissionsExpander.IsExpanded = true; }
+        // Only a real permission/storage problem opens the section; a host that is still starting or a transient pause does not.
+        if (!permissionsShown && (!controller.PermissionReady || !controller.StorageReady)) { permissionsShown = true; permissionsExpander.IsExpanded = true; }
         RenderFooter();
     }
     private static string Grouped(string hex) => string.Join(" ", Enumerable.Range(0, hex.Length / 2).Select(i => hex.Substring(i * 2, 2)));

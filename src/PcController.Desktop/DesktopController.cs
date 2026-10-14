@@ -15,6 +15,9 @@ public sealed class DesktopController : IAsyncDisposable
     private readonly IDesktopStartup? startup;
     private readonly SemaphoreSlim refreshGate = new(1, 1);
     public bool InputReady { get; private set; } = true;
+    // False only while the platform input permission is missing; a transient Secure Input, login
+    // screen or inactive-session block keeps it true and only pauses control.
+    public bool PermissionReady { get; private set; } = true;
     public bool StorageReady { get; private set; } = true;
     public bool HasStorageAuthorization => environment?.CanAuthorizeStorage == true;
     private int authorizingStorage;
@@ -112,9 +115,11 @@ public sealed class DesktopController : IAsyncDisposable
     {
         if (disposed) return;
         // Every unsafe event pauses control. Only network-trust events (macOS: network keys, system
-        // sleep/wake, session switch) also revoke LAN approval; Space/display changes keep it.
-        if (environment?.NetworkChangedSinceInspect != false) Networks.Invalidate();
-        Server?.Sessions.Pause(true); DenyPrompts();
+        // sleep/wake, session switch) also revoke LAN approval and deny pending pairing approvals;
+        // Space/display changes keep both, so showing the approval dialog from a full-screen app
+        // (which switches Spaces) cannot deny the very request it presents.
+        if (environment?.NetworkChangedSinceInspect != false) { Networks.Invalidate(); DenyPrompts(); }
+        Server?.Sessions.Pause(true);
         _ = RefreshAsync(); Changed?.Invoke();
     }
     private void Notify() => Changed?.Invoke();
@@ -152,12 +157,14 @@ public sealed class DesktopController : IAsyncDisposable
             if (environment != null)
             {
                 var state = await Task.Run(environment.Inspect).ConfigureAwait(false);
-                InputReady = state.InputReady; StorageReady = state.StorageReady; Message = state.Message; refreshCapabilities |= state.Changed;
+                InputReady = state.InputReady; PermissionReady = state.PermissionReady; StorageReady = state.StorageReady; Message = state.Message;
+                // Only a permission/mode change rebuilds the capability snapshot. Pause-only transitions
+                // (Space, display, Secure Input) keep the host, its pairing link and pending approvals.
+                refreshCapabilities |= state.CapabilitiesChanged;
                 // Keep the last host setup failure visible until a host starts; the readiness text alone hides why.
                 if (state.StorageReady && Server == null && hostFailure != null) Message = hostFailure;
-                if (state.NetworkChanged) Networks.Invalidate();
-                if (state.Changed) { Server?.Sessions.Pause(true); DenyPrompts(); }
-                if (!state.InputReady) { Server?.Sessions.Pause(true); DenyPrompts(); }
+                if (state.NetworkChanged) { Networks.Invalidate(); DenyPrompts(); }
+                if (state.Changed || !state.InputReady) Server?.Sessions.Pause(true);
                 if (!state.StorageReady)
                 { Networks.Invalidate(); if (lifecycle != null) await lifecycle.StopAsync().ConfigureAwait(false); Changed?.Invoke(); return; }
             }
@@ -183,14 +190,14 @@ public sealed class DesktopController : IAsyncDisposable
         DesktopEnvironmentState? inspected = null;
         if (!pause && environment != null)
         {
-            var state = environment.Inspect(); inspected = state; InputReady = state.InputReady;
+            var state = environment.Inspect(); inspected = state; InputReady = state.InputReady; PermissionReady = state.PermissionReady;
             if (!state.InputReady || !state.StorageReady || state.Changed)
             {
-                if (state.NetworkChanged || !state.StorageReady) Networks.Invalidate();
+                if (state.NetworkChanged || !state.StorageReady) { Networks.Invalidate(); DenyPrompts(); }
                 s.Sessions.Pause(true); Message = state.Message;
                 // This Inspect consumed the change; the refresh must still rebuild capabilities
                 // (e.g. Accessibility just granted) instead of keeping the stale host.
-                _ = RefreshAsync(force: state.Changed); Changed?.Invoke(); return;
+                _ = RefreshAsync(force: state.CapabilitiesChanged); Changed?.Invoke(); return;
             }
         }
         if (TryReleaseInput())
