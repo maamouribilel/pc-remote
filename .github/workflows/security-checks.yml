@@ -1,9 +1,9 @@
 name: Security and regression checks
 
+# Not run on every push to main: the release `final` dispatch runs every suite once on
+# Windows, macOS and Ubuntu and builds the assets; pull requests and manual runs still check.
 on:
   pull_request:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       final:

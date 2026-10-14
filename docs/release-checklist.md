@@ -10,7 +10,7 @@ For every new version, complete [AGENTS.md](https://github.com/maamouribilel/win
 - [ ] Download documentation and dated release evidence are updated; affected guides and limitations are current.
 - [ ] `.github/` files are reviewed and affected workflows/templates/configuration are updated.
 - [ ] `scripts/check-release-docs.ps1`, security/regression suites, dependency/runtime advisory checks, source/package secret scans, licenses, and hashes pass.
-- [ ] Matching source/documentation is committed and pushed; that commit's hosted CI passed on Windows, macOS and Linux; bundled runtime advisories were rechecked on release day.
+- [ ] Matching source/documentation is committed and pushed; that commit's `final` dispatch (every suite on Windows, macOS and Linux) passed; bundled runtime advisories were rechecked on release day.
 - [ ] Final assets come from `--final`/the CI `final` dispatch at that exact commit; the release has installer, ZIP, any macOS/Ubuntu archives and manifests, one combined checksum file, accurate notes and preview/stable status.
 - [ ] Public tag/commit and download URLs, sizes, and SHA-256 digests are verified before declaring completion.
 
