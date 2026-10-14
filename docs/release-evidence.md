@@ -621,3 +621,24 @@ Source changes on `main` after v0.3.5. Version stays **0.3.5**; nothing was publ
 - Two watcher processes loaded the previous bridge (second candidate) and the new bridge (third candidate), each calling `pc_observe` and polling `pc_network_generation`, while `scutil` recorded keys. At 22:14:48 the same burst arrived (2 record keys plus 36 field keys): the previous bridge advanced its network-trust generation 38 times, one revocation per key; the new bridge stayed at 0. A hash of the record's `SSID_STR` and `BSSID` was identical before and after the burst, so the comparison kept the approval for the case it was designed for. The installed bundle differs from the committed source only by a comment that now cites this third burst.
 - Physical phone pairing after the fix, a Space switch from a real full-screen app during a request, Secure Input in a real password field, and lock/sleep. The checks drive the shell's fake environment.
 - tccd also logs preflight checks for `kTCCServiceScreenCapture` and `kTCCServiceDeveloperTool` from the app process ("Auth Right: Unknown", no prompt) on 0.3.5 before and after the fix; their origin (Avalonia, AppKit or the runtime) was not investigated.
+
+## Version 0.3.6 — macOS LAN approval, pairing approvals and local signing (2026-10-14)
+
+Preview release of the fixes described in the [2026-10-14 entry](#2026-10-14--macos-pairing-approvals-transient-pauses-and-local-signing-unreleased-after-035) and its second and third rounds. Windows and Ubuntu behavior is unchanged from 0.3.5: no Host, Core, Windows, Linux or phone-remote source changed, and the shared desktop-shell changes are exercised by the desktop checks on every OS. All 0.3.x builds bundle .NET 10.0.13.
+
+**What changed on macOS**
+- Wi-Fi record (`State:/Network/Interface/<if>/AirPort` and its field keys) bursts revoke LAN approval only when the joined network name changed.
+- Pause-only transitions (Space/full-screen, display sleep, Secure Input, login screen) keep the host, its pairing link and pending phone approvals; only a permission or storage change rebuilds the capability snapshot; `PermissionReady` separates onboarding from a transient block.
+- The pause text names the one blocking reason; any failed system-wide focus query falls back to the frontmost application, so a grant while running needs no relaunch.
+- `scripts/sign-macos-local.py` keeps the Accessibility entry across updates; the Keychain dialog stays once per build.
+
+**Local results before the release commit (macOS 27 Apple Silicon, fix commit `31fa79c`)**
+- Desktop **92** and Mac adapter **69** on the final source. The real disposable Keychain storage/host suite (**88**) ran earlier the same day, before the bridge's session and Wi-Fi changes; the shared portable suite and that suite were not rerun at the end because the user's installed build held port 8443 with the phone controlling. The final dispatch runs both on all three OSes.
+- npm/NuGet audits: no advisories. Bundled runtime advisory feed: no matching advisories for 10.0.13 (run with the system CA bundle; the python.org 3.9 installation has none). Gitleaks 8.30.1 (archive checksum verified): no leaks in the 247 tracked files or in the fix commit.
+- Side-by-side bridge watchers over 16 minutes: two Wi-Fi bursts (22:14:48 and 22:22:49, 38 keys each). The 0.3.5 bridge advanced its network-trust generation 38 times per burst; the 0.3.6 bridge not at all.
+- Installed, locally signed third candidate: after the user's Keychain approval and network approval at 22:16:49, the LAN listener answered every second without interruption through the 22:22:49 burst while the phone was controlling the Mac ("Controlling: My iPhone"). Earlier the same evening the same class of burst dropped it within the second.
+- `check-release-docs.ps1` runs in the Release documentation workflow on push; PowerShell is not installed on this Mac.
+
+**Not established**
+- Hosted CI for this commit and the final assets: recorded in the publication entry below once the final dispatch has run.
+- Windows execution, a real Ubuntu desktop, macOS Intel hardware and every earlier 0.3.x gap.

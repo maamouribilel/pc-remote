@@ -535,3 +535,6 @@ Release 0.3.4 — 2026-10-14:
 
 Release 0.3.5 — 2026-10-14:
 - macOS-only fix: Wi-Fi LinkQuality SystemConfiguration updates no longer revoke LAN approval; the interactive-session check falls back to the frontmost app when the system-wide AX focus query cannot complete. Windows/Ubuntu unchanged; Windows physical/installed acceptance remains open.
+
+Release 0.3.6 — 2026-10-14:
+- macOS-only fixes: Wi-Fi record (AirPort) bursts no longer revoke LAN approval unless the joined network name changed; pause-only transitions keep the host, pairing link and pending phone approvals; the pause text names the one blocking reason and a failed focus query falls back to the frontmost app; `scripts/sign-macos-local.py` keeps the Accessibility entry across updates. Windows/Ubuntu unchanged; Windows physical/installed acceptance remains open.
