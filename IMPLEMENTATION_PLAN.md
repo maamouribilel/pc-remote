@@ -529,3 +529,6 @@ Release 0.3.2 — 2026-10-14:
 
 Release 0.3.3 — 2026-10-14:
 - macOS/Ubuntu window only: phone-address preview before LAN approval, paired-devices empty-state refresh, permissions section opened only for real problems, no startup "no host" flash. Windows behavior unchanged from 0.3.2; Windows physical/installed acceptance remains open.
+
+Release 0.3.4 — 2026-10-14:
+- macOS-only fix: keyboard-layout (Text Input Source) lookups moved to the main thread; with Accessibility granted the host setup previously trapped and never started. Host setup failures stay visible. Windows/Ubuntu behavior unchanged; Windows physical/installed acceptance remains open.

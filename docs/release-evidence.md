@@ -431,3 +431,21 @@ Afterwards, at the user's request:
 - Desktop **86**, including a check that a host-setup failure stays visible across readiness refreshes.
 
 **Not established:** physical input with a paired phone and a real shortcut from the phone; behaviour on macOS versions without the main-queue assertion is expected to be unchanged (cache populated at startup).
+
+## Version 0.3.4 — macOS server start fix (2026-10-14)
+
+Preview release of the fix described in the [2026-10-14 entry](#2026-10-14--macos-server-never-started-once-accessibility-was-granted-fixed-for-034). Windows and Ubuntu behavior is unchanged from 0.3.3.
+
+**Hosted CI on fix commit `f527b88`** (run [38613509433](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38613509433)) passed every job:
+- Portable on Windows, macOS and Ubuntu x64: shared **272** and desktop **86** each.
+- Mac adapter **63** on macOS (the hosted runner does not run the native-app check).
+- Linux faults **88**; Ubuntu x64 isolated suites (Xvfb/GTK US and French **41** each, portal **31**, keyring and strict TLS).
+- Windows validation and all provisional packages.
+
+On release day the runtime advisory feed again had no advisories for .NET 10.0.13.
+
+**Not established:**
+- A real phone shortcut on the installed app.
+- Every earlier 0.3.x gap.
+
+The final assets and digests follow in the publication entry.
