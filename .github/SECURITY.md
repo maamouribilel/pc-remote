@@ -2,11 +2,11 @@
 
 ## Supported version
 
-Security fixes are provided in the latest published preview, currently **v0.3.6**. Update from older previews using the [Windows installer, portable ZIP or experimental macOS/Ubuntu archives](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.6). Versions 0.3.0 and later bundle .NET 10.0.13 from Microsoft's 2026-10-13 security release; earlier builds bundle the affected 10.0.12 runtime. The app has no automatic updater. Preview status and outstanding physical/manual acceptance checks are documented in release notes, `docs/release-checklist.md` and `docs/release-readiness.md`. The macOS and Ubuntu builds are experimental: report issues for them the same way, but they do not yet have the native and physical acceptance evidence of the Windows companion.
+Security fixes are provided in the latest published preview, currently **v0.3.6**. Update from older previews using the [Windows installer, portable ZIP or experimental macOS/Ubuntu archives](https://github.com/maamouribilel/pc-remote/releases/tag/v0.3.6). Versions 0.3.0 and later bundle .NET 10.0.13 from Microsoft's 2026-10-13 security release; earlier builds bundle the affected 10.0.12 runtime. The app has no automatic updater. Preview status and outstanding physical/manual acceptance checks are documented in release notes, `docs/release-checklist.md` and `docs/release-readiness.md`. The macOS and Ubuntu builds are experimental: report issues for them the same way, but they do not yet have the native and physical acceptance evidence of the Windows companion.
 
 ## Report an issue privately
 
-Use [GitHub's private vulnerability report form](https://github.com/maamouribilel/windows-pc-mobile-controller/security/advisories/new) or the repository's **Security → Report a vulnerability** button. Include the affected version, a minimal reproduction, expected/observed behavior, and relevant operating system/browser details. Use test data; omit credentials, private keys, pairing links, cookies, personal paths, and network addresses. Keep exploitable details out of public issues until a fix is available.
+Use [GitHub's private vulnerability report form](https://github.com/maamouribilel/pc-remote/security/advisories/new) or the repository's **Security → Report a vulnerability** button. Include the affected version, a minimal reproduction, expected/observed behavior, and relevant operating system/browser details. Use test data; omit credentials, private keys, pairing links, cookies, personal paths, and network addresses. Keep exploitable details out of public issues until a fix is available.
 
 ## Trust boundaries
 

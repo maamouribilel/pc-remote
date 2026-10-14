@@ -1,16 +1,16 @@
 # Download a specific PC Remote version
 
-Open [GitHub Releases](https://github.com/maamouribilel/windows-pc-mobile-controller/releases), choose a version, and expand its **Assets** section.
+Open [GitHub Releases](https://github.com/maamouribilel/pc-remote/releases), choose a version, and expand its **Assets** section.
 
-For the latest public preview, [PC Remote v0.3.6](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.6):
+For the latest public preview, [PC Remote v0.3.6](https://github.com/maamouribilel/pc-remote/releases/tag/v0.3.6):
 
-- [Windows x64 installer](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-win-x64-setup.exe): installs for the current user, adds a Start menu shortcut and an uninstall entry.
-- [Windows x64 portable ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-win-x64.zip): extract the whole archive and run `PCRemote-win-x64/PcController.App.exe`. Keep its adjacent runtime and web files.
-- [macOS Apple Silicon ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-osx-arm64.zip) — **experimental**: contains `PC Remote.app` for macOS 14 or later.
-- [macOS Intel ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-osx-x64.zip) — **experimental**: built for Intel Macs, not yet run on Intel hardware.
-- [Ubuntu 24.04 x64 / GNOME archive](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-linux-x64.tar.gz) — **experimental**: contains `PCRemote-linux-x64/`.
+- [Windows x64 installer](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/PCRemote-0.3.6-win-x64-setup.exe): installs for the current user, adds a Start menu shortcut and an uninstall entry.
+- [Windows x64 portable ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/PCRemote-0.3.6-win-x64.zip): extract the whole archive and run `PCRemote-win-x64/PcController.App.exe`. Keep its adjacent runtime and web files.
+- [macOS Apple Silicon ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/PCRemote-0.3.6-osx-arm64.zip) — **experimental**: contains `PC Remote.app` for macOS 14 or later.
+- [macOS Intel ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/PCRemote-0.3.6-osx-x64.zip) — **experimental**: built for Intel Macs, not yet run on Intel hardware.
+- [Ubuntu 24.04 x64 / GNOME archive](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/PCRemote-0.3.6-linux-x64.tar.gz) — **experimental**: contains `PCRemote-linux-x64/`.
 - `PCRemote-0.3.6-<platform>-manifest.json`: per-file hashes and the exact source revision for each macOS/Ubuntu archive.
-- [SHA256SUMS.txt](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/SHA256SUMS.txt): expected hashes for every download listed above.
+- [SHA256SUMS.txt](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/SHA256SUMS.txt): expected hashes for every download listed above.
 
 GitHub's generated **Source code (zip/tar.gz)** files contain the project source, not an installed app. Normal use of the packaged builds needs no SDK, Node.js, or separate .NET installation; macOS and Ubuntu still need their native OS services.
 

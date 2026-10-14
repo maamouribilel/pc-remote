@@ -26,7 +26,7 @@ function Copy-ReleaseGuide([string]$Source, [string]$Name) {
         if (!$taskTargetPath.StartsWith($taskRootPrefix, [StringComparison]::OrdinalIgnoreCase)) { throw 'Release guide link leaves the source repository.' }
         $taskRelative = $taskTargetPath.Substring($taskRootPrefix.Length).Replace('\', '/')
         $taskAnchor = if ($taskParts.Length -eq 2) { '#' + $taskParts[1] } else { '' }
-        return $taskMatch.Groups[1].Value + "https://github.com/maamouribilel/windows-pc-mobile-controller/blob/v$Version/$taskRelative$taskAnchor" + $taskMatch.Groups[3].Value
+        return $taskMatch.Groups[1].Value + "https://github.com/maamouribilel/pc-remote/blob/v$Version/$taskRelative$taskAnchor" + $taskMatch.Groups[3].Value
     })
     [IO.File]::WriteAllText((Join-Path $taskPublishDirectory $Name), $taskGuide)
 }

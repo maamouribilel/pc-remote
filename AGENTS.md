@@ -3,7 +3,7 @@
 These instructions apply to the whole repository. Read this file before changing the project. Claude must also read `CLAUDE.md`.
 
 Current app version: `0.3.6`.
-Current public release: [v0.3.6 preview](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.6) — Windows companion plus experimental macOS ARM64/Intel and Ubuntu 24.04 x64 archives.
+Current public release: [v0.3.6 preview](https://github.com/maamouribilel/pc-remote/releases/tag/v0.3.6) — Windows companion plus experimental macOS ARM64/Intel and Ubuntu 24.04 x64 archives.
 
 ## Project and development
 

@@ -28,7 +28,7 @@ if ($taskPackage -notmatch ('param\(\[string\]\$Version = ''' + $taskVersionPatt
 $taskInstaller = Read-ReleaseFile 'installer/PCRemote.iss'
 if ($taskInstaller -notmatch ('#define AppVersion "' + $taskVersionPattern + '"')) { throw "Installer fallback must be $Version." }
 
-$taskReleaseUrl = 'https://github.com/maamouribilel/windows-pc-mobile-controller/releases'
+$taskReleaseUrl = 'https://github.com/maamouribilel/pc-remote/releases'
 $taskTagUrl = "$taskReleaseUrl/tag/v$Version"
 $taskAssets = @("PCRemote-$Version-win-x64-setup.exe", "PCRemote-$Version-win-x64.zip", 'SHA256SUMS.txt')
 foreach ($taskDoc in @('README.md', 'docs/releases.md')) {
@@ -38,7 +38,7 @@ foreach ($taskDoc in @('README.md', 'docs/releases.md')) {
         $taskUrl = "$taskReleaseUrl/download/v$Version/$taskAsset"
         if (-not $taskContent.Contains($taskUrl)) { throw "$taskDoc needs the download link: $taskUrl" }
     }
-    foreach ($taskLink in [regex]::Matches($taskContent, 'https://github\.com/maamouribilel/windows-pc-mobile-controller/releases/(?:tag|download)/v(\d+\.\d+\.\d+)')) {
+    foreach ($taskLink in [regex]::Matches($taskContent, 'https://github\.com/maamouribilel/pc-remote/releases/(?:tag|download)/v(\d+\.\d+\.\d+)')) {
         if ($taskLink.Groups[1].Value -cne $Version) { throw "$taskDoc has a stale current release link: $($taskLink.Value)" }
     }
 }

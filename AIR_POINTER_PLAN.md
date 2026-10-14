@@ -1,6 +1,6 @@
 # PC Remote — Air pointer (gyroscope mouse) plan
 
-Created: 2026-10-13. Baseline at creation: committed app version **0.3.0**, commit `56fa60d` (an uncommitted 0.3.1 version bump was in progress in the working tree), public [v0.3.0 preview](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.0).
+Created: 2026-10-13. Baseline at creation: committed app version **0.3.0**, commit `56fa60d` (an uncommitted 0.3.1 version bump was in progress in the working tree), public [v0.3.0 preview](https://github.com/maamouribilel/pc-remote/releases/tag/v0.3.0).
 
 This is a plan. **Nothing in it has been implemented or validated by creating this document.** The feature, its tests, and any device results must be recorded in the execution log at the end as they actually happen.
 

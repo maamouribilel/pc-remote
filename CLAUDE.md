@@ -3,7 +3,7 @@
 Read and follow [AGENTS.md](AGENTS.md) before editing this repository. It is the shared source of project, validation, security, and publishing instructions. Also read [README.md](README.md), [release publishing](docs/releases.md), and the [release checklist](docs/release-checklist.md) when preparing a release.
 
 Current app version: `0.3.6`.
-Current public release: [v0.3.6 preview](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.6) — Windows companion plus experimental macOS ARM64/Intel and Ubuntu 24.04 x64 archives.
+Current public release: [v0.3.6 preview](https://github.com/maamouribilel/pc-remote/releases/tag/v0.3.6) — Windows companion plus experimental macOS ARM64/Intel and Ubuntu 24.04 x64 archives.
 
 
 - Public documentation and GitHub metadata describe every supported platform and browser with its actual status: Windows primary; macOS and Ubuntu experimental; iPhone Safari and its Home Screen app verified on hardware; Chromium-based browsers covered by automated checks at phone and desktop sizes; Android, iPad and Firefox untested. Never present the product as Windows-only or iPhone/Safari-only, and never claim a device, browser or platform that has not been verified. Keep companion UI text device-neutral except where a step is genuinely platform-specific.

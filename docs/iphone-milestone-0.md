@@ -11,7 +11,7 @@ Latest user-observed result (2026-10-11): actual iPhone Safari shows **Connected
 
    ```powershell
    Set-NetConnectionProfile -InterfaceAlias "Wi-Fi 3" -NetworkCategory Private
-   Set-Location "C:\path\to\windows-pc-mobile-controller"
+   Set-Location "C:\path\to\pc-remote"
    ./scripts/firewall.ps1 -Action Install
    ```
 

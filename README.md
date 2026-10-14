@@ -10,7 +10,7 @@ A touchpad, keyboard, media remote, and app launcher in the browser you already 
 Pair on your computer, connect over your own network, and keep control within reach.<br>
 <sub>Companions for Windows (primary), macOS and Ubuntu (experimental previews). Works from a phone, a tablet or another computer.</sub>
 
-[![Download](https://img.shields.io/badge/Download-v0.3.6_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.6)
+[![Download](https://img.shields.io/badge/Download-v0.3.6_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/pc-remote/releases/tag/v0.3.6)
 [![Windows](https://img.shields.io/badge/Windows-x64_primary-0078D4?style=flat-square)](#supported-environments)
 [![macOS](https://img.shields.io/badge/macOS-14%2B_experimental-8A8F98?style=flat-square)](#supported-environments)
 [![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04_experimental-8A8F98?style=flat-square)](#supported-environments)
@@ -21,7 +21,7 @@ Pair on your computer, connect over your own network, and keep control within re
 [![Transport](https://img.shields.io/badge/Transport-HTTPS_%2B_WSS-5EE8BE?style=flat-square)](docs/protocol.md)
 [![License](https://img.shields.io/badge/License-MIT-5EE8BE?style=flat-square)](LICENSE)
 
-**[Download for Windows](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-win-x64-setup.exe)** · **[macOS](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-osx-arm64.zip)** · **[Ubuntu](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-linux-x64.tar.gz)** · **[All versions](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)** · **[Watch the walkthrough](#walkthrough)** · **[Build from source](#getting-started)**
+**[Download for Windows](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/PCRemote-0.3.6-win-x64-setup.exe)** · **[macOS](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/PCRemote-0.3.6-osx-arm64.zip)** · **[Ubuntu](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/PCRemote-0.3.6-linux-x64.tar.gz)** · **[All versions](https://github.com/maamouribilel/pc-remote/releases)** · **[Watch the walkthrough](#walkthrough)** · **[Build from source](#getting-started)**
 
 <img src="docs/assets/desktop-controls.jpg" alt="The Windows companion showing power, pointer, and media preferences" width="900">
 
@@ -59,18 +59,18 @@ On every platform the companion and the remote share one trusted local network, 
 
 ## Download
 
-**[Download PC Remote v0.3.6 for Windows x64 →](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-win-x64-setup.exe)**
+**[Download PC Remote v0.3.6 for Windows x64 →](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/PCRemote-0.3.6-win-x64-setup.exe)**
 
 | Download | Choose this for |
 | :--- | :--- |
-| **[Windows installer](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-win-x64-setup.exe)** | Recommended: Start menu shortcuts and an uninstall entry |
-| **[Portable ZIP](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-win-x64.zip)** | Extract the complete archive, then run `PCRemote-win-x64/PcController.App.exe` |
-| **[macOS Apple Silicon](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-osx-arm64.zip)** · experimental | Extract and keep `PC Remote.app` in a stable folder. Unsigned; read the [macOS guide](docs/macos-setup.md) first |
-| **[macOS Intel](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-osx-x64.zip)** · experimental | Built for Intel Macs; not yet run on Intel hardware |
-| **[Ubuntu 24.04 x64 / GNOME](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/PCRemote-0.3.6-linux-x64.tar.gz)** · experimental | Extract and run `PCRemote-linux-x64/PcController.Desktop` as your desktop user; read the [Linux guide](docs/linux-setup.md) |
-| **[SHA-256 checksums](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/download/v0.3.6/SHA256SUMS.txt)** | Verify every download, including the per-platform build manifests |
+| **[Windows installer](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/PCRemote-0.3.6-win-x64-setup.exe)** | Recommended: Start menu shortcuts and an uninstall entry |
+| **[Portable ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/PCRemote-0.3.6-win-x64.zip)** | Extract the complete archive, then run `PCRemote-win-x64/PcController.App.exe` |
+| **[macOS Apple Silicon](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/PCRemote-0.3.6-osx-arm64.zip)** · experimental | Extract and keep `PC Remote.app` in a stable folder. Unsigned; read the [macOS guide](docs/macos-setup.md) first |
+| **[macOS Intel](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/PCRemote-0.3.6-osx-x64.zip)** · experimental | Built for Intel Macs; not yet run on Intel hardware |
+| **[Ubuntu 24.04 x64 / GNOME](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/PCRemote-0.3.6-linux-x64.tar.gz)** · experimental | Extract and run `PCRemote-linux-x64/PcController.Desktop` as your desktop user; read the [Linux guide](docs/linux-setup.md) |
+| **[SHA-256 checksums](https://github.com/maamouribilel/pc-remote/releases/download/v0.3.6/SHA256SUMS.txt)** | Verify every download, including the per-platform build manifests |
 
-**[Release notes for v0.3.6](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.6)** · **[Browse every published version](https://github.com/maamouribilel/windows-pc-mobile-controller/releases)**
+**[Release notes for v0.3.6](https://github.com/maamouribilel/pc-remote/releases/tag/v0.3.6)** · **[Browse every published version](https://github.com/maamouribilel/pc-remote/releases)**
 
 On GitHub, open **Releases**, select the version you want, and expand **Assets**. GitHub's automatic **Source code** archives are for developers. See [download and version instructions](docs/releases.md).
 
@@ -78,11 +78,11 @@ Version 0.3.6 is a public preview. The Windows companion targets Windows 10 1809
 
 **New in 0.3.6:** on macOS, the approved network no longer drops back to `localhost` when macOS re-publishes its Wi-Fi record (every few minutes on the tested Mac), which made the phone report "TypeError: Load failed". Space/full-screen, display-sleep and Secure Input changes no longer deny a pending phone approval or restart the companion (which also discarded the pairing link); a pause shows the one reason macOS reports instead of the Accessibility alert; a permission granted while the app is running takes effect without reopening it; and the new `scripts/sign-macos-local.py` keeps the Accessibility entry across updates (the Keychain dialog after an update stays once per build). Windows and Ubuntu behavior is unchanged from 0.3.5. See the [0.3.6 evidence](docs/release-evidence.md#version-036--macos-lan-approval-pairing-approvals-and-local-signing-2026-10-14).
 
-**Earlier 0.3.x previews:** 0.3.5 kept the approved macOS network across Wi-Fi signal-quality updates; 0.3.4 fixed the macOS server never starting once Accessibility was granted; 0.3.3 shows the phone address before you approve a network on macOS/Ubuntu; 0.3.2 redesigned the macOS/Ubuntu window to match the Windows dashboard and fixed phone-remote, host, macOS and Ubuntu defects (including two held arrow keys pausing control); 0.3.1 kept macOS network approval across Space, full-screen, display sleep and Secure Input changes. See the [release notes](https://github.com/maamouribilel/windows-pc-mobile-controller/releases).
+**Earlier 0.3.x previews:** 0.3.5 kept the approved macOS network across Wi-Fi signal-quality updates; 0.3.4 fixed the macOS server never starting once Accessibility was granted; 0.3.3 shows the phone address before you approve a network on macOS/Ubuntu; 0.3.2 redesigned the macOS/Ubuntu window to match the Windows dashboard and fixed phone-remote, host, macOS and Ubuntu defects (including two held arrow keys pausing control); 0.3.1 kept macOS network approval across Space, full-screen, display sleep and Secure Input changes. See the [release notes](https://github.com/maamouribilel/pc-remote/releases).
 
 **Security update for Windows (since 0.3.0):** 0.3.x bundles .NET **10.0.13** from Microsoft's 2026-10-13 security release (including CVE-2026-58280); the .NET 10.0.12 runtime in 0.2.1 is affected, so updating is recommended. PC actions now also bind to the original connected session before reading a request body.
 
-**What else changed for Windows:** the server moved into the shared portable host while keeping the existing WPF companion, Windows input/audio/power adapters, DPAPI-protected certificate/device files, trusted root and remembered devices, and the remote now receives platform capabilities. The Windows 0.3.x builds passed the automated regression, DPAPI migration, security, browser and strict-TLS suites on GitHub's hosted Windows runner, but it has **not** yet been installed or used with a physical iPhone. Please report problems through the repository's issues; older versions remain on the [Releases page](https://github.com/maamouribilel/windows-pc-mobile-controller/releases).
+**What else changed for Windows:** the server moved into the shared portable host while keeping the existing WPF companion, Windows input/audio/power adapters, DPAPI-protected certificate/device files, trusted root and remembered devices, and the remote now receives platform capabilities. The Windows 0.3.x builds passed the automated regression, DPAPI migration, security, browser and strict-TLS suites on GitHub's hosted Windows runner, but it has **not** yet been installed or used with a physical iPhone. Please report problems through the repository's issues; older versions remain on the [Releases page](https://github.com/maamouribilel/pc-remote/releases).
 
 ### Experimental macOS and Ubuntu builds
 
@@ -181,8 +181,8 @@ The scripts prefer a verified portable toolchain in `.tools/`: **.NET SDK 10.0.4
 Windows (PowerShell 7):
 
 ```powershell
-git clone https://github.com/maamouribilel/windows-pc-mobile-controller.git
-Set-Location windows-pc-mobile-controller
+git clone https://github.com/maamouribilel/pc-remote.git
+Set-Location pc-remote
 
 ./scripts/install-tools.ps1
 ./scripts/build.ps1 -Configuration Release
@@ -192,8 +192,8 @@ Set-Location windows-pc-mobile-controller
 macOS or Ubuntu:
 
 ```sh
-git clone https://github.com/maamouribilel/windows-pc-mobile-controller.git
-cd windows-pc-mobile-controller
+git clone https://github.com/maamouribilel/pc-remote.git
+cd pc-remote
 
 python3 scripts/portable.py build
 python3 scripts/portable.py desktop
@@ -240,7 +240,7 @@ The recording follows the real browser interface through a secure connection, to
 ## Project structure
 
 ```text
-windows-pc-mobile-controller/
+pc-remote/
 ├── src/
 │   ├── PcController.App/       # WPF companion and Windows production composition
 │   ├── PcController.Desktop/   # Shared Avalonia shell, real macOS development composition
@@ -381,6 +381,6 @@ PC Remote source is available under the **[MIT License](LICENSE)**. Dependencies
 
 **Control stays on your PC. Convenience stays in your hand.**
 
-[Download](#download) · [All versions](https://github.com/maamouribilel/windows-pc-mobile-controller/releases) · [Setup](docs/setup.md) · [Protocol](docs/protocol.md) · [Limitations](docs/limitations.md)
+[Download](#download) · [All versions](https://github.com/maamouribilel/pc-remote/releases) · [Setup](docs/setup.md) · [Protocol](docs/protocol.md) · [Limitations](docs/limitations.md)
 
 </div>

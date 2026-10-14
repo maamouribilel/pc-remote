@@ -156,9 +156,9 @@ The release commit's own runs and final asset digests are recorded in the GitHub
 
 ### Version 0.3.0 publication and public verification (2026-10-13)
 
-Published as a **pre-release**: [v0.3.0](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.0). The annotated tag `v0.3.0` (tag object `dbdcbd3`) points to commit `6bf908c030f7f8c7903c4a4cc0e71fa186be183a`. Existing v0.2.0/v0.2.1 tags and assets were not changed.
+Published as a **pre-release**: [v0.3.0](https://github.com/maamouribilel/pc-remote/releases/tag/v0.3.0). The annotated tag `v0.3.0` (tag object `dbdcbd3`) points to commit `6bf908c030f7f8c7903c4a4cc0e71fa186be183a`. Existing v0.2.0/v0.2.1 tags and assets were not changed.
 
-Actual hosted runs on `6bf908c`: push run [38463186338](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38463186338) and `final` dispatch [38463184359](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38463184359) passed every job on Windows, macOS ARM64 and Ubuntu 24.04 x64 (same suites and counts as the `826e46c` row above); the tag's release-documentation run [38464949711](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38464949711) passed for `v0.3.0`. All assets come from the `final` dispatch artifacts:
+Actual hosted runs on `6bf908c`: push run [38463186338](https://github.com/maamouribilel/pc-remote/actions/runs/38463186338) and `final` dispatch [38463184359](https://github.com/maamouribilel/pc-remote/actions/runs/38463184359) passed every job on Windows, macOS ARM64 and Ubuntu 24.04 x64 (same suites and counts as the `826e46c` row above); the tag's release-documentation run [38464949711](https://github.com/maamouribilel/pc-remote/actions/runs/38464949711) passed for `v0.3.0`. All assets come from the `final` dispatch artifacts:
 
 | Asset | Bytes | SHA-256 |
 | --- | ---: | --- |
@@ -191,18 +191,18 @@ Bug-fix preview for the experimental macOS companion; Windows and Ubuntu behavio
 
 **Local results (macOS 27 Apple Silicon):** Release build zero warnings/errors; shared **265**, desktop **74** (eight new: pause-only events keep approval, readiness changes keep approval, network/sleep/session events revoke synchronously and at inspection, storage failure revokes, default environments still revoke, pause-only callback still pauses, loopback address explanation), Mac adapter **59** (native generation split), real disposable Keychain/storage **82** (including `MacEnvironment` pause-only versus network-trust reporting), Linux faults **81**; Windows cross-build, runtime advisories (10.0.13: none), Gitleaks source scan.
 
-**Hosted CI on fix commit `62644b2` (run [38471786573](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38471786573)), all jobs passed:** Windows validation default 147, security 181, pairing 187, lifecycle 154, PC feature 176, browser 6, strict TLS and candidate packaging; portable shared 265 and desktop 74 on Windows, macOS and Ubuntu x64 (Mac adapter 59 on macOS); Ubuntu x64 private Xvfb/GTK US 41 and French 41, private portal/MPRIS/logind 29, disposable keyring/strict TLS 24; all three candidate packages. The release commit's own runs and final digests follow in the publication entry after it is built.
+**Hosted CI on fix commit `62644b2` (run [38471786573](https://github.com/maamouribilel/pc-remote/actions/runs/38471786573)), all jobs passed:** Windows validation default 147, security 181, pairing 187, lifecycle 154, PC feature 176, browser 6, strict TLS and candidate packaging; portable shared 265 and desktop 74 on Windows, macOS and Ubuntu x64 (Mac adapter 59 on macOS); Ubuntu x64 private Xvfb/GTK US 41 and French 41, private portal/MPRIS/logind 29, disposable keyring/strict TLS 24; all three candidate packages. The release commit's own runs and final digests follow in the publication entry after it is built.
 
-On version commit `35bad7c` the push run [38472970739](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38472970739) passed every job, but the `final` dispatch [38472969018](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38472969018) failed one Windows browser check: the loopback test fixture crashed with `UnauthorizedAccessException` replacing its event snapshot while Playwright was reading it. The fixture now skips a refused replacement until its next 50 ms snapshot (the first metadata write must still succeed). That dispatch's artifacts were not used.
+On version commit `35bad7c` the push run [38472970739](https://github.com/maamouribilel/pc-remote/actions/runs/38472970739) passed every job, but the `final` dispatch [38472969018](https://github.com/maamouribilel/pc-remote/actions/runs/38472969018) failed one Windows browser check: the loopback test fixture crashed with `UnauthorizedAccessException` replacing its event snapshot while Playwright was reading it. The fixture now skips a refused replacement until its next 50 ms snapshot (the first metadata write must still succeed). That dispatch's artifacts were not used.
 
 **Not established for 0.3.1:** real Space/full-screen/display/Secure Input transitions on the installed app with a connected phone, approval of the Keychain update dialog for this build, and every gap listed for 0.3.0 (Windows installation/iPhone, macOS Gatekeeper/installed/Accessibility/player/login/sleep/phone, Intel hardware, Ubuntu GNOME desktop). Taking a player full-screen still pauses control by design; Resume is local.
 
 
 ### Version 0.3.1 publication and public verification (2026-10-13)
 
-Published as a **pre-release**: [v0.3.1](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.1). The annotated tag `v0.3.1` points to commit `8fc1d1cf1e3f2f2d270086bada541af5ac024942`. The v0.2.0, v0.2.1 and v0.3.0 tags and assets were not changed.
+Published as a **pre-release**: [v0.3.1](https://github.com/maamouribilel/pc-remote/releases/tag/v0.3.1). The annotated tag `v0.3.1` points to commit `8fc1d1cf1e3f2f2d270086bada541af5ac024942`. The v0.2.0, v0.2.1 and v0.3.0 tags and assets were not changed.
 
-Hosted runs on `8fc1d1c`: the `final` dispatch [38474378271](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38474378271) passed every job and supplied all assets. The push run [38474378406](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38474378406) passed every job on attempt 2. On attempt 1, the macOS portable job's `dotnet list package --vulnerable` exited 1 without reporting an advisory. The same audit passed in five parallel jobs and in a local re-check, and only that job was re-run. The tag documentation run [38475858646](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38475858646) passed.
+Hosted runs on `8fc1d1c`: the `final` dispatch [38474378271](https://github.com/maamouribilel/pc-remote/actions/runs/38474378271) passed every job and supplied all assets. The push run [38474378406](https://github.com/maamouribilel/pc-remote/actions/runs/38474378406) passed every job on attempt 2. On attempt 1, the macOS portable job's `dotnet list package --vulnerable` exited 1 without reporting an advisory. The same audit passed in five parallel jobs and in a local re-check, and only that job was re-run. The tag documentation run [38475858646](https://github.com/maamouribilel/pc-remote/actions/runs/38475858646) passed.
 
 | Asset | Bytes | SHA-256 |
 | --- | ---: | --- |
@@ -274,7 +274,7 @@ Source changes on `main` after v0.3.1. Version stays **0.3.1**; no package was b
 
 Preview release of the fixes and the macOS/Linux window redesign described in the [2026-10-14 entry](#2026-10-14--bug-fixes-and-macoslinux-window-redesign-unreleased-after-031). The shared host fixes also ship in the Windows companion; its WPF window is unchanged. All 0.3.x builds bundle .NET 10.0.13. On 2026-10-14 the public advisory feed had no advisories for the bundled 10.0.13 runtime packages (`scripts/audit-runtime.py`), and the npm/NuGet audits were clean.
 
-**Hosted CI on fix commit `0601761`** (run [38539382226](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38539382226)) passed every job:
+**Hosted CI on fix commit `0601761`** (run [38539382226](https://github.com/maamouribilel/pc-remote/actions/runs/38539382226)) passed every job:
 - Windows validation: default **151**, security **185**, pairing **193**, lifecycle **158**, PC feature **180**, browser **6**, strict TLS, provisional packaging and content checks.
 - Portable on Windows, macOS and Ubuntu x64: shared **272** and desktop **79** each. Mac adapter **62** on macOS; Linux faults **88** on Ubuntu.
 - Ubuntu x64 isolated: private Xvfb/GTK **41**, private portal/MPRIS/logind **31** (including the NetworkManager noise/roaming check) and disposable keyring/strict TLS.
@@ -294,12 +294,12 @@ The release commit's own runs, the final assets and their digests are recorded i
 
 ### Version 0.3.2 publication and public verification (2026-10-14)
 
-Published as a **pre-release**: [v0.3.2](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.2). The annotated tag `v0.3.2` points to commit `ece5d4c463034141ad0bcf49c22310775521e8d8`. Earlier tags and assets were not changed.
+Published as a **pre-release**: [v0.3.2](https://github.com/maamouribilel/pc-remote/releases/tag/v0.3.2). The annotated tag `v0.3.2` points to commit `ece5d4c463034141ad0bcf49c22310775521e8d8`. Earlier tags and assets were not changed.
 
 Hosted runs on `ece5d4c`, all of which passed every job:
-- The `final` dispatch [38540711618](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38540711618) supplied all assets. Windows default 151, security 185, pairing 193, lifecycle 158, PC feature 180, browser 6; shared 272 and desktop 79 on all three OSes; Mac adapter 62; Linux faults 88; Xvfb/GTK US 41 and French 41; portal/MPRIS/logind 31; keyring/strict TLS 24.
-- The push run [38540702103](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38540702103).
-- The documentation runs for the commit and for the tag ([38542158676](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38542158676)).
+- The `final` dispatch [38540711618](https://github.com/maamouribilel/pc-remote/actions/runs/38540711618) supplied all assets. Windows default 151, security 185, pairing 193, lifecycle 158, PC feature 180, browser 6; shared 272 and desktop 79 on all three OSes; Mac adapter 62; Linux faults 88; Xvfb/GTK US 41 and French 41; portal/MPRIS/logind 31; keyring/strict TLS 24.
+- The push run [38540702103](https://github.com/maamouribilel/pc-remote/actions/runs/38540702103).
+- The documentation runs for the commit and for the tag ([38542158676](https://github.com/maamouribilel/pc-remote/actions/runs/38542158676)).
 
 | Asset | Bytes | SHA-256 |
 | --- | ---: | --- |
@@ -330,7 +330,7 @@ After publication:
 - The release is marked pre-release.
 - The rendered release notes (all sections, both tables and the checksum block) and the README's v0.3.2 badge and download links were checked in a browser.
 
-The documentation commit `dd547d2` that recorded this publication passed the Security and regression checks (run [38542724706](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38542724706)) and Release documentation workflows. Afterwards, at the user's request:
+The documentation commit `dd547d2` that recorded this publication passed the Security and regression checks (run [38542724706](https://github.com/maamouribilel/pc-remote/actions/runs/38542724706)) and Release documentation workflows. Afterwards, at the user's request:
 - The verified public Apple Silicon ZIP replaced the installed 0.3.1 app in `/Applications`. Its SHA-256 matched `SHA256SUMS.txt`, the seal verified after extraction and in place, and `--package-info` reported `0.3.2+ece5d4c`.
 - The old 0.3.1 bundle and the local 0.2.1 candidate/development builds were moved to the Trash, not permanently deleted.
 - The application data directory and the Keychain item were not touched.
@@ -357,7 +357,7 @@ Windows behavior is unchanged from 0.3.2.
 
 **Results:**
 - Desktop UI checks **85** (6 new). Because the user's installed app held loopback port 8443 on this Mac, the 8443-dependent suites ran in an isolated Ubuntu 24.04 ARM64 container: shared **272**, desktop **85**, Linux faults **88**; the address-preview render was also taken there.
-- Hosted CI on fix commit `bc4ff3f` (run [38597846729](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38597846729)) passed every job:
+- Hosted CI on fix commit `bc4ff3f` (run [38597846729](https://github.com/maamouribilel/pc-remote/actions/runs/38597846729)) passed every job:
   - Windows default 151, security 185, pairing 193, lifecycle 158, PC feature 180, browser 6.
   - Shared 272 and desktop 85 on Windows, macOS and Ubuntu x64; Mac adapter 62; Linux faults 88.
   - Ubuntu x64 isolated suites.
@@ -369,12 +369,12 @@ Windows behavior is unchanged from 0.3.2.
 
 ### Version 0.3.3 publication and public verification (2026-10-14)
 
-Published as a **pre-release**: [v0.3.3](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.3). The annotated tag `v0.3.3` points to commit `83130897a3d126d1f5837ad22e2b8813d2fdd6ea`. Earlier tags and assets were not changed.
+Published as a **pre-release**: [v0.3.3](https://github.com/maamouribilel/pc-remote/releases/tag/v0.3.3). The annotated tag `v0.3.3` points to commit `83130897a3d126d1f5837ad22e2b8813d2fdd6ea`. Earlier tags and assets were not changed.
 
 Hosted runs on `8313089` all passed every job:
-- The `final` dispatch [38599277310](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38599277310) supplied the assets.
-- The push run [38599266569](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38599266569).
-- The documentation runs for the commit and for the tag ([38600703519](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38600703519)).
+- The `final` dispatch [38599277310](https://github.com/maamouribilel/pc-remote/actions/runs/38599277310) supplied the assets.
+- The push run [38599266569](https://github.com/maamouribilel/pc-remote/actions/runs/38599266569).
+- The documentation runs for the commit and for the tag ([38600703519](https://github.com/maamouribilel/pc-remote/actions/runs/38600703519)).
 
 | Asset | Bytes | SHA-256 |
 | --- | ---: | --- |
@@ -436,7 +436,7 @@ Afterwards, at the user's request:
 
 Preview release of the fix described in the [2026-10-14 entry](#2026-10-14--macos-server-never-started-once-accessibility-was-granted-fixed-for-034). Windows and Ubuntu behavior is unchanged from 0.3.3.
 
-**Hosted CI on fix commit `f527b88`** (run [38613509433](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38613509433)) passed every job:
+**Hosted CI on fix commit `f527b88`** (run [38613509433](https://github.com/maamouribilel/pc-remote/actions/runs/38613509433)) passed every job:
 - Portable on Windows, macOS and Ubuntu x64: shared **272** and desktop **86** each.
 - Mac adapter **63** on macOS (the hosted runner does not run the native-app check).
 - Linux faults **88**; Ubuntu x64 isolated suites (Xvfb/GTK US and French **41** each, portal **31**, keyring and strict TLS).
@@ -453,12 +453,12 @@ The final assets and digests follow in the publication entry.
 
 ### Version 0.3.4 publication and public verification (2026-10-14)
 
-Published as a **pre-release**: [v0.3.4](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.4). The annotated tag `v0.3.4` points to commit `c36c69ca683c31c8c287dfefc295a8dfa00e3ca7`. Earlier tags and assets were not changed.
+Published as a **pre-release**: [v0.3.4](https://github.com/maamouribilel/pc-remote/releases/tag/v0.3.4). The annotated tag `v0.3.4` points to commit `c36c69ca683c31c8c287dfefc295a8dfa00e3ca7`. Earlier tags and assets were not changed.
 
 Hosted runs on `c36c69c`:
-- The `final` dispatch [38614827128](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38614827128) passed every job and supplied the assets.
-- The push run [38614817206](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38614817206) passed every job on attempt 2. On attempt 1, the Windows portable job's capability-compatibility browser test timed out while Playwright was *setting up the page* (30 s), before the test body ran. The same test passed in the final run on this commit. No product code for Windows or the remote changed in this release, and only that job was re-run.
-- The documentation runs for the commit and for the tag ([38617881726](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38617881726)) passed.
+- The `final` dispatch [38614827128](https://github.com/maamouribilel/pc-remote/actions/runs/38614827128) passed every job and supplied the assets.
+- The push run [38614817206](https://github.com/maamouribilel/pc-remote/actions/runs/38614817206) passed every job on attempt 2. On attempt 1, the Windows portable job's capability-compatibility browser test timed out while Playwright was *setting up the page* (30 s), before the test body ran. The same test passed in the final run on this commit. No product code for Windows or the remote changed in this release, and only that job was re-run.
+- The documentation runs for the commit and for the tag ([38617881726](https://github.com/maamouribilel/pc-remote/actions/runs/38617881726)) passed.
 
 | Asset | Bytes | SHA-256 |
 | --- | ---: | --- |
@@ -518,7 +518,7 @@ Read-only diagnosis on that Mac (screen-recording frames, Accessibility reading 
 
 Preview release of the fixes described in the [2026-10-14 entry](#2026-10-14--macos-lan-approval-dropped-on-wi-fi-signal-updates-fixed-for-035). Windows and Ubuntu behavior is unchanged from 0.3.4.
 
-**Hosted CI on fix commit `8f3af0e`** (run [38620935396](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38620935396)) passed every job on attempt 2:
+**Hosted CI on fix commit `8f3af0e`** (run [38620935396](https://github.com/maamouribilel/pc-remote/actions/runs/38620935396)) passed every job on attempt 2:
 - Portable on Windows, macOS and Ubuntu x64: shared **272** and desktop **86** each.
 - Mac adapter **65** on macOS, including both new checks.
 - Linux faults **88**; Ubuntu x64 isolated suites.
@@ -538,12 +538,12 @@ The final assets and digests follow in the publication entry.
 
 ### Version 0.3.5 publication and public verification (2026-10-14)
 
-Published as a **pre-release**: [v0.3.5](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.5). The annotated tag `v0.3.5` points to commit `f2980d2a19518f962baff5527946bbc1acb432bb`, not to the version-bump commit `5aedec6`. Earlier tags and assets were not changed.
+Published as a **pre-release**: [v0.3.5](https://github.com/maamouribilel/pc-remote/releases/tag/v0.3.5). The annotated tag `v0.3.5` points to commit `f2980d2a19518f962baff5527946bbc1acb432bb`, not to the version-bump commit `5aedec6`. Earlier tags and assets were not changed.
 
 Hosted runs:
 - **Version commit `5aedec6`:** both the push run 38622426722 and the final run 38622434838 failed the new interactive-session check on hosted macOS. The runner had no ordinary frontmost app or AX focus value, which the product correctly treats as not interactive.
 - **`f62008a`:** gated the check on an ordinary frontmost app. Its push run 38623765869 passed, but its final run 38623777679 failed the same way.
-- **`f2980d2`:** skips this local-desktop check under `CI=true`. Its final dispatch [38625592883](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38625592883) passed every job and supplied the assets: shared 272 and desktop 86 on all three OSes, Mac adapter 64 with the local-only check skipped, Linux faults 88, the Windows suites and the Ubuntu isolated suites. Its push run was cancelled as a duplicate at the user's request.
+- **`f2980d2`:** skips this local-desktop check under `CI=true`. Its final dispatch [38625592883](https://github.com/maamouribilel/pc-remote/actions/runs/38625592883) passed every job and supplied the assets: shared 272 and desktop 86 on all three OSes, Mac adapter 64 with the local-only check skipped, Linux faults 88, the Windows suites and the Ubuntu isolated suites. Its push run was cancelled as a duplicate at the user's request.
 - **`84ee50a`:** at the user's request, the workflow no longer runs on every push to `main`; the `final` dispatch is the release gate.
 - None of these failed runs produced published assets.
 
@@ -645,10 +645,10 @@ Preview release of the fixes described in the [2026-10-14 entry](#2026-10-14--ma
 
 ### Version 0.3.6 publication and public verification (2026-10-14)
 
-Published as a **pre-release**: [v0.3.6](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.6). The annotated tag `v0.3.6` points to the release commit `49205979fbafbbc3f392a464cdba5aa98568f9a5` (tagged 21:43 UTC). Earlier tags and assets were not changed.
+Published as a **pre-release**: [v0.3.6](https://github.com/maamouribilel/pc-remote/releases/tag/v0.3.6). The annotated tag `v0.3.6` points to the release commit `49205979fbafbbc3f392a464cdba5aa98568f9a5` (tagged 21:43 UTC). Earlier tags and assets were not changed.
 
 Hosted runs on the release commit:
-- The `final` dispatch [38640378193](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38640378193) passed every job on the first attempt and supplied the assets: shared **272** and desktop **92** on Windows, macOS and Ubuntu; Mac adapter **68** on hosted macOS (the local-desktop interactive-session check skipped) and the non-native subset **54** on Windows and Ubuntu; Linux adapter **88** on Ubuntu (81 elsewhere); Ubuntu private Xvfb/GTK US and French **41** each, portal/MPRIS/logind **31** and disposable encrypted keyring/TLS; the Windows default, security, pairing, lifecycle and PC-feature suites (151, 185, 193, 158, 180), browser and strict TLS suites, installer, content/license/checksum checks; strict TLS probes, npm/NuGet audits and the runtime advisory feed on every OS.
+- The `final` dispatch [38640378193](https://github.com/maamouribilel/pc-remote/actions/runs/38640378193) passed every job on the first attempt and supplied the assets: shared **272** and desktop **92** on Windows, macOS and Ubuntu; Mac adapter **68** on hosted macOS (the local-desktop interactive-session check skipped) and the non-native subset **54** on Windows and Ubuntu; Linux adapter **88** on Ubuntu (81 elsewhere); Ubuntu private Xvfb/GTK US and French **41** each, portal/MPRIS/logind **31** and disposable encrypted keyring/TLS; the Windows default, security, pairing, lifecycle and PC-feature suites (151, 185, 193, 158, 180), browser and strict TLS suites, installer, content/license/checksum checks; strict TLS probes, npm/NuGet audits and the runtime advisory feed on every OS.
 - The Release documentation workflow passed on the push (38640379142) and on the tag (38642387244).
 
 | Asset | Bytes | SHA-256 |

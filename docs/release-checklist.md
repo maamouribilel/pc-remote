@@ -2,7 +2,7 @@
 
 ## Source, documentation, and GitHub synchronization
 
-For every new version, complete [AGENTS.md](https://github.com/maamouribilel/windows-pc-mobile-controller/blob/main/AGENTS.md)'s mandatory release synchronization and the [publishing procedure](https://github.com/maamouribilel/windows-pc-mobile-controller/blob/main/docs/releases.md#publishing-the-next-version):
+For every new version, complete [AGENTS.md](https://github.com/maamouribilel/pc-remote/blob/main/AGENTS.md)'s mandatory release synchronization and the [publishing procedure](https://github.com/maamouribilel/pc-remote/blob/main/docs/releases.md#publishing-the-next-version):
 
 - [ ] Shared version, Windows app project, Desktop inheritance, packaging default, installer fallback, and annotated tag use the same version.
 - [ ] README current version/status/downloads/commands and affected features/media are updated.
