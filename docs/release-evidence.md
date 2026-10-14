@@ -330,4 +330,10 @@ After publication:
 - The release is marked pre-release.
 - The rendered release notes (all sections, both tables and the checksum block) and the README's v0.3.2 badge and download links were checked in a browser.
 
-The documentation commit `dd547d2` that recorded this publication passed the Security and regression checks (run [38542724706](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38542724706)) and Release documentation workflows. The user's installed macOS app was not updated by this release work. The gaps listed under [Version 0.3.2](#version-032--bug-fixes-and-macoslinux-window-redesign-2026-10-14) remain open.
+The documentation commit `dd547d2` that recorded this publication passed the Security and regression checks (run [38542724706](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38542724706)) and Release documentation workflows. Afterwards, at the user's request:
+- The verified public Apple Silicon ZIP replaced the installed 0.3.1 app in `/Applications`. Its SHA-256 matched `SHA256SUMS.txt`, the seal verified after extraction and in place, and `--package-info` reported `0.3.2+ece5d4c`.
+- The old 0.3.1 bundle and the local 0.2.1 candidate/development builds were moved to the Trash, not permanently deleted.
+- The application data directory and the Keychain item were not touched.
+- The app launched and keeps its listeners stopped until the user approves Keychain access for the new code identity; Accessibility must be re-enabled for this build.
+
+The gaps listed under [Version 0.3.2](#version-032--bug-fixes-and-macoslinux-window-redesign-2026-10-14) remain open.
