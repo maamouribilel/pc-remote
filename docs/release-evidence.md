@@ -322,7 +322,7 @@ Local verification of the downloaded workflow artifacts, using an independent sc
 - `--package-info` reports `0.3.2+ece5d4c` and .NET 10.0.13 natively on Apple Silicon; the Intel build was run under Rosetta emulation only.
 - The Windows and Ubuntu informational revisions match, and Ubuntu TAR ownership is normalized.
 - License notices are present, there are no PDB, private-key or protected files, and a Gitleaks scan of the extracted packages is clean.
-- The shipped binaries contain the redesigned shell, the macOS lock fix, the Linux session fallback and NetworkManager filter, and the phone-remote fixes.
+- Byte-pattern checks (not runtime verification) confirm that the shipped assemblies, bridge and remote bundle include the redesigned shell, the macOS lock fix, the Linux session fallback and NetworkManager filter, and the phone-remote fixes.
 
 After publication:
 - All nine public URLs returned HTTP 200 to anonymous downloads, with matching sizes and SHA-256 digests.
@@ -330,4 +330,4 @@ After publication:
 - The release is marked pre-release.
 - The rendered release notes (all sections, both tables and the checksum block) and the README's v0.3.2 badge and download links were checked in a browser.
 
-The user's installed macOS app was not updated by this release work. The gaps listed under [Version 0.3.2](#version-032--bug-fixes-and-macoslinux-window-redesign-2026-10-14) remain open.
+The documentation commit `dd547d2` that recorded this publication passed the Security and regression checks (run [38542724706](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38542724706)) and Release documentation workflows. The user's installed macOS app was not updated by this release work. The gaps listed under [Version 0.3.2](#version-032--bug-fixes-and-macoslinux-window-redesign-2026-10-14) remain open.
