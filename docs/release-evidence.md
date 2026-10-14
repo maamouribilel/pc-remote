@@ -365,3 +365,42 @@ Windows behavior is unchanged from 0.3.2.
 - On release day the runtime advisory feed still had no advisories for .NET 10.0.13.
 
 **Not established:** the 0.3.2 gaps remain, including native appearance on a real display, real macOS logout, real GNOME, Windows installation and physical-phone/LAN use. The final assets and digests follow in the publication entry.
+
+
+### Version 0.3.3 publication and public verification (2026-10-14)
+
+Published as a **pre-release**: [v0.3.3](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.3). The annotated tag `v0.3.3` points to commit `83130897a3d126d1f5837ad22e2b8813d2fdd6ea`. Earlier tags and assets were not changed.
+
+Hosted runs on `8313089` all passed every job:
+- The `final` dispatch [38599277310](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38599277310) supplied the assets.
+- The push run [38599266569](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38599266569).
+- The documentation runs for the commit and for the tag ([38600703519](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38600703519)).
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `PCRemote-0.3.3-win-x64-setup.exe` | 62,692,777 | `6b515a78e163d285f1e8eabf06026c93930573bc72d453c2326fd769efca416b` |
+| `PCRemote-0.3.3-win-x64.zip` | 89,739,620 | `7d76a51debe934b463226277e8be8f4d032446181ca04af88de7db600f486680` |
+| `PCRemote-0.3.3-osx-arm64.zip` | 60,694,450 | `ca04bf1b192f6b84e8da4cdbcd4c490e97a05c2f77210a3eac5ca78439d6caa7` |
+| `PCRemote-0.3.3-osx-x64.zip` | 63,403,557 | `e8940a9d98e7615eda862c7c4542daada5bee401774d8c18b913a23dc51392c9` |
+| `PCRemote-0.3.3-linux-x64.tar.gz` | 60,555,330 | `387c2122afbff6b9a9c0bd8c8429fa4b099c8a929965f7cf681810edb522c50c` |
+| `PCRemote-0.3.3-osx-arm64-manifest.json` | 109,626 | `d2d98ff596c2b169fc97fa1960390450ef979b5e875e9d40f290983d4a85dc18` |
+| `PCRemote-0.3.3-osx-x64-manifest.json` | 109,624 | `09c1a534bd4ee5655f89e5cb4bd8ea67bf856519f71e53ab66c941142166f946` |
+| `PCRemote-0.3.3-linux-x64-manifest.json` | 50,478 | `c2cb0c466b30576c507dc18ab71f165f6fc873421d13d1423977715ed84eca78` |
+| `SHA256SUMS.txt` | 791 | covers the eight files above |
+
+Local verification of the downloaded workflow artifacts, using the same independent script as 0.3.2:
+- Checksums match.
+- Manifest provenance: `candidate: false`, `sourceDirty: false`, revision `8313089`, version 0.3.3.
+- Every extracted file matches its manifest inventory.
+- Extracted macOS seals verify, and native architectures are correct.
+- `--package-info` reports `0.3.3+8313089` and .NET 10.0.13: natively on Apple Silicon, and for the Intel build under Rosetta emulation only.
+- The Windows and Ubuntu informational revisions match.
+- License notices are present, there are no PDB or private files, and a Gitleaks scan is clean.
+- Byte-pattern checks (not runtime verification) confirm that the macOS and Ubuntu shells include the address-preview and starting texts.
+
+After publication:
+- All nine public URLs returned HTTP 200 to anonymous downloads, with matching sizes and SHA-256 digests.
+- The public `SHA256SUMS.txt` is byte-identical, and GitHub's asset digests match.
+- The README on `main` links only v0.3.3 assets.
+
+The user's Mac still runs the installed 0.3.2 app.
