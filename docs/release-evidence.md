@@ -642,3 +642,39 @@ Preview release of the fixes described in the [2026-10-14 entry](#2026-10-14--ma
 **Not established**
 - Hosted CI for this commit and the final assets: recorded in the publication entry below once the final dispatch has run.
 - Windows execution, a real Ubuntu desktop, macOS Intel hardware and every earlier 0.3.x gap.
+
+### Version 0.3.6 publication and public verification (2026-10-14)
+
+Published as a **pre-release**: [v0.3.6](https://github.com/maamouribilel/windows-pc-mobile-controller/releases/tag/v0.3.6). The annotated tag `v0.3.6` points to the release commit `49205979fbafbbc3f392a464cdba5aa98568f9a5` (tagged 21:43 UTC). Earlier tags and assets were not changed.
+
+Hosted runs on the release commit:
+- The `final` dispatch [38640378193](https://github.com/maamouribilel/windows-pc-mobile-controller/actions/runs/38640378193) passed every job on the first attempt and supplied the assets: shared **272** and desktop **92** on Windows, macOS and Ubuntu; Mac adapter **68** on hosted macOS (the local-desktop interactive-session check skipped) and the non-native subset **54** on Windows and Ubuntu; Linux adapter **88** on Ubuntu (81 elsewhere); Ubuntu private Xvfb/GTK US and French **41** each, portal/MPRIS/logind **31** and disposable encrypted keyring/TLS; the Windows default, security, pairing, lifecycle and PC-feature suites (151, 185, 193, 158, 180), browser and strict TLS suites, installer, content/license/checksum checks; strict TLS probes, npm/NuGet audits and the runtime advisory feed on every OS.
+- The Release documentation workflow passed on the push (38640379142) and on the tag (38642387244).
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `PCRemote-0.3.6-win-x64-setup.exe` | 62,693,054 | `e1a3a833f23e17d72d10579be6e41a4343500904226ad9b4cf507246822266b4` |
+| `PCRemote-0.3.6-win-x64.zip` | 89,740,341 | `7133e8f0cfd14534864d8ffee5cde8cfb9f8491ac7832b0fbbfc1ffb68ebed3d` |
+| `PCRemote-0.3.6-osx-arm64.zip` | 60,713,795 | `f9c6409130faad51eadc4572679ba4444b18d76b26caeb31e29c3bf653456d98` |
+| `PCRemote-0.3.6-osx-x64.zip` | 63,422,741 | `3b3f3d3257b8abfb4285a07d44e4f722d6aaf7234dd093791a7a730435f25a1e` |
+| `PCRemote-0.3.6-linux-x64.tar.gz` | 60,571,608 | `799f4dd85e88fd95475681c26a8592f5f39036ce3647f8d2f3aa904bf5a9c982` |
+| `PCRemote-0.3.6-osx-arm64-manifest.json` | 109,626 | `62d7daeea4f5a256ca2ce330215d2f881bd33a286abe92ab4cc3d1a31fd4d91d` |
+| `PCRemote-0.3.6-osx-x64-manifest.json` | 109,624 | `ca51e96b60479446e46dfa44a1412a0448d44a171c313c40955da24deaaccaff` |
+| `PCRemote-0.3.6-linux-x64-manifest.json` | 50,478 | `21f7e31e063fb1f12861c209cb83d95154f2dd0b004f3b676dc72885f667b624` |
+| `SHA256SUMS.txt` | 791 | covers the eight files above |
+
+Local verification of the downloaded workflow artifacts (new empty directory, independent script run with `python3 -I`, plus the repository's `scripts/check-package.py --final` for the three macOS/Ubuntu packages):
+- Every file matches its per-platform CI checksum; the combined `SHA256SUMS.txt` was built from those files and verified with `shasum -c`.
+- Manifests: `candidate: false`, `sourceDirty: false`, revision `4920597`, version 0.3.6. Every extracted file (464 per macOS bundle, 463 for Ubuntu) matches its manifest and nothing is uninventoried.
+- Both macOS bundles pass `codesign --verify --deep --strict` with an ad-hoc cdhash requirement and the correct architectures (main binary plus 17 dylibs); `--package-info` reports `0.3.6+4920597…` with .NET 10.0.13, natively on Apple Silicon and under Rosetta emulation for Intel.
+- Byte checks (not runtime verification) confirm the 0.3.6 bridge symbols and the named pause text in both macOS bundles.
+- The Ubuntu archive has normalized ownership and no links, and its launcher is an x86-64 ELF; the Windows ZIP and installer have the expected layout.
+- License notices are present, there are no debug symbols or private files, and a Gitleaks 8.30.1 scan of every extracted package is clean.
+
+After publication, all nine public URLs returned HTTP 200 with matching sizes and SHA-256 digests when downloaded anonymously into a new directory. The public `SHA256SUMS.txt` is byte-identical, GitHub's stored asset digests match, and the tag object resolves to the release commit.
+
+At the user's request, the verified public Apple Silicon ZIP replaced the locally signed third candidate in `/Applications`:
+- The anonymous download's SHA-256 matched, the seal verified after extraction, and `--package-info` reported `0.3.6+4920597…`.
+- The staged bundle was re-signed with the local identity (`scripts/sign-macos-local.py`) before the swap; the replaced bundle was moved to the Trash, not permanently deleted, and the move is recorded under the ignored `.tools/mac-install-0.3.6/`.
+- The application data directory and the Keychain item were not touched.
+- 0.3.6 launched; tccd answered `Allowed (System Set)` for the new process with no `Failed to match` (the third different build matched by the local identity's requirement), and the window asks only for the per-build **Allow Keychain access after update…**.
