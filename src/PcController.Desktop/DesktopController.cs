@@ -88,6 +88,8 @@ public sealed class DesktopController : IAsyncDisposable
         Message = platform == "macos"
             ? "Setup required: No platform host is composed: Keychain storage and native Accessibility input services are required. No HTTPS listener is running."
             : "Setup required: No Linux platform host is composed. Reviewed GNOME keyring, X11/portal input and local lifecycle services are required. No HTTPS listener is running.";
+        // A composed platform host starts on the first refresh; don't flash "no host" text meanwhile.
+        if (factory != null) Message = "Starting secure setup…";
         if (setupMessage != null) Message = setupMessage;
         if (factory != null)
         {

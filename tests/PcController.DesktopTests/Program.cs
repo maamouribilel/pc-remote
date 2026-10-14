@@ -45,14 +45,17 @@ internal sealed class UiChecks : IDisposable
         check(!Find(window, "approve-network").IsEnabled, "network approval requires an explicitly selected observable candidate");
         check(!window.GetVisualDescendants().OfType<Button>().Any(b => AutomationProperties.GetAutomationId(b) == "authorize-keychain"), "Keychain consent is offered only by a real Mac storage environment");
         check(window.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text?.Contains("Keychain") == true), "shell explains secure storage/native setup requirement");
+        Expander Section(Window owner, string header) => owner.GetVisualDescendants().OfType<Expander>().Single(e => Equals(e.Header, header));
+        check(!Section(window, "Permissions & platform setup").IsExpanded, "permissions section is not opened just because no host is running yet");
         // The real Mac composition adds Keychain consent and permission onboarding; build it with a platform environment.
         var environment = new DesktopChecks.FakeEnvironment();
         var macController = new DesktopController("macos", new TrustedNetworks(() => []), observeNetworks: false, environment: environment);
         var macWindow = new MainWindow(macController); macWindow.Show(); Dispatcher.UIThread.RunJobs(); macWindow.UpdateLayout();
-        check(Find(macWindow, "authorize-keychain") != null && Find(macWindow, "accessibility") != null && !Find(macWindow, "banner-permission").IsVisible, "platform composition builds Keychain consent and permission onboarding; banner action hidden while input is ready");
+        check(!Find(macWindow, "banner-permission").IsVisible && !Section(macWindow, "Permissions & platform setup").IsExpanded, "banner action hidden and permissions section closed while no permission problem is known");
         environment.State = new(true, false, true, "Accessibility is required for pointer and keyboard control.");
         macController.RefreshAsync().GetAwaiter().GetResult(); Dispatcher.UIThread.RunJobs(); macWindow.UpdateLayout();
         check(Find(macWindow, "banner-permission").IsVisible && macWindow.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == "Accessibility is required for pointer and keyboard control."), "missing input permission shows the readiness message with its permission action");
+        check(Section(macWindow, "Permissions & platform setup").IsExpanded && Find(macWindow, "authorize-keychain") != null && Find(macWindow, "accessibility") != null, "a real missing permission opens the permissions section with Keychain consent and permission onboarding");
         macWindow.Close(); macWindow.Close(); macController.DisposeAsync().AsTask().GetAwaiter().GetResult();
         var allowed = new ApprovalPrompt(new("test", "Disposable browser", DateTimeOffset.UtcNow.AddMinutes(1)), "loopback fixture");
         var approve = new ApprovalWindow(allowed); approve.Show(); Dispatcher.UIThread.RunJobs();
@@ -74,14 +77,23 @@ internal sealed class UiChecks : IDisposable
         window.Close();
         var directory = Path.Combine(Path.GetTempPath(), "PcDesktopButtons-" + Guid.NewGuid().ToString("N"));
         var input = new RecordingMouse();
-        var fixture = new DesktopController("macos", new TrustedNetworks(() => []), network => PortableFixture.Create(directory, input, network: network, capabilities: PlatformCapabilities.Unavailable("macos")), observeNetworks: false);
+        // One observable but unapproved interface (documentation address): the host stays loopback-only.
+        var lanCandidate = new NetworkCandidate("fixture", "en-test", "fixture-network", [System.Net.IPAddress.Parse("192.0.2.10")]);
+        var fixture = new DesktopController("macos", new TrustedNetworks(() => [lanCandidate]), network => PortableFixture.Create(directory, input, network: network, capabilities: PlatformCapabilities.Unavailable("macos")), observeNetworks: false);
         try
         {
+            check(fixture.Message == "Starting secure setup…", "a composed host shows a starting message, not the no-host setup text, before its first refresh");
+            var early = new MainWindow(fixture); early.Show(); Dispatcher.UIThread.RunJobs();
+            check(early.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == "No paired devices."), "device list shows the unavailable state before the host starts");
             fixture.RefreshAsync().GetAwaiter().GetResult();
             check(fixture.Server != null, "fixture dashboard host starts: " + fixture.Status);
+            Dispatcher.UIThread.RunJobs(); early.UpdateLayout();
+            check(early.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == "No paired devices yet. Create a pairing link to pair your iPhone."), "device list empty state updates once the host is ready");
+            early.Close(); early.Close();
             var dashboard = new MainWindow(fixture); dashboard.Show(); Dispatcher.UIThread.RunJobs(); dashboard.UpdateLayout();
             check(dashboard.GetVisualDescendants().OfType<Image>().Any(i => AutomationProperties.GetAutomationId(i) == "pairing-qr" && i.Source != null && i.IsVisible), "fixture dashboard renders actual short-lived pairing QR (active link=" + (fixture.Server!.PairingAddress != null) + ")");
-            check(dashboard.GetVisualDescendants().OfType<TextBlock>().Any(t => AutomationProperties.GetAutomationId(t) == "address-scope" && t.Text!.Contains("Only this computer")), "loopback-only address explains how to approve a network for the phone");
+            check(dashboard.GetVisualDescendants().OfType<TextBlock>().Any(t => AutomationProperties.GetAutomationId(t) == "address-scope" && t.Text!.Contains("Only this computer") && t.Text.Contains("Choose and approve en-test") && t.Text.Contains("https://192.0.2.10:8443")), "loopback-only address previews the phone address of the only interface before approval");
+            check(fixture.Server!.Network.PrivateAddresses.Length == 0 && fixture.Server.ConnectionAddress == "https://localhost:8443", "the preview grants nothing: the host stays loopback-only until explicit approval");
             var before = fixture.Server!.PairingAddress;
             Find(dashboard, "new-pairing").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Dispatcher.UIThread.RunJobs();
             check(fixture.Server.PairingAddress != before, "dashboard creates a fresh manual/QR link");

@@ -136,7 +136,8 @@ public sealed class MainWindow : Window
         network.Children.Add(networks);
         approveNetwork = Button("Approve network…", () => _ = ApproveNetwork(), "approve-network"); approveNetwork.HorizontalAlignment = HorizontalAlignment.Stretch;
         blockNetwork = Button("Block LAN", () => _ = controller.BlockLanAsync(), "block-network"); blockNetwork.HorizontalAlignment = HorizontalAlignment.Stretch;
-        networks.SelectionChanged += (_, _) => approveNetwork.IsEnabled = networks.SelectedItem is NetworkCandidate;
+        // Re-render (deferred) so the address previews the selected interface before approval.
+        networks.SelectionChanged += (_, _) => { approveNetwork.IsEnabled = networks.SelectedItem is NetworkCandidate; Dispatcher.UIThread.Post(Render); };
         var networkButtons = new Grid { ColumnDefinitions = new ColumnDefinitions("3*,2*"), ColumnSpacing = 10, Margin = new Thickness(0, 10, 0, 0) };
         networkButtons.Children.Add(approveNetwork); Grid.SetColumn(blockNetwork, 1); networkButtons.Children.Add(blockNetwork);
         network.Children.Add(networkButtons);
@@ -449,9 +450,15 @@ public sealed class MainWindow : Window
 
         Set(fingerprint, server == null ? "Available after secure certificate setup" : Grouped(server.Certificates.Fingerprint));
         Set(address, server?.ConnectionAddress ?? "Unavailable — secure storage setup required");
-        Set(addressScope, server == null ? "" : !lan
-            ? "Only this computer can connect (localhost). To use your phone, choose your Wi-Fi or Ethernet interface under Trusted network and approve it for this session."
-            : "Reachable on the approved network for this session. Network changes, sleep or switching users require approval again.");
+        // Before approval, name the interface and the exact address the phone will use (the host
+        // binds the approved interface's first address). This previews only; it grants no trust.
+        var candidates = controller.Networks.Candidates;
+        var suggested = networks.SelectedItem as NetworkCandidate ?? (candidates.Length == 1 ? candidates[0] : null);
+        var preview = server != null && suggested?.Addresses.FirstOrDefault() is { } lanAddress ? $"https://{lanAddress}:{PcController.Host.CompanionServer.Port}" : null;
+        Set(addressScope, server == null ? "" : lan
+            ? "Reachable on the approved network for this session. Network changes, sleep or switching users require approval again."
+            : preview != null ? $"Only this computer can connect (localhost). {(networks.SelectedItem is NetworkCandidate ? "Approve" : "Choose and approve")} {suggested!.Name} under Trusted network to use {preview} from your phone."
+            : "Only this computer can connect (localhost). To use your phone, choose your Wi-Fi or Ethernet interface under Trusted network and approve it for this session.");
         var nextPair = server?.PairingAddress;
         qr.IsVisible = nextPair != null;
         qrPlaceholder.IsVisible = nextPair == null;
@@ -496,7 +503,6 @@ public sealed class MainWindow : Window
         }
 
         var selected = networks.SelectedItem as NetworkCandidate;
-        var candidates = controller.Networks.Candidates;
         if (!((networks.ItemsSource as NetworkCandidate[]) ?? []).Select(c => c.Identity).SequenceEqual(candidates.Select(c => c.Identity)))
         { networks.ItemsSource = candidates; networks.SelectedItem = candidates.FirstOrDefault(c => c.Identity == selected?.Identity); }
         approveNetwork.IsEnabled = networks.SelectedItem is NetworkCandidate;
@@ -505,10 +511,12 @@ public sealed class MainWindow : Window
         Set(networkState, server == null ? "No listener running" : lan ? "Approved for this session" : "LAN blocked · this computer only");
         Paint(networkDot, lan ? "#5EE8BE" : "#F5C46B");
         Set(networkNote, server == null ? "No listener is running. Network approval alone cannot enable missing secure storage/native adapters."
-            : lan ? "Phones on this network can open " + server.ConnectionAddress + "." : candidates.Length == 0 ? "No suitable Wi-Fi or Ethernet interface with an observable network identity was found." : server.Network.Notice);
+            : lan ? "Phones on this network can open " + server.ConnectionAddress + "." : candidates.Length == 0 ? "No suitable Wi-Fi or Ethernet interface with an observable network identity was found."
+            : preview != null ? $"Approving {suggested!.Name} lets phones on that network open {preview}." : server.Network.Notice);
         if (authorizeStorage != null) authorizeStorage.IsEnabled = !controller.StorageReady;
-        // Rebuild only when device content changes to preserve keyboard focus.
-        var signature = string.Join("|", records.Select(d => d.Id + d.Name + d.Expires)) + "|" + owner;
+        // Rebuild only when device content changes to preserve keyboard focus. Host availability is
+        // part of the signature so the empty-state text updates when setup completes.
+        var signature = (server == null ? "unavailable|" : "ready|") + string.Join("|", records.Select(d => d.Id + d.Name + d.Expires)) + "|" + owner;
         if (!Equals(devices.Tag, signature))
         {
             devices.Tag = signature; devices.Children.Clear();
@@ -522,7 +530,8 @@ public sealed class MainWindow : Window
         }
         // Expand guidance once, when it is first needed, without fighting a person who collapses it.
         if (!certificateShown && server != null && records.Length == 0) { certificateShown = true; certificateExpander.IsExpanded = true; }
-        if (!permissionsShown && attention) { permissionsShown = true; permissionsExpander.IsExpanded = true; }
+        // Only a real permission/storage problem opens the section; a host that is still starting does not.
+        if (!permissionsShown && (!controller.InputReady || !controller.StorageReady)) { permissionsShown = true; permissionsExpander.IsExpanded = true; }
         RenderFooter();
     }
     private static string Grouped(string hex) => string.Join(" ", Enumerable.Range(0, hex.Length / 2).Select(i => hex.Substring(i * 2, 2)));
