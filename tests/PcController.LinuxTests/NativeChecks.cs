@@ -42,7 +42,7 @@ internal static class NativeChecks
             input.Move(20, 10); input.Click("left", false); input.Scroll(0, 120);
             var state = await Until(r => int.Parse(r[3]) > int.Parse(pointerBefore[3]) && int.Parse(r[4]) > int.Parse(pointerBefore[4]) && int.Parse(r[5]) > int.Parse(pointerBefore[5])); Program.Check(int.Parse(state[3]) > int.Parse(pointerBefore[3]) && int.Parse(state[4]) > int.Parse(pointerBefore[4]) && int.Parse(state[5]) > int.Parse(pointerBefore[5]), "real pointer click motion scroll receipt");
             Program.Check(int.Parse(state[8]) == int.Parse(pointerBefore[8]) + 20 && int.Parse(state[9]) == int.Parse(pointerBefore[9]) + 10, "actual relative pointer displacement");
-            input.Click("right", false); await Read(); input.Press("Escape"); await Read(); await Task.Delay(500); input.Click("left", true); state = await Read(); Program.Check(int.Parse(state[6]) >= 1 && int.Parse(state[7]) >= 1, "native right click and recognized GTK double click");
+            input.Click("right", false); await Read(); input.Press("Escape"); await Read(); await Task.Delay(500); input.Click("left", true); state = await Until(r => int.Parse(r[6]) >= 1 && int.Parse(r[7]) >= 1); Program.Check(int.Parse(state[6]) >= 1 && int.Parse(state[7]) >= 1, "native right click and recognized GTK double click");
             input.Press("Escape"); // Close target context menu if present.
             input.Button("left", true); input.Move(10, 0); input.Key("Shift", true);
             state = await Until(r => int.Parse(r[1]) != 0 && int.Parse(r[2]) != 0); Program.Check(int.Parse(state[1]) != 0 && int.Parse(state[2]) != 0, "drag and modifier received held");
