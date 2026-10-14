@@ -403,4 +403,8 @@ After publication:
 - The public `SHA256SUMS.txt` is byte-identical, and GitHub's asset digests match.
 - The README on `main` links only v0.3.3 assets.
 
-The user's Mac still runs the installed 0.3.2 app.
+Afterwards, at the user's request:
+- The verified public Apple Silicon ZIP replaced the installed 0.3.2 app in `/Applications`. The SHA-256 matched, the seal verified before and after installation, and `--package-info` reported `0.3.3+8313089`.
+- 0.3.2 exited gracefully on SIGTERM (the 0.3.2 fix, observed natively on this installed build) and was moved to the Trash, not permanently deleted.
+- The application data directory and Keychain item were not touched.
+- 0.3.3 launched and keeps its listeners stopped until the user approves Keychain access for the new code identity. Accessibility must be re-enabled.
