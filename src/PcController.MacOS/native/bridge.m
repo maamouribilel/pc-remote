@@ -60,7 +60,16 @@ int pc_session(void) { @autoreleasepool {
     pid_t pid=0; if(status==kAXErrorSuccess && focused) AXUIElementGetPid((AXUIElementRef)focused, &pid);
     if(focused) CFRelease(focused); CFRelease(system);
     NSString *focusedBundle=pid ? [NSRunningApplication runningApplicationWithProcessIdentifier:pid].bundleIdentifier : nil;
-    return active && status==kAXErrorSuccess && pid>0 && ![focusedBundle isEqualToString:@"com.apple.loginwindow"];
+    // On current macOS the system-wide focus query can fail with kAXErrorCannotComplete for
+    // ordinary front apps (observed with Chromium/Electron apps and PC Remote itself) while
+    // per-app AX works. Use the frontmost application then; it needs no AX round trip. Other
+    // AX errors (no permission) still fail, and Secure Input above still blocks password
+    // fields, including the lock screen.
+    if(status==kAXErrorCannotComplete) {
+        NSRunningApplication *front=[NSWorkspace sharedWorkspace].frontmostApplication;
+        pid=front.processIdentifier; focusedBundle=front.bundleIdentifier;
+    } else if(status!=kAXErrorSuccess) return 0;
+    return active && pid>0 && ![focusedBundle isEqualToString:@"com.apple.loginwindow"];
 } }
 int pc_diagnostics(void) {
     int bits=(AXIsProcessTrusted()?1:0) | (CGPreflightPostEventAccess()?2:0) | (IsSecureEventInputEnabled()?8:0) | (atomic_load(&inactive)?32:0);
@@ -71,7 +80,23 @@ int pc_diagnostics(void) {
     if(focused) CFRelease(focused); CFRelease(system); return bits;
 }
 static void networkChanged(SCDynamicStoreRef store, CFArrayRef keys, void *info) {
-    (void)store; (void)keys; (void)info; invalidate_network();
+    (void)store; (void)info;
+    // Wi-Fi signal quality (State:/Network/Interface/<if>/LinkQuality) updates every few seconds
+    // and is not a connectivity change; revoking approval on it dropped the LAN within seconds.
+    // Any other changed key (addresses, routes, AirPort association, configuration) still counts.
+    CFIndex count = keys ? CFArrayGetCount(keys) : 0;
+    BOOL relevant = count == 0;
+    for (CFIndex i = 0; i < count && !relevant; i++)
+        if (!CFStringHasSuffix((CFStringRef)CFArrayGetValueAtIndex(keys, i), CFSTR("/LinkQuality"))) relevant = YES;
+    if (relevant) invalidate_network();
+}
+// Test-only: feeds one changed SystemConfiguration key through the real filter.
+int pc_test_network_key(const char *key) {
+    unsigned long before = atomic_load(&networkGeneration);
+    CFStringRef value = CFStringCreateWithCString(NULL, key, kCFStringEncodingUTF8);
+    CFArrayRef keys = CFArrayCreate(NULL, (const void **)&value, 1, &kCFTypeArrayCallBacks);
+    networkChanged(NULL, keys, NULL); CFRelease(keys); CFRelease(value);
+    return atomic_load(&networkGeneration) != before;
 }
 int pc_observe(void (*callback)(void)) {
     atomic_store(&unsafeCallback, callback);

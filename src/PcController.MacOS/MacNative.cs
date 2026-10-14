@@ -8,6 +8,7 @@ internal static class MacNative
     [DllImport(Library)] internal static extern int pc_permission();
     [DllImport(Library)] internal static extern void pc_onboard();
     [DllImport(Library)] internal static extern int pc_session();
+    [DllImport(Library)] internal static extern int pc_test_network_key([MarshalAs(UnmanagedType.LPUTF8Str)] string key);
     [DllImport(Library)] internal static extern int pc_frontmost();
     [DllImport(Library)] internal static extern int pc_test_activate(int pid);
     [DllImport(Library)] internal static extern int pc_arm(ulong expected);

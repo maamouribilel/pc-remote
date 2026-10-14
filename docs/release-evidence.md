@@ -489,3 +489,27 @@ Afterwards, at the user's request:
 - The application data directory and the Keychain item were not touched.
 - 0.3.4 launched. It needs Keychain approval and a re-added Accessibility entry for its new code identity.
 - Native server start with Accessibility granted on the installed app remains to be observed.
+
+## 2026-10-14 — macOS LAN approval dropped on Wi-Fi signal updates (fixed for 0.3.5)
+
+**User report on the installed 0.3.4 app.** The user approved `en0`; the window showed *Secure LAN ready*, then fell back to `https://localhost:8443`. Brave on the Mac reported *TypeError: Failed to fetch*, and the Accessibility banner sometimes returned although permission was granted.
+
+Read-only diagnosis on that Mac (screen-recording frames, Accessibility reading of the window, `scutil` notifications, tccd log):
+
+- macOS updates `State:/Network/Interface/en0/LinkQuality` every few seconds on Wi-Fi.
+- The bridge watched all of `State:/Network/.*` and treated every change as a network-trust event. Each signal-quality update therefore revoked the session's LAN approval, paused control and rebuilt the host, which is the browser's *Failed to fetch*.
+- The Wi-Fi identity lookup was stable: `networksetup` reports no observable network name, so the connectivity-session identity is used.
+- TCC granted Accessibility (`authValue=2`). While the screen recording was active, the system-wide AX focused-application query intermittently returned `kAXErrorCannotComplete`. The interactive-session check required that query, so readiness flipped to *not ready* and back.
+
+**Fixes (macOS bridge):**
+- Change notifications whose only changed keys end in `/LinkQuality` no longer advance the network-trust generation. Any other key (AirPort association, addresses, routes, configuration) still revokes approval.
+- When the system-wide focus query cannot complete, the session check uses the frontmost application. Other AX errors still fail. Secure Input still blocks password fields, including the lock screen, and the login window is still excluded.
+
+**Verification:**
+- Mac adapter **65**:
+  - a deterministic key-filter check: LinkQuality kept; AirPort and IPv4 revoke;
+  - an interactive-session check on an AX-trusted active console session, which is skipped without trust, as on CI.
+- On the user's live Wi-Fi over the same 40 s, the previous bridge's real observer counted **3** network-trust invalidations and the fixed bridge **0**. The only changed key was `LinkQuality`.
+- The intermittent focus-query failure could not be reproduced on demand after the recording ended. A GUI probe succeeded with the probe itself and with Claude in front, so that fix is defensive.
+
+**Not established:** a paired phone keeping control across Wi-Fi signal changes on the installed app; real roaming between access points, which should still revoke approval.

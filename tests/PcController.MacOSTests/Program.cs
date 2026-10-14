@@ -69,11 +69,20 @@ if (OperatingSystem.IsMacOS())
     var (mainCommand, mainPlain) = (MacNative.pc_command_key('c'), MacNative.pc_layout_key('k'));
     var worker = Task.Run(() => (MacNative.pc_command_key('c'), MacNative.pc_layout_key('k'), MacInput.ShortcutsAvailable));
     Check(worker.Wait(TimeSpan.FromSeconds(5)) && worker.Result == (mainCommand, mainPlain, true), "keyboard layout lookups return the main-thread result from a worker thread without trapping");
+    // On current macOS the system-wide AX focus query can fail (kAXErrorCannotComplete) for normal
+    // front apps; an AX-trusted, active console session without Secure Input must still be interactive.
+    var diagnostics = MacNative.pc_diagnostics();
+    if ((diagnostics & 1) != 0 && (diagnostics & 4) != 0 && (diagnostics & 8) == 0 && (diagnostics & 32) == 0)
+        Check(MacNative.pc_session() == 1, $"active console session is interactive (system-wide AX focus query {((diagnostics & 16) != 0 ? "succeeded" : "could not complete")})");
+    else Console.WriteLine("SKIP: interactive-session check needs an AX-trusted active console session without Secure Input");
     var (inputBefore, networkBefore) = (MacNative.pc_generation(), MacNative.pc_network_generation());
     MacNative.pc_test_notify(0);
     Check(MacNative.pc_generation() > inputBefore && MacNative.pc_network_generation() == networkBefore, "native Space/display event pauses input without network-trust change");
     MacNative.pc_test_notify(1);
     Check(MacNative.pc_generation() > inputBefore + 1 && MacNative.pc_network_generation() > networkBefore, "native network/sleep/session event advances both input and network-trust generations");
+    // Wi-Fi LinkQuality changes every few seconds; it must not revoke LAN approval (it did before 0.3.5).
+    Check(MacNative.pc_test_network_key("State:/Network/Interface/en0/LinkQuality") == 0 && MacNative.pc_test_network_key("State:/Network/Interface/en0/AirPort") == 1
+        && MacNative.pc_test_network_key("State:/Network/Global/IPv4") == 1, "Wi-Fi signal-quality updates keep LAN approval; association and address changes still revoke it");
     var lockDirectory = Path.Combine("/private/tmp", "PcMacLock-" + Guid.NewGuid().ToString("N"));
     try
     {
