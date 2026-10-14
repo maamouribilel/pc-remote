@@ -678,3 +678,4 @@ At the user's request, the verified public Apple Silicon ZIP replaced the locall
 - The staged bundle was re-signed with the local identity (`scripts/sign-macos-local.py`) before the swap; the replaced bundle was moved to the Trash, not permanently deleted, and the move is recorded under the ignored `.tools/mac-install-0.3.6/`.
 - The application data directory and the Keychain item were not touched.
 - 0.3.6 launched; tccd answered `Allowed (System Set)` for the new process with no `Failed to match` (the third different build matched by the local identity's requirement), and the window asks only for the per-build **Allow Keychain access after update…**.
+- After the user approved the Keychain dialog and the network, the public build reported Secure LAN ready and input ready, and a ten-minute watch logged one Wi-Fi record burst (22:54:50, 38 keys) with the LAN listener answering throughout and the approval kept.
