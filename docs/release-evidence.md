@@ -858,3 +858,35 @@ Bug-fix release of the macOS companion's native bridge; Windows, Ubuntu, the pho
 **Not established before publication**
 - Hosted CI for the release commit and the final assets: recorded in the publication entry below once the final dispatch has run.
 - A paired phone keeping control across the peer-to-peer record bursts on an installed 0.4.2 build (no phone test was run for this version); whether other Macs publish further churn keys (VPN tunnels, VM bridges), which still revoke by design; the Air pointer Phase 4 rows beyond the flat grip, Windows installation on a physical PC, a real Ubuntu desktop, macOS Intel hardware and every earlier 0.3.x/0.4.x gap.
+
+### Version 0.4.2 publication and public verification (2026-10-15)
+
+Published as a **pre-release**: [v0.4.2](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.2). The annotated tag `v0.4.2` (object `65e9cff`, 16:14 UTC) points to the release commit `8c1bba059d9cdf0581a5c2f88ffc73b86e2c8d6e` (the bridge fix, its adapter row, the diagnosis record and the release synchronization were committed together as `8c1bba0`). The release was published at 16:16 UTC. Earlier tags and assets were not changed (the v0.4.1 release still lists its nine assets with their original sizes and the v0.4.1 tag still resolves to `cab1524`).
+
+Hosted runs on the release commit:
+- The `final` dispatch [38765461369](https://github.com/maamouribilel/pc-remote/actions/runs/38765461369) passed every job on the first attempt in eight minutes and supplied the assets: shared **272** and desktop **92** on Windows, macOS and Ubuntu; Air pointer math **19** on every OS; Mac adapter **69** on hosted macOS (including the new peer-to-peer `awdl`/`llw` row; the local-desktop interactive-session check is skipped under `CI=true`) and the non-native subset **54** on Windows and Ubuntu; Linux adapter **88** on Ubuntu (81 elsewhere); the isolated Ubuntu job's private Xvfb/GTK US and French layouts (41 each), portal/MPRIS/logind protocol (31) and disposable encrypted keyring/TLS checks; platform-aware browser checks on every OS; the Windows default, security, pairing, lifecycle and PC-feature suites (151, 185, 193, 158, 180), the browser suite in Edge (Air pointer math 19, connection and touch 6, Air pointer 1), strict TLS, installer and content/license/checksum/source-revision checks; strict TLS probes, npm/NuGet audits, the runtime advisory feed and the release-documentation check on every OS.
+- The Release documentation workflow passed on the push (38765462260) and on the tag (38767270415).
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `PCRemote-0.4.2-win-x64-setup.exe` | 62,690,740 | `55909b526538120c83fa752078607ac2e3e08ecf9c8fdb9d9a1f7dbd0252db93` |
+| `PCRemote-0.4.2-win-x64.zip` | 89,746,709 | `34797f69c458719c2717e2f2067ce3ed4b2a6c927dcc96c16fad2d77d08ac74a` |
+| `PCRemote-0.4.2-osx-arm64.zip` | 61,170,956 | `0c357b3b8bb95b20da88117a91ae484e6bfeb6b0f8b6717a5d1db33abb19564b` |
+| `PCRemote-0.4.2-osx-x64.zip` | 63,879,924 | `e8fe2606609e688347c410fc270cc8f13a4e29d2e185a97784f754b3ddedbb4d` |
+| `PCRemote-0.4.2-linux-x64.tar.gz` | 61,040,825 | `57db378155fd58657c09918699d8b531ee7c2eb296516a9d12566961534fcec1` |
+| `PCRemote-0.4.2-osx-arm64-manifest.json` | 109,747 | `faebc7018c1eb40068b16d8bb6ac55cbe559f3ac26b6a06be36c4847b40716e6` |
+| `PCRemote-0.4.2-osx-x64-manifest.json` | 109,745 | `b9f752e2f3bec7bb8be714f9217829b826be28fa73d152e1b553458c46544fb4` |
+| `PCRemote-0.4.2-linux-x64-manifest.json` | 50,580 | `5816252f2f6d76b9a7c1a5f0c4d6c221e5fa713176ede6cf672cbea07049be64` |
+| `SHA256SUMS.txt` | 791 | covers the eight files above |
+
+Local verification of the downloaded workflow artifacts (new empty directory, independent script run with `python3 -I`, plus the repository's `scripts/check-package.py --final --output` for the three macOS/Ubuntu packages after extracting each archive into its artifact directory):
+- Every file matches its per-platform CI checksum (the Windows job's checksum file has CRLF line endings and was compared after stripping the carriage returns); the combined `SHA256SUMS.txt` was built from those files and verified with `shasum -c`.
+- Manifests: `candidate: false`, `sourceDirty: false`, revision `8c1bba0`, version 0.4.2. Every extracted file (465 per macOS bundle, 464 for Ubuntu) matches its manifest and nothing is uninventoried.
+- Both macOS bundles pass `codesign --verify --deep --strict` with an ad-hoc seal and the correct architectures (main binary and 17 dylibs); `--package-info` reports `0.4.2+8c1bba0…` with .NET 10.0.13, natively on Apple Silicon and under Rosetta emulation for Intel.
+- The fix is in the packages: the bridge library `libPcControllerMac.dylib` of each extracted bundle, loaded in a throwaway C probe (arm64 natively, x86_64 under Rosetta) that calls `pc_test_network_key`, keeps the `awdl0`/`llw0`/`awdl12` IPv6, Link and record keys and still revokes on `en0` IPv4/IPv6, `utun4`, `bridge100`, a Service key, `Setup:/…/awdl0/IPv6`, `awdl`/`llwx` and `State:/Network/Global/IPv4` (0 mismatches each). Its manifest digest differs from the 0.4.1 manifests' (arm64 `1c66d264…` → `eae071ab…`, Intel `baf776b5…` → `164e4d17…`); the bundled remote is the unchanged 0.4.1 Air pointer build in all four packages.
+- The Ubuntu archive has normalized ownership (0/0), no links and an x86-64 launcher; the Windows ZIP contains `PcController.App.exe` and `wwwroot` with no debug symbols; the installer is a PE executable.
+- Gitleaks 8.30.1 over the four extracted package trees: no leaks.
+
+After publication, all nine public URLs returned HTTP 200 with matching sizes and SHA-256 digests when downloaded anonymously (no token) into a new directory and compared with an independent `python3 -I` script. The public `SHA256SUMS.txt` is byte-identical, GitHub's stored asset digests match every file, the tag reference resolves to the annotated tag object `65e9cff` and that object to the release commit `8c1bba0`, and every v0.4.2 download and release-notes link in the published README answers 200.
+
+The installed companion on the user's Mac is still 0.4.1 at the time of this entry (quit gracefully for the local suites and not relaunched); installing the verified public Apple Silicon ZIP happens only at the user's request and is recorded separately.
