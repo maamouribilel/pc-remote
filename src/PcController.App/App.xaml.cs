@@ -15,7 +15,9 @@ public partial class App : Application
     private ServerLifecycle? lifecycle;
     private Forms.NotifyIcon? tray;
     private Forms.ContextMenuStrip? menu;
-    private Forms.ToolStripMenuItem? pauseItem, resumeItem;
+    private Forms.ToolStripMenuItem? pauseItem, resumeItem, updateItem;
+    private UpdateService? updates;
+    private string? announcedUpdate;
     private readonly DispatcherTimer networkTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     private MainWindow? setup;
     private bool exiting;
@@ -36,6 +38,13 @@ public partial class App : Application
         setup.Closing += (_, args) => { if (!exiting) { args.Cancel = true; setup.Hide(); } };
         setup.Show();
         if (e.Args.Contains("--background")) setup.Hide();
+        // Update checks keep their own plain preferences and run even if Windows integration fails below.
+        try
+        {
+            updates = UpdateService.Create(System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PcController"));
+            setup.AttachUpdates(updates); updates.Changed += UpdatesChanged; updates.Start();
+        }
+        catch (Exception exception) when (exception is System.IO.IOException or UnauthorizedAccessException or InvalidOperationException or System.Security.Cryptography.CryptographicException) { updates = null; }
         try
         {
             var nativeInput = new WindowsInput(); // Retains native hold tracking across network restarts.
@@ -45,12 +54,15 @@ public partial class App : Application
             lifecycle.Failed += message => Dispatcher.BeginInvoke(() => { if (!exiting) { setup.ShowFailure(message); UpdateTray(); } });
             menu = new Forms.ContextMenuStrip();
             menu.Items.Add("Open", null, (_, _) => OpenSetup());
+            updateItem = (Forms.ToolStripMenuItem)menu.Items.Add("Update available…", null, (_, _) => OpenSetup()); updateItem.Visible = false;
             pauseItem = (Forms.ToolStripMenuItem)menu.Items.Add("Pause control", null, (_, _) => SetPaused(true));
             resumeItem = (Forms.ToolStripMenuItem)menu.Items.Add("Resume control", null, (_, _) => SetPaused(false));
             menu.Items.Add(new Forms.ToolStripSeparator()); menu.Items.Add("Exit", null, (_, _) => ExitCompanion());
             menu.Opening += (_, _) => UpdateTray();
             tray = new Forms.NotifyIcon { Icon = new System.Drawing.Icon(System.IO.Path.Combine(AppContext.BaseDirectory, "wwwroot", "pc-remote-v2.ico"), 32, 32), Text = "PC Remote", ContextMenuStrip = menu, Visible = true };
             tray.DoubleClick += (_, _) => OpenSetup();
+            tray.BalloonTipClicked += (_, _) => OpenSetup();
+            UpdatesChanged();
             _ = instance.ListenAsync(command => Dispatcher.InvokeAsync(() => Handle(command)).Task);
             networkTimer.Tick += async (_, _) => { if (lifecycle != null) await lifecycle.RefreshAsync(); UpdateTray(); };
             NetworkChange.NetworkAddressChanged += NetworkChanged;
@@ -64,6 +76,19 @@ public partial class App : Application
             if (tray == null) { exiting = true; Shutdown(1); }
         }
     }
+    private void UpdatesChanged() => Dispatcher.BeginInvoke(() =>
+    {
+        if (exiting || updates == null) return;
+        setup?.RenderUpdates();
+        var notice = updates.Notice;
+        if (updateItem != null) { updateItem.Visible = notice != null; if (notice != null) updateItem.Text = (notice.Security ? "Security update: " : "") + $"PC Remote {notice.Version} available…"; }
+        // One tray balloon per version while this companion runs; the window banner stays until Skip or Later.
+        if (notice != null && tray != null && announcedUpdate != notice.Version)
+        {
+            announcedUpdate = notice.Version;
+            tray.ShowBalloonTip(10000, notice.Security ? "PC Remote security update" : "PC Remote update available", $"Version {notice.Version} is available. Open PC Remote to view the release.", Forms.ToolTipIcon.Info);
+        }
+    });
     private void OpenSetup() { setup?.Show(); if (setup != null) { setup.WindowState = WindowState.Normal; setup.Activate(); } }
     private void Handle(LocalAction command) { switch (command) { case LocalAction.Open: OpenSetup(); break; case LocalAction.Pause: SetPaused(true); break; case LocalAction.Resume: SetPaused(false); break; case LocalAction.Exit: Dispatcher.BeginInvoke(ExitCompanion, DispatcherPriority.Background); break; } }
     private void SetPaused(bool paused)
@@ -116,6 +141,7 @@ public partial class App : Application
         NetworkChange.NetworkAddressChanged -= NetworkChanged;
         NetworkChange.NetworkAvailabilityChanged -= AvailabilityChanged;
         SystemEvents.PowerModeChanged -= PowerChanged;
+        if (updates != null) { updates.Changed -= UpdatesChanged; updates.Dispose(); }
         tray?.Dispose(); menu?.Dispose();
         if (lifecycle != null) Task.Run(async () => await lifecycle.DisposeAsync()).GetAwaiter().GetResult();
         instance?.Dispose();

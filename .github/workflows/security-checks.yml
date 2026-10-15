@@ -46,6 +46,9 @@ jobs:
         run: python scripts/portable.py build
       - name: Portable pairing, ownership, transport, lifecycle, capabilities and security
         run: python scripts/portable.py test
+      - name: Update manifest tool round trip (throwaway key; the release key never enters CI)
+        if: runner.os != 'Windows'
+        run: python scripts/update-manifest.py selftest
       - name: macOS adapter fault and semantic checks (no native input)
         run: python scripts/portable.py mac-test
       - name: Linux adapter fault and semantic checks (no native input)

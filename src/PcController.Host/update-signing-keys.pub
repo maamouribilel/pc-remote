@@ -1,0 +1,8 @@
+Public keys trusted for PC Remote update manifests (update.json.sig). See AUTO_UPDATE_PLAN.md.
+Each PUBLIC KEY block is one ECDSA P-256 key; private keys are never committed.
+
+Key 1, created 2026-10-15:
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEgENfbCkfEby65kfhBbgk9K2Rg1mx
+OohEavtKOggKnrg2l52sztAu6R67P+Z/k+dpP8aYqLGsJtwPx/GRCkRrEA==
+-----END PUBLIC KEY-----

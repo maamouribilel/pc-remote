@@ -34,6 +34,12 @@ For an installer update, download the new version's installer. It requests a gra
 
 These builds are experimental and are not signed for distribution. Their [release readiness](release-readiness.md) lists implemented features, pending native/phone/LAN acceptance and exact manual checks.
 
+## Find out about new versions
+
+Published versions up to 0.4.2 never check for updates themselves. On the repository page, choose **Watch → Custom → Releases** to get an email for each new version.
+
+The source now contains an opt-in update notice that is not yet in a published release. After a one-time question in the companion window, it asks GitHub once a day whether a newer signed release exists and shows a banner that opens the release page. It never downloads or installs anything itself. The design and its later phases are in [AUTO_UPDATE_PLAN.md](../AUTO_UPDATE_PLAN.md).
+
 ## Publishing the next version
 
 Each published release uses its own Git tag and versioned asset filenames. Do not replace a published version's files with a different build.
@@ -55,15 +61,25 @@ Read [AGENTS.md](../AGENTS.md), [CLAUDE.md](../CLAUDE.md), and the [release chec
    python3 scripts/package-linux.py --final
    ```
 
-   Download the artifacts into a new empty directory. Verify every archive hash, inventory, license notice, native architecture, extracted macOS seal and informational source revision, inspect packages for private data and debug symbols, and scan source and packages for secrets. Merge all asset digests into one `SHA256SUMS.txt` (LF line endings, two spaces). Create an annotated tag for that exact commit:
+   Download the artifacts into a new empty directory. Verify every archive hash, inventory, license notice, native architecture, extracted macOS seal and informational source revision, inspect packages for private data and debug symbols, and scan source and packages for secrets. Merge all asset digests into one `SHA256SUMS.txt` (LF line endings, two spaces).
+
+   From the first release that ships update checks, create and sign the update manifest on the maintainer's Mac (never in CI). The key stays in `~/.config/pc-remote-release/`; back it up offline:
+
+   ```sh
+   python3 scripts/update-manifest.py create --version X.Y.Z --assets <release-dir> --summary "One plain-text sentence for the update banner." [--security]
+   python3 scripts/update-manifest.py sign --manifest <release-dir>/update.json
+   python3 scripts/update-manifest.py verify --manifest <release-dir>/update.json
+   ```
+
+   Create an annotated tag for that exact commit:
 
    ```powershell
    git tag -a v0.4.3 -m "PC Remote v0.4.3"
    git push origin v0.4.3
    ```
 
-5. Create the GitHub release for that tag (for example `gh release create v0.4.3 --verify-tag --prerelease --notes-file <notes> <assets>`), with version-specific notes covering actual validation, platform status and known limits, and attach the Windows installer and ZIP, the macOS/Ubuntu archives and manifests, and the combined `SHA256SUMS.txt`. Keep **pre-release** for preview builds. Publish within the user's authorization.
-6. Verify the public tag points to the intended source commit, every asset downloads publicly, and asset sizes/SHA-256 digests match the local files. Check the README/download links and rendered release notes, then report the release URL and any remaining limits. Record final digests and public verification in a documentation-only follow-up commit.
+5. Create the GitHub release for that tag (for example `gh release create v0.4.3 --verify-tag --prerelease --notes-file <notes> <assets>`), with version-specific notes covering actual validation, platform status and known limits, and attach the Windows installer and ZIP, the macOS/Ubuntu archives and manifests, the combined `SHA256SUMS.txt`, and (from the first release that ships update checks) `update.json` and `update.json.sig`. Keep **pre-release** for preview builds. Publish within the user's authorization.
+6. Verify the public tag points to the intended source commit, every asset downloads publicly, and asset sizes/SHA-256 digests match the local files. Download the public `update.json` and `update.json.sig` into a new empty directory and run `scripts/update-manifest.py verify` on them. Check the README/download links and rendered release notes, then report the release URL and any remaining limits. Record final digests and public verification in a documentation-only follow-up commit.
 
 The `0.4.3` commands above illustrate a future release; they do not claim that version is already available. Build artifacts remain under ignored `artifacts/` locally and are uploaded as release assets, rather than committed to `main`.
 

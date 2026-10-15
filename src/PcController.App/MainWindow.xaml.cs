@@ -25,6 +25,7 @@ public partial class MainWindow : Window
     private string? lastApps;
     private bool updatingVolume;
     private bool desktopVolumeEdited;
+    private UpdateService? updates;
     public MainWindow()
     {
         InitializeComponent();
@@ -224,6 +225,46 @@ public partial class MainWindow : Window
             dialog.Show(); timer.Start(); dialog.Activate();
         });
         return completion.Task;
+    }
+    public void AttachUpdates(UpdateService service) { updates = service; RenderUpdates(); }
+    // Called on the UI thread after every update-state change.
+    public void RenderUpdates()
+    {
+        if (updates == null) return;
+        var notice = updates.Notice;
+        UpdateBanner.Visibility = updates.NeedsConsent || notice != null ? Visibility.Visible : Visibility.Collapsed;
+        UpdateConsentButtons.Visibility = updates.NeedsConsent && notice == null ? Visibility.Visible : Visibility.Collapsed;
+        UpdateNoticeButtons.Visibility = notice != null ? Visibility.Visible : Visibility.Collapsed;
+        // Same banner colors as the macOS/Linux window: neutral question, green notice, amber security notice.
+        var (background, border) = notice == null ? ("#141B23", "#3D4753") : notice.Security ? ("#211C12", "#6B5524") : ("#102620", "#2C6B58");
+        UpdateBanner.Background = (Brush)new BrushConverter().ConvertFromString(background)!; UpdateBanner.BorderBrush = (Brush)new BrushConverter().ConvertFromString(border)!;
+        if (notice != null)
+        {
+            UpdateTitle.Text = (notice.Security ? "Security update: " : "") + $"PC Remote {notice.Version} is available";
+            UpdateText.Text = $"{notice.Summary} You have {UpdateService.Display(updates.Current)}. The release page lists the installer, portable ZIP, checksums and update steps.";
+        }
+        else if (updates.NeedsConsent)
+        {
+            UpdateTitle.Text = "Check for PC Remote updates automatically?";
+            UpdateText.Text = "PC Remote can ask GitHub once a day whether a newer version is published and tell you here. Nothing is downloaded or installed, and no device, pairing or setting information is sent; GitHub sees this PC's IP address. You can change this in Settings.";
+        }
+        UpdateAutomatic.IsChecked = updates.Preferences.Automatic == true;
+        UpdateCheckNow.IsEnabled = !updates.Checking;
+        UpdateStatus.Text = updates.Status;
+    }
+    private void AcceptUpdateChecks(object sender, RoutedEventArgs e) => updates?.SetAutomatic(true);
+    private void DeclineUpdateChecks(object sender, RoutedEventArgs e) => updates?.SetAutomatic(false);
+    private void ToggleUpdateChecks(object sender, RoutedEventArgs e) => updates?.SetAutomatic(UpdateAutomatic.IsChecked == true);
+    private async void CheckUpdatesNow(object sender, RoutedEventArgs e) { if (updates != null) await updates.CheckNowAsync(); }
+    private void SkipUpdate(object sender, RoutedEventArgs e) => updates?.Skip();
+    private void LaterUpdate(object sender, RoutedEventArgs e) => updates?.Later();
+    private void ViewRelease(object sender, RoutedEventArgs e)
+    {
+        // The address comes from a signed manifest and is re-checked against this repository's release pages.
+        if (updates?.Notice is not { } release) return;
+        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(release.ReleaseUrl) { UseShellExecute = true })?.Dispose(); }
+        catch (Exception exception) when (exception is System.ComponentModel.Win32Exception or InvalidOperationException)
+        { MessageBox.Show(this, "Open " + release.ReleaseUrl + " in your browser.", "PC Remote update"); }
     }
     public void ShowUpdating() { host = null; Status.Text = "Updating secure connection…"; StatusDot.Fill = (Brush)FindResource("MutedBrush"); PairQr.Source = null; QrPlaceholder.Visibility = Visibility.Visible; PairLink.Text = "Updating connection address…"; }
     public void ShowFailure(string message) { Status.Text = "Setup failed"; StatusDot.Fill = new SolidColorBrush(Color.FromRgb(255, 181, 177)); NetworkNotice.Text = message; CertificateSettings.IsExpanded = true; }

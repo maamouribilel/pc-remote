@@ -47,6 +47,50 @@ internal sealed class UiChecks : IDisposable
         check(window.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text?.Contains("Keychain") == true), "shell explains secure storage/native setup requirement");
         Expander Section(Window owner, string header) => owner.GetVisualDescendants().OfType<Expander>().Single(e => Equals(e.Header, header));
         check(!Section(window, "Permissions & platform setup").IsExpanded, "permissions section is not opened just because no host is running yet");
+        // Update banner and Preferences group, driven by an in-memory check (never GitHub).
+        check(!window.GetVisualDescendants().OfType<Border>().Any(b => AutomationProperties.GetAutomationId(b) == "update-banner" && b.IsVisible)
+            && !window.GetVisualDescendants().OfType<CheckBox>().Any(c => AutomationProperties.GetAutomationId(c) == "update-automatic"), "a shell without an update service shows no update banner or settings");
+        var updateDirectory = Path.Combine(Path.GetTempPath(), "PcDesktopUpdates-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var offered = new PcController.Host.UpdateRelease("9.9.9", "https://github.com/maamouribilel/pc-remote/releases/tag/v9.9.9", "Fixture release notes.", true, DateTimeOffset.UtcNow);
+            var checks = 0;
+            Task<PcController.Host.UpdateResult> Offer(Version _, CancellationToken __) { Interlocked.Increment(ref checks); return Task.FromResult(new PcController.Host.UpdateResult(PcController.Host.UpdateOutcome.Available, offered)); }
+            using (var updates = new PcController.Host.UpdateService(Path.Combine(updateDirectory, "decline"), new Version(0, 4, 2), Offer))
+            {
+                var updateWindow = new MainWindow(controller, updates); updateWindow.Show(); Dispatcher.UIThread.RunJobs(); updateWindow.UpdateLayout();
+                Border Banner() => updateWindow.GetVisualDescendants().OfType<Border>().Single(b => AutomationProperties.GetAutomationId(b) == "update-banner");
+                TextBlock UpdateText(string id) => updateWindow.GetVisualDescendants().OfType<TextBlock>().Single(t => AutomationProperties.GetAutomationId(t) == id);
+                check(Banner().IsVisible && Find(updateWindow, "update-consent-on").IsEffectivelyVisible && Find(updateWindow, "update-consent-off").IsEffectivelyVisible
+                    && !Find(updateWindow, "update-view").IsEffectivelyVisible && UpdateText("update-title").Text == "Check for PC Remote updates automatically?" && checks == 0,
+                    "first launch asks once whether to check automatically, before any request");
+                Find(updateWindow, "update-consent-off").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Dispatcher.UIThread.RunJobs();
+                check(!Banner().IsVisible && updates.Preferences.Automatic == false && File.Exists(Path.Combine(updateDirectory, "decline", "update-settings.json")) && checks == 0,
+                    "Don't check hides the question, is saved and sends nothing");
+                Section(updateWindow, "Preferences").IsExpanded = true; Dispatcher.UIThread.RunJobs(); updateWindow.UpdateLayout();
+                check(FindControl<CheckBox>(updateWindow, "update-automatic").IsChecked == false && Find(updateWindow, "update-check-now").IsEnabled, "Preferences show the saved choice and Check now");
+                Find(updateWindow, "update-check-now").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                var deadline = DateTime.UtcNow.AddSeconds(5);
+                while (!Banner().IsVisible && DateTime.UtcNow < deadline) { Dispatcher.UIThread.RunJobs(); Thread.Sleep(5); }
+                updateWindow.UpdateLayout();
+                check(checks == 1 && Banner().IsVisible && Banner().Classes.Contains("warning") && UpdateText("update-title").Text == "Security update: PC Remote 9.9.9 is available"
+                    && UpdateText("update-text").Text!.StartsWith("Fixture release notes.") && Find(updateWindow, "update-view").IsEffectivelyVisible && !Find(updateWindow, "update-consent-on").IsEffectivelyVisible,
+                    "Check now shows a verified security release with View release");
+                check(UpdateText("update-status").Text!.Contains("9.9.9 is available"), "the Preferences status names the available version");
+                Find(updateWindow, "update-skip").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Dispatcher.UIThread.RunJobs();
+                check(!Banner().IsVisible && updates.Preferences.Skipped == "9.9.9", "Skip this version hides the notice and is saved");
+                updateWindow.Close(); updateWindow.Close();
+            }
+            using (var updates = new PcController.Host.UpdateService(Path.Combine(updateDirectory, "accept"), new Version(0, 4, 2), Offer))
+            {
+                var updateWindow = new MainWindow(controller, updates); updateWindow.Show(); Dispatcher.UIThread.RunJobs();
+                Find(updateWindow, "update-consent-on").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Dispatcher.UIThread.RunJobs();
+                Section(updateWindow, "Preferences").IsExpanded = true; Dispatcher.UIThread.RunJobs(); updateWindow.UpdateLayout();
+                check(updates.Preferences.Automatic == true && FindControl<CheckBox>(updateWindow, "update-automatic").IsChecked == true, "Check automatically turns on the daily check");
+                updateWindow.Close(); updateWindow.Close();
+            }
+        }
+        finally { Directory.Delete(updateDirectory, true); }
         // The real Mac composition adds Keychain consent and permission onboarding; build it with a platform environment.
         var environment = new DesktopChecks.FakeEnvironment();
         var macController = new DesktopController("macos", new TrustedNetworks(() => []), observeNetworks: false, environment: environment);
@@ -137,6 +181,7 @@ internal sealed class UiChecks : IDisposable
 public sealed class FixtureApp : DesktopApp
 {
     protected override DesktopController CreateController() => FixtureRuntime.Create();
+    protected override PcController.Host.UpdateService? CreateUpdates() => null;
     protected override string WindowTitle => "PC Remote · LOOPBACK RECORDING FIXTURE";
     protected override void ShutdownCleanup() => FixtureRuntime.Cleanup();
 }
@@ -151,6 +196,8 @@ internal static class FixtureRuntime
 public sealed class NativeStartupCheckApp : DesktopApp
 {
     protected override DesktopController CreateController() => new(OperatingSystem.IsMacOS() ? "macos" : "linux", new TrustedNetworks());
+    // No GitHub request from an automated startup check.
+    protected override PcController.Host.UpdateService? CreateUpdates() => null;
     public override void OnFrameworkInitializationCompleted()
     {
         base.OnFrameworkInitializationCompleted();

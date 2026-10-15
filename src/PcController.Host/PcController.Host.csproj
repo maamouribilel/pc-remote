@@ -3,5 +3,7 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="../PcController.Core/PcController.Core.csproj" />
+    <!-- Trusted public keys for signed update manifests (AUTO_UPDATE_PLAN.md). -->
+    <EmbeddedResource Include="update-signing-keys.pub" LogicalName="PcController.Host.update-signing-keys.pub" />
   </ItemGroup>
 </Project>

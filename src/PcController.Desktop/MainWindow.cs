@@ -14,23 +14,33 @@ using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using PcController.Core;
+using PcController.Host;
 using QRCoder;
 using Path = Avalonia.Controls.Shapes.Path;
 
 namespace PcController.Desktop;
 
-// Layout mirrors the Windows companion: header with status and Settings, a two-column dashboard
-// (pairing QR/address | control, trusted network, paired devices), then expandable setup and
-// preferences. Automation IDs are stable; UI checks and assistive technology rely on them.
+// Layout mirrors the Windows companion: header with status and Settings, readiness and update
+// banners, a two-column dashboard (pairing QR/address | control, trusted network, paired devices),
+// then expandable setup and preferences. Automation IDs are stable; UI checks and assistive
+// technology rely on them.
 public sealed class MainWindow : Window
 {
     private static readonly string[] Profiles = ["General", "YouTube", "VLC", "Stremio"];
     private readonly DesktopController controller;
+    private readonly UpdateService? updates;
     private readonly bool mac;
     private readonly TextBlock status = Text("Setup required", "caption"), readiness = Text(""), networkNote = Text("", "caption"), pairingNote = Text("", "caption");
     private readonly TextBlock ownerStatus = Text("No active controller", "secondary"), networkState = Text("", "secondary"), footer = Text("", "caption");
     private readonly Ellipse statusDot = Dot(), ownerDot = Dot(), networkDot = Dot(), readinessDot = Dot();
     private readonly Border readinessBanner = new() { Classes = { "notice" } };
+    // Update banner: the one-time automatic-check question, then signed release notices.
+    private readonly Border updateBanner = new() { Classes = { "notice" }, IsVisible = false };
+    private readonly TextBlock updateTitle = Text("", "subheading"), updateText = Text("", "secondary"), updateStatus = Text("", "caption");
+    private readonly StackPanel consentButtons = new() { Orientation = Orientation.Horizontal, Spacing = 10 }, noticeButtons = new() { Orientation = Orientation.Horizontal, Spacing = 10 };
+    private readonly CheckBox updateAutomatic = new() { Content = "Check GitHub for new versions automatically (once a day)" };
+    private Button? updateCheckNow;
+    private bool renderingUpdates;
     private readonly TextBox address = new() { IsReadOnly = true }, pairing = new() { IsReadOnly = true, TextWrapping = TextWrapping.Wrap };
     private readonly TextBlock addressScope = Text("", "caption");
     private readonly Image qr = new() { Stretch = Stretch.Uniform };
@@ -63,9 +73,9 @@ public sealed class MainWindow : Window
     private VolumeState lastVolume = new(false);
     private PcController.Host.CompanionServer? renderedServer;
     public event Action? ExitRequested;
-    public MainWindow(DesktopController controller)
+    public MainWindow(DesktopController controller, UpdateService? updates = null)
     {
-        this.controller = controller; mac = controller.Platform == "macos";
+        this.controller = controller; this.updates = updates; mac = controller.Platform == "macos";
         Title = "PC Remote"; Width = 1020; Height = 860; MinWidth = 600; MinHeight = 520;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://PcController.Desktop/Assets/tray.ico")));
@@ -93,6 +103,20 @@ public sealed class MainWindow : Window
             Grid.SetColumn(permissionBanner, 2); bannerRow.Children.Add(permissionBanner);
         }
         readinessBanner.Child = bannerRow; readinessBanner.Margin = new Thickness(0, 0, 0, 16);
+
+        // Update banner (shown only with an update service): question first, notices afterwards.
+        // Text above the actions keeps the banner readable at the 600-pixel minimum width.
+        var updateRow = new StackPanel { Spacing = 4 };
+        updateRow.Children.Add(updateTitle); updateRow.Children.Add(updateText);
+        SetAccessibleName(updateTitle, "Update", "update-title"); SetAccessibleName(updateText, "Update details", "update-text");
+        var on = Button("Check automatically", () => updates?.SetAutomatic(true), "update-consent-on"); on.Classes.Add("primary");
+        consentButtons.Children.Add(Button("Don't check", () => updates?.SetAutomatic(false), "update-consent-off")); consentButtons.Children.Add(on);
+        var view = Button("View release", () => _ = OpenRelease(), "update-view"); view.Classes.Add("primary");
+        noticeButtons.Children.Add(Button("Later", () => updates?.Later(), "update-later"));
+        noticeButtons.Children.Add(Button("Skip this version", () => updates?.Skip(), "update-skip")); noticeButtons.Children.Add(view);
+        var updateActions = new Panel { HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 8, 0, 0), Children = { consentButtons, noticeButtons } };
+        updateRow.Children.Add(updateActions);
+        updateBanner.Child = updateRow; AutomationProperties.SetAutomationId(updateBanner, "update-banner");
 
         // Pair your phone.
         var pair = new StackPanel();
@@ -249,7 +273,18 @@ public sealed class MainWindow : Window
         app.Children.Add(Spaced(quit, 8, 0));
         app.Children.Add(Text("The menu-bar or tray icon also offers Open, Pause/Resume, Release input and Exit.", "caption"));
 
-        preferenceSections = [Group(pointer), Group(apps), Group(audio), Group(power), Group(app)];
+        var updateSection = new StackPanel { Spacing = 10 };
+        updateSection.Children.Add(Text("Updates", "subheading"));
+        updateSection.Children.Add(Text("Checks only ask GitHub whether a newer signed release exists; nothing is downloaded or installed. GitHub sees this computer's IP address; no device, pairing or setting information is sent.", "caption"));
+        SetAccessibleName(updateAutomatic, "Check for updates automatically", "update-automatic");
+        updateAutomatic.IsCheckedChanged += (_, _) => { if (!renderingUpdates && updates != null && (updateAutomatic.IsChecked == true) != (updates.Preferences.Automatic == true)) updates.SetAutomatic(updateAutomatic.IsChecked == true); };
+        updateSection.Children.Add(updateAutomatic);
+        updateCheckNow = Button("Check now", () => _ = updates?.CheckNowAsync(), "update-check-now"); updateCheckNow.HorizontalAlignment = HorizontalAlignment.Left;
+        updateSection.Children.Add(updateCheckNow);
+        SetAccessibleName(updateStatus, "Update status", "update-status"); updateSection.Children.Add(updateStatus);
+
+        preferenceSections = updates == null ? [Group(pointer), Group(apps), Group(audio), Group(power), Group(app)]
+            : [Group(pointer), Group(apps), Group(audio), Group(power), Group(updateSection), Group(app)];
         preferenceGrid = new Grid { ColumnSpacing = 16, RowSpacing = 16 };
         foreach (var section in preferenceSections) preferenceGrid.Children.Add(section);
         preferencesExpander = Section("Preferences", preferenceGrid);
@@ -260,17 +295,19 @@ public sealed class MainWindow : Window
         var preview = Text("Experimental macOS/Linux preview · Windows remains the primary platform. Native control is reported separately from pairing and transport.", "caption");
         preview.TextAlignment = TextAlignment.Center; body.Children.Add(preview);
         scroll = new ScrollViewer { Content = body, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Padding = new Thickness(0, 0, 10, 0) };
-        var root = new Grid { RowDefinitions = new RowDefinitions("Auto,Auto,*,Auto"), Margin = new Thickness(24, 20, 14, 14) };
-        header.Margin = new Thickness(0, 0, 10, 18); readinessBanner.Margin = new Thickness(0, 0, 10, 16);
+        var root = new Grid { RowDefinitions = new RowDefinitions("Auto,Auto,Auto,*,Auto"), Margin = new Thickness(24, 20, 14, 14) };
+        header.Margin = new Thickness(0, 0, 10, 18); readinessBanner.Margin = new Thickness(0, 0, 10, 16); updateBanner.Margin = new Thickness(0, 0, 10, 16);
         root.Children.Add(header);
         Grid.SetRow(readinessBanner, 1); root.Children.Add(readinessBanner);
-        Grid.SetRow(scroll, 2); root.Children.Add(scroll);
-        Grid.SetRow(footer, 3); footer.Margin = new Thickness(0, 12, 10, 0); root.Children.Add(footer);
+        Grid.SetRow(updateBanner, 2); root.Children.Add(updateBanner);
+        Grid.SetRow(scroll, 3); root.Children.Add(scroll);
+        Grid.SetRow(footer, 4); footer.Margin = new Thickness(0, 12, 10, 0); root.Children.Add(footer);
         Content = root;
         ApplyLayout(false);
         SizeChanged += (_, _) => { var next = ClientSize.Width < 880; if (next != narrow) { ApplyLayout(next); Render(); } };
 
         controller.Changed += Changed; controller.ApprovalRequested += Approval;
+        if (updates != null) updates.Changed += Changed;
         Closing += (_, e) =>
         {
             if (exiting) return;
@@ -282,7 +319,7 @@ public sealed class MainWindow : Window
             }
             else RequestExit();
         };
-        Closed += (_, _) => { timer?.Stop(); controller.Changed -= Changed; controller.ApprovalRequested -= Approval; qrBitmap?.Dispose(); };
+        Closed += (_, _) => { timer?.Stop(); controller.Changed -= Changed; controller.ApprovalRequested -= Approval; if (updates != null) updates.Changed -= Changed; qrBitmap?.Dispose(); };
         timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         timer.Tick += async (_, _) =>
         {
@@ -313,12 +350,14 @@ public sealed class MainWindow : Window
         if (compact) { Place(pairingCard, 0, 0); Place(controlCard, 1, 0); Place(networkCard, 2, 0); Place(devicesCard, 3, 0); }
         else { Place(pairingCard, 0, 0, 3); Place(controlCard, 0, 1); Place(networkCard, 1, 1); Place(devicesCard, 2, 1); }
         preferenceGrid.ColumnDefinitions = new ColumnDefinitions(compact ? "*" : "*,*");
-        preferenceGrid.RowDefinitions = new RowDefinitions(compact ? "Auto,Auto,Auto,Auto,Auto" : "Auto,Auto,Auto");
+        var rows = compact ? preferenceSections.Length : (preferenceSections.Length + 1) / 2;
+        preferenceGrid.RowDefinitions = new RowDefinitions(string.Join(",", Enumerable.Repeat("Auto", rows)));
         for (var i = 0; i < preferenceSections.Length; i++)
         {
             var section = preferenceSections[i];
-            var last = i == preferenceSections.Length - 1;
-            Grid.SetRow(section, compact ? i : i / 2); Grid.SetColumn(section, compact ? 0 : i % 2); Grid.SetColumnSpan(section, !compact && last ? 2 : 1);
+            // An odd last section spans both columns in the wide layout.
+            var alone = i == preferenceSections.Length - 1 && preferenceSections.Length % 2 == 1;
+            Grid.SetRow(section, compact ? i : i / 2); Grid.SetColumn(section, compact ? 0 : i % 2); Grid.SetColumnSpan(section, !compact && alone ? 2 : 1);
         }
     }
     private async Task AddApp()
@@ -361,6 +400,39 @@ public sealed class MainWindow : Window
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { readiness.Text = "Public profile could not be saved. Check the destination and retry."; }
     }
     private void Changed() => Dispatcher.UIThread.Post(Render);
+    private async Task OpenRelease()
+    {
+        // The address comes from a signed manifest and is re-checked against this repository's release pages.
+        if (updates?.Notice is not { } release || TopLevel.GetTopLevel(this)?.Launcher is not { } launcher) return;
+        try { if (!await launcher.LaunchUriAsync(new Uri(release.ReleaseUrl))) Set(updateText, "Open " + release.ReleaseUrl + " in your browser."); }
+        catch (Exception e) when (e is InvalidOperationException or IOException or UriFormatException) { Set(updateText, "Open " + release.ReleaseUrl + " in your browser."); }
+    }
+    private void RenderUpdates()
+    {
+        if (updates == null) return;
+        renderingUpdates = true;
+        try
+        {
+            var notice = updates.Notice;
+            updateBanner.IsVisible = updates.NeedsConsent || notice != null;
+            consentButtons.IsVisible = updates.NeedsConsent && notice == null; noticeButtons.IsVisible = notice != null;
+            updateBanner.Classes.Set("warning", notice?.Security == true); updateBanner.Classes.Set("ready", notice is { Security: false });
+            if (notice != null)
+            {
+                Set(updateTitle, (notice.Security ? "Security update: " : "") + $"PC Remote {notice.Version} is available");
+                Set(updateText, $"{notice.Summary} You have {UpdateService.Display(updates.Current)}. The release page lists the downloads, checksums and update steps for this computer.");
+            }
+            else if (updates.NeedsConsent)
+            {
+                Set(updateTitle, "Check for PC Remote updates automatically?");
+                Set(updateText, "PC Remote can ask GitHub once a day whether a newer version is published and tell you here. Nothing is downloaded or installed, and no device, pairing or setting information is sent; GitHub sees this computer's IP address. You can change this in Preferences.");
+            }
+            updateAutomatic.IsChecked = updates.Preferences.Automatic == true;
+            if (updateCheckNow != null) updateCheckNow.IsEnabled = !updates.Checking;
+            Set(updateStatus, updates.Status);
+        }
+        finally { renderingUpdates = false; }
+    }
     private async Task RecoverEndedBackend()
     {
         if (await Confirm("Verify ended-session cleanup locally", "Use this only after the portal/display connection ended and Release input cannot reach it. Verify on this computer that every held key/button and GTK composition is cleared, using local input as needed. Confirmation retires unreachable tracking; it does not establish successful automatic cleanup. Wayland requires fresh consent; X11 requires app restart. Control remains paused.",
@@ -533,6 +605,7 @@ public sealed class MainWindow : Window
         if (!certificateShown && server != null && records.Length == 0) { certificateShown = true; certificateExpander.IsExpanded = true; }
         // Only a real permission/storage problem opens the section; a host that is still starting or a transient pause does not.
         if (!permissionsShown && (!controller.PermissionReady || !controller.StorageReady)) { permissionsShown = true; permissionsExpander.IsExpanded = true; }
+        RenderUpdates();
         RenderFooter();
     }
     private static string Grouped(string hex) => string.Join(" ", Enumerable.Range(0, hex.Length / 2).Select(i => hex.Substring(i * 2, 2)));

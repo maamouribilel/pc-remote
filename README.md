@@ -67,6 +67,8 @@ You need a signed-in computer, a browser device on the same trusted network, and
 
 Remembered browser authentication lasts 30 days and can be revoked immediately. One browser owns input at a time; **Take over control** explicitly replaces it. A certificate warning needs to be resolved before use. After an address change, open the companion's new address.
 
+**Stay up to date.** Published versions (0.4.2 and earlier) don't check for updates themselves. Choose **Watch → Custom → Releases** on this repository to get an email for each new version.
+
 **Updating a Mac?** Keep the app in its stable location, use **Allow Keychain access after update…** for the existing key, and review Accessibility before approving the network again. [Update and recovery steps](docs/macos-setup.md).
 
 <a id="walkthrough"></a>

@@ -13,6 +13,7 @@ For every new version, complete [AGENTS.md](https://github.com/maamouribilel/pc-
 - [ ] Matching source/documentation is committed and pushed; that commit's `final` dispatch (every suite on Windows, macOS and Linux) passed; bundled runtime advisories were rechecked on release day.
 - [ ] Final assets come from `--final`/the CI `final` dispatch at that exact commit; the release has installer, ZIP, any macOS/Ubuntu archives and manifests, one combined checksum file, accurate notes and preview/stable status.
 - [ ] Public tag/commit and download URLs, sizes, and SHA-256 digests are verified before declaring completion.
+- [ ] From the first release that ships update checks: `update.json` was created from the verified assets, signed locally with the offline key (never in CI), attached with `update.json.sig`, and the public copies pass `scripts/update-manifest.py verify`.
 
 ## Manual acceptance
 
