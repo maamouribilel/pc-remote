@@ -153,3 +153,11 @@ Attach `update.json` and `update.json.sig` to the release along with the other a
   - The Inno Pascal changes are compiled only when the Windows CI job builds the provisional installer; that job hasn't run for this change.
   - The WPF banner, the Windows-only lock check, a real silent install with `--exit` and relaunch, and Defender/SmartScreen behavior for an unsigned installer run from `%LOCALAPPDATA%` have not run on Windows.
   - A real installed N → N+1 update can only happen once two releases contain Phase 2 (the first must be installed by hand).
+
+### 2026-10-15 — first hosted CI run for Phases 1–2
+
+- [Run 38801590541](https://github.com/maamouribilel/pc-remote/actions/runs/38801590541) (manual dispatch, not `final`) on `61398aa`: all 8 jobs succeeded.
+- Windows (`validation`): every Windows test-suite invocation ran the update checks. They include the first Windows pass of "the verified installer cannot be changed or deleted while it is held", the installed-copy rules and the `PCRemote.iss` checks.
+- The provisional installer compiled with Inno Setup 7.1.0. `package.ps1` checks the compiler's exit code and then hashed the generated `setup.exe`, so the new `UpdateRelaunch` Pascal code compiles. The Windows package content checks passed.
+- `portable (windows-latest)`: 351 checks. This is 353 minus the three Unix-only file-mode and symlink checks, plus the Windows-only lock check. macOS and Ubuntu ran 353, and the manifest tool self-test passed on both.
+- Still pending, because CI does not install or run the app: a real silent install with `--exit` and relaunch, the WPF banner on screen, Defender/SmartScreen behavior, and a real installed N → N+1 update.
