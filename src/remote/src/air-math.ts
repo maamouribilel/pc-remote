@@ -1,10 +1,13 @@
 // Air pointer motion pipeline. Pure functions with no DOM access, so a page-less spec can test them.
-// Device frame (W3C DeviceMotion): x = right, y = top of the screen, z = out of the screen toward the
-// user. rotationRate is alpha about z, beta about x, gamma about y, in °/s with the right-hand rule.
-// accelerationIncludingGravity reads about (0, 0, +9.8) m/s² for a phone lying face-up per the
-// specification; some platforms report the opposite sign, so the "up" sign is resolved per hold from
-// the grip (resolveGravitySign). Both output axes can also be inverted in the Air settings.
-// These conventions have not yet been measured on a physical phone (see AIR_POINTER_PLAN.md).
+// Device frame: x = right, y = top of the screen, z = out of the screen toward the user; rotation rates
+// follow the right-hand rule in °/s. rotationRate.alpha is the rotation rate about x, beta about y and
+// gamma about z (W3C Candidate Recommendation Draft 2025-02-12; WebKit, Chromium and Gecko all pass the
+// gyroscope's x/y/z in that order; older MDN text describing alpha as "about z" is stale and misled
+// version 0.4.0). accelerationIncludingGravity differs per platform: the specification and Android
+// report (0, 0, +9.8) m/s² for a phone lying face-up, while WebKit on iOS reports gravity pointing toward
+// the ground (face-up z ≈ -9.8, measured 2026-10-15). The "up" sign is seeded per platform
+// (detectGravitySign) and confirmed per hold from the grip (resolveGravitySign). Both output axes can
+// still be inverted in the Air settings.
 export type Vec3 = { x: number; y: number; z: number };
 export type MotionSample = {
   rotationRate: { alpha: number | null; beta: number | null; gamma: number | null } | null;
@@ -13,6 +16,13 @@ export type MotionSample = {
   interval?: number | null;
 };
 export type AirSettings = { speed: number; invertX: boolean; invertY: boolean };
+export type GravitySign = 1 | -1;
+// Every iOS browser uses WebKit's sensor implementation (gravity toward the ground); iPadOS 13+ presents a
+// Mac user agent with touch points. Everything else is assumed to follow the specification (+9.8 face-up).
+export function detectGravitySign(userAgent: string, platform: string, maxTouchPoints: number): GravitySign {
+  const ios = /\b(iPhone|iPad|iPod)\b/.test(userAgent) || (platform === 'MacIntel' && maxTouchPoints > 1);
+  return ios ? -1 : 1;
+}
 export const constants = {
   maxRate: 2000,                        // °/s; anything larger is a sensor spike
   minDt: 4, maxDt: 50,                  // ms between samples
@@ -20,7 +30,7 @@ export const constants = {
   gravityMin: 6, gravityMax: 14,        // m/s²; outside this band the phone is shaking, keep the estimate
   signConfidence: 4,                    // m/s² of projection needed to resolve the gravity sign
   rightAxisMin: 0.35,                   // below this (about 70° roll) keep the last screen-right axis
-  deadzone: 1.5,                        // °/s, subtracted rather than clamped
+  deadzone: 2,                          // °/s, subtracted after filtering (measured hand-held noise peaks ±4 °/s raw)
   minCutoff: 1, beta: 0.02, dCutoff: 1, // One-Euro filter
   basePxPerDeg: 40, accelStart: 20, accelEnd: 200, accelMax: 2,
   minSpeed: 0.5, maxSpeed: 2.5,
@@ -43,13 +53,15 @@ export function normalizeSettings(raw: unknown): AirSettings {
 export function sanitize(sample: MotionSample): { omega: Vec3; gravity: Vec3 | null } | null {
   const r = sample.rotationRate;
   if (!r || !finite(r.alpha) || !finite(r.beta) || !finite(r.gamma)) return null;
-  const omega = { x: r.beta, y: r.gamma, z: r.alpha };
+  const omega = { x: r.alpha, y: r.beta, z: r.gamma };
   if (magnitude(omega) > constants.maxRate) return null;
   const g = sample.gravity;
   return { omega, gravity: g && finite(g.x) && finite(g.y) && finite(g.z) ? { x: g.x, y: g.y, z: g.z } : null };
 }
 export function clampDt(dt: number | null | undefined, fallback?: number | null): number {
-  const value = finite(dt) && dt > 0 ? dt : finite(fallback) && fallback > 0 ? fallback : 16;
+  // iOS reports event.interval in seconds (0.0167); a sub-millisecond interval is never real, so treat it as seconds.
+  const interval = finite(fallback) && fallback > 0 ? (fallback < 1 ? fallback * 1000 : fallback) : null;
+  const value = finite(dt) && dt > 0 ? dt : interval ?? 16;
   return Math.min(constants.maxDt, Math.max(constants.minDt, value));
 }
 // Screen right/up in the device frame for a clockwise screen rotation (screen.orientation.angle).
@@ -89,13 +101,13 @@ export function project(omega: Vec3, up: Vec3 | null, screenRight: Vec3, lastRig
 export function softDeadzone(value: number, threshold: number = constants.deadzone) {
   return Math.abs(value) <= threshold ? 0 : value - Math.sign(value) * threshold;
 }
+// Rates start from rest when a hold begins, so the filter is seeded at zero rather than at the first sample.
 export class OneEuro {
-  private x: number | null = null;
+  private x = 0;
   private dx = 0;
   constructor(private readonly minCutoff: number = constants.minCutoff, private readonly beta: number = constants.beta, private readonly dCutoff: number = constants.dCutoff) {}
-  reset() { this.x = null; this.dx = 0; }
+  reset() { this.x = 0; this.dx = 0; }
   filter(value: number, dtSeconds: number) {
-    if (this.x === null) { this.x = value; this.dx = 0; return value; }
     const alpha = (cutoff: number) => 1 / (1 + 1 / (2 * Math.PI * cutoff * dtSeconds));
     this.dx += alpha(this.dCutoff) * ((value - this.x) / dtSeconds - this.dx);
     this.x += alpha(this.minCutoff + this.beta * Math.abs(this.dx)) * (value - this.x);
@@ -120,9 +132,10 @@ export class AirPipeline {
   private lastRight: Vec3 | null = null;
   private engagedAt = -Infinity;
   private first = true;
-  private sign: 1 | -1 = 1;
+  private sign: GravitySign;
   /** Degrees of rotation since the hold began, for tap classification. */
   rotation = 0;
+  constructor(gravitySign: GravitySign = 1) { this.sign = gravitySign; }
   reset() { this.gravity.reset(); this.lastTime = null; this.lastRight = null; this.engagedAt = -Infinity; this.rotation = 0; }
   engage(now: number, angle: number) {
     this.engagedAt = now; this.first = true; this.rotation = 0; this.lastRight = null;
@@ -143,8 +156,9 @@ export class AirPipeline {
     const { yaw, pitch, right } = project(clean.omega, up, axes.right, this.lastRight);
     this.lastRight = right;
     this.rotation += magnitude(clean.omega) * dt / 1000;
-    const yawRate = this.yaw.filter(softDeadzone(yaw), dt / 1000);
-    const pitchRate = pitch === null ? 0 : this.pitch.filter(softDeadzone(pitch), dt / 1000);
+    // Filter first, then the deadzone: raw noise peaks would otherwise leak through the deadzone as a slow random walk.
+    const yawRate = softDeadzone(this.yaw.filter(yaw, dt / 1000));
+    const pitchRate = pitch === null ? 0 : softDeadzone(this.pitch.filter(pitch, dt / 1000));
     if (now - this.engagedAt < constants.settleMs) return null; // pressing the pad moves the phone
     const dx = -gain(yawRate, dt, settings.speed) * (settings.invertX ? -1 : 1);
     const dy = -gain(pitchRate, dt, settings.speed) * (settings.invertY ? -1 : 1);

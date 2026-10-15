@@ -1,4 +1,4 @@
-import { AirPipeline, constants, isTap, normalizeSettings, type AirSettings, type MotionSample } from './air-math';
+import { AirPipeline, constants, detectGravitySign, isTap, normalizeSettings, type AirSettings, type MotionSample } from './air-math';
 type Pointer = {
   motion(dx: number, dy: number): void; click(): boolean; held(): boolean; release(): void;
   hook(callbacks: { reset?: () => void; enabled?: (value: boolean) => void }): void;
@@ -26,7 +26,8 @@ export function setupAirPointer(pointer: Pointer) {
   const invertX = document.getElementById('air-invert-x') as HTMLInputElement;
   const invertY = document.getElementById('air-invert-y') as HTMLInputElement;
   const modes = [...document.querySelectorAll<HTMLButtonElement>('#pointer-mode [data-mode]')];
-  const pipeline = new AirPipeline();
+  // iOS WebKit reports gravity pointing toward the ground, the opposite of the specification (measured 2026-10-15).
+  const pipeline = new AirPipeline(detectGravitySign(navigator.userAgent, navigator.platform, navigator.maxTouchPoints));
   let mode: Mode = 'touch', sensor: Sensor = 'idle';
   let enabled = false, subscribed = false, holding = false;
   let pointerId = -1, start = 0, travel = 0, lastSample = 0, notice = '';

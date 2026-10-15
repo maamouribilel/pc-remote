@@ -57,6 +57,7 @@ test('air pointer: permission states, hold-to-point, taps, release paths and dra
       window.dispatchEvent(new DeviceMotionEvent('devicemotion', { rotationRate: { ...w.__air.rate }, accelerationIncludingGravity: { ...w.__air.gravity }, interval }));
     }, interval); };
     w.__airStop = () => { clearInterval(w.__air.timer); w.__air.timer = 0; };
+    // rotationRate per the specification: alpha about x (tilt), beta about y (roll), gamma about z (turn).
     w.__airRate = (rate: Record<string, number>) => { w.__air.rate = { alpha: 0, beta: 0, gamma: 0, ...rate }; };
   });
   const rate = (value: Record<string, number>) => page.evaluate(r => (window as unknown as Record<string, any>).__airRate(r), value);
@@ -99,7 +100,7 @@ test('air pointer: permission states, hold-to-point, taps, release paths and dra
   await touch('touchStart', [{ id: 1, ...(await center()) }]);
   await expect(page.locator('#air-pad')).toHaveClass(/holding/);
   await expect(page.locator('#air-status')).toHaveText('Pointing');
-  await rate({ alpha: 60 });
+  await rate({ gamma: 60 });
   await page.waitForTimeout(400);
   await page.screenshot({ path: path.join(os.tmpdir(), 'pc-air-holding-390x700.png') });
   await rate({});
@@ -111,7 +112,7 @@ test('air pointer: permission states, hold-to-point, taps, release paths and dra
   expect(clicks()).toBe(0);
   // Motion without a hold sends nothing.
   before = await quiet();
-  await rate({ alpha: 90, beta: 90 }); await settle(); await rate({});
+  await rate({ gamma: 90, alpha: 90 }); await settle(); await rate({});
   expect(moves().length).toBe(before);
   // A tap clicks once and adds no movement.
   before = moves().length;
@@ -122,7 +123,7 @@ test('air pointer: permission states, hold-to-point, taps, release paths and dra
   // Aiming up moves up; Invert vertical flips it and the setting persists on the phone.
   before = moves().length;
   await touch('touchStart', [{ id: 1, ...(await center()) }]);
-  await rate({ beta: 60 }); await settle(); await rate({});
+  await rate({ alpha: 60 }); await settle(); await rate({});
   await touch('touchEnd', []);
   await expect.poll(() => moves().length).toBeGreaterThan(before + 5);
   sent = moves().slice(before);
@@ -137,7 +138,7 @@ test('air pointer: permission states, hold-to-point, taps, release paths and dra
   await expect(page.locator('#air-dialog')).toBeHidden();
   before = moves().length;
   await touch('touchStart', [{ id: 1, ...(await center()) }]);
-  await rate({ beta: 60 }); await settle(); await rate({});
+  await rate({ alpha: 60 }); await settle(); await rate({});
   await touch('touchEnd', []);
   await expect.poll(() => moves().length).toBeGreaterThan(before + 5);
   expect(moves().slice(before).every(m => m.y > 0)).toBe(true);
@@ -160,7 +161,7 @@ test('air pointer: permission states, hold-to-point, taps, release paths and dra
   await expect(page.locator('#air-pad')).not.toHaveClass(/holding/, { timeout: 2000 });
   await expect(page.locator('#air-hint')).toHaveText('Motion paused · hold again');
   before = await quiet();
-  await rate({ alpha: 60 }); await inject(); await settle();
+  await rate({ gamma: 60 }); await inject(); await settle();
   expect(moves().length).toBe(before);
   await touch('touchEnd', []);
   await rate({});
@@ -174,7 +175,7 @@ test('air pointer: permission states, hold-to-point, taps, release paths and dra
   await expect(page.locator('#keyboard-controls')).toBeVisible();
   await expect.poll(releases).toBeGreaterThan(released);
   before = await quiet();
-  await rate({ alpha: 60 }); await settle();
+  await rate({ gamma: 60 }); await settle();
   expect(moves().length).toBe(before);
   await touch('touchEnd', []);
   await page.evaluate(() => document.getElementById('tab-touchpad')!.click());
@@ -207,7 +208,7 @@ test('air pointer: permission states, hold-to-point, taps, release paths and dra
   await expect(page.locator('#state')).toHaveText('Connected securely');
   await expect(page.locator('#air-pad')).toHaveAttribute('data-state', 'ready');
   before = await quiet();
-  await rate({ alpha: 60 }); await settle(); await rate({});
+  await rate({ gamma: 60 }); await settle(); await rate({});
   expect(moves().length).toBe(before);
   // Drag: Start drag, hold and turn, End drag keeps the button order around the motion.
   await page.locator('#drag').click();
@@ -216,7 +217,7 @@ test('air pointer: permission states, hold-to-point, taps, release paths and dra
   await expect(page.locator('#air-hint')).toHaveText('Dragging · hold to move, then End drag');
   await expect.poll(() => events().includes('left:True')).toBe(true);
   await touch('touchStart', [{ id: 1, ...(await center()) }]);
-  await rate({ alpha: -40 }); await settle(); await rate({});
+  await rate({ gamma: -40 }); await settle(); await rate({});
   await touch('touchEnd', []);
   await page.locator('#drag').click();
   await expect.poll(() => events().includes('left:False')).toBe(true);
@@ -226,7 +227,7 @@ test('air pointer: permission states, hold-to-point, taps, release paths and dra
   expect(ordered.slice(down + 1, up).some(e => e.startsWith('move:') && Number(e.slice(5).split(',')[0]) > 0)).toBe(true);
   await expect(page.locator('#air-hint')).toHaveText('Hold to point · tap to click');
   // Sustained fast samples stay at one aggregate per frame, well under the PC's 180 messages/second.
-  await rate({ alpha: 30, beta: 10 }); await inject(4);
+  await rate({ gamma: 30, alpha: 10 }); await inject(4);
   await touch('touchStart', [{ id: 1, ...(await center()) }]);
   await page.waitForTimeout(200);
   before = moves().length; const started = Date.now();
