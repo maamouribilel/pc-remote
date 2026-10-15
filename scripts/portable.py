@@ -95,7 +95,7 @@ def fixture(configuration, platform_name="recording", mac=False):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['build', 'test', 'tls', 'browser', 'browser-capabilities', 'desktop-test', 'desktop', 'desktop-fixture', 'linux-test', 'linux-x11', 'linux-portal', 'linux-storage', 'mac-test', 'mac-storage', 'mac-smoke', 'mac-onboard', 'mac-tls', 'audit'])
+    parser.add_argument('action', choices=['build', 'test', 'tls', 'browser', 'browser-capabilities', 'remote-unit', 'desktop-test', 'desktop', 'desktop-fixture', 'linux-test', 'linux-x11', 'linux-portal', 'linux-storage', 'mac-test', 'mac-storage', 'mac-smoke', 'mac-onboard', 'mac-tls', 'audit'])
     parser.add_argument('--configuration', default='Release', choices=['Debug', 'Release'])
     args = parser.parse_args()
     if args.action == 'build':
@@ -135,12 +135,18 @@ def main():
             raise RuntimeError('Strict TLS acceptance requires Python 3.13+; older Python is not equivalent evidence.')
         with fixture(args.configuration, mac=args.action == 'mac-tls') as directory:
             run([sys.executable, 'tests/certificate-trust.py', str(directory / 'certificates/pc-remote-root.cer')])
+    elif args.action == 'remote-unit':
+        frontend()
+        run([NPM, 'test', '--', 'air-math.spec.ts'], ROOT / 'src/remote')  # page-less, no fixture or browser
     elif args.action == 'browser':
         frontend()
-        with fixture(args.configuration) as directory:
-            os.environ['PC_CONTROLLER_MOUSE_FIXTURE'] = str(directory / 'certificates/fixture.json')
-            os.environ['PC_CONTROLLER_BROWSER_TLS_BYPASS'] = '1'  # Explicit fixture UI mode only.
-            run([NPM, 'test', '--', 'mouse.spec.ts', 'connection.spec.ts'], ROOT / 'src/remote')
+        run([NPM, 'test', '--', 'air-math.spec.ts'], ROOT / 'src/remote')
+        # Each fixture issues one single-use pairing challenge, so the Air pointer spec gets its own instance.
+        for specs in (['mouse.spec.ts', 'connection.spec.ts'], ['air.spec.ts']):
+            with fixture(args.configuration) as directory:
+                os.environ['PC_CONTROLLER_MOUSE_FIXTURE'] = str(directory / 'certificates/fixture.json')
+                os.environ['PC_CONTROLLER_BROWSER_TLS_BYPASS'] = '1'  # Explicit fixture UI mode only.
+                run([NPM, 'test', '--', *specs], ROOT / 'src/remote')
     elif args.action == 'audit':
         frontend()
         run([NPM, 'audit', '--audit-level=low'], ROOT / 'src/remote')

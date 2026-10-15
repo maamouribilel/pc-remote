@@ -1,21 +1,26 @@
+import { quantize } from './air-math';
 export type Sender = (type: string, payload: object) => boolean;
 export function setupTouchpad(send: Sender, congested: () => boolean) {
   const pad = document.getElementById('touchpad')!;
+  const pads = [pad, document.getElementById('air-pad')!];
   const surface = document.getElementById('mouse-controls')!;
   const drag = document.getElementById('drag') as HTMLButtonElement;
   const hint = document.getElementById('pad-hint')!;
   const dragLabel = drag.querySelector('.button-label')!;
   let enabled = false, dragging = false, multiple = false;
   let moveX = 0, moveY = 0, scrollX = 0, scrollY = 0, frame = 0;
-  let start = 0, distance = 0;
+  let start = 0, distance = 0, lastFlush = -Infinity;
+  const hooks: { reset?: () => void; enabled?: (value: boolean) => void } = {};
+  const carry = (value: number) => Math.abs(value) < 0.005 ? 0 : value;
   const touches = new Map<number, { x: number; y: number }>();
   const active = new Set<number>();
   let blocked = false;
   function reset() {
     touches.clear(); multiple = false; dragging = false;
     moveX = moveY = scrollX = scrollY = 0; cancelAnimationFrame(frame); frame = 0;
-    drag.setAttribute('aria-pressed', 'false'); dragLabel.textContent = 'Start drag'; pad.classList.remove('dragging');
+    drag.setAttribute('aria-pressed', 'false'); dragLabel.textContent = 'Start drag'; for (const p of pads) p.classList.remove('dragging');
     hint.textContent = 'Move · tap · two-finger scroll';
+    hooks.reset?.();
   }
   function release() { if (enabled) send('input.releaseAll', {}); reset(); }
   function flush(transition = false): boolean {
@@ -24,10 +29,16 @@ export function setupTouchpad(send: Sender, congested: () => boolean) {
       if (transition) { release(); return false; }
       return true;
     }
-    for (const [type, x, y] of [['pointer.move', moveX, moveY], ['pointer.scroll', scrollX, scrollY]] as const) {
+    const now = performance.now();
+    // At most one aggregate every 8 ms (≤125 frames/s) keeps high-refresh phones under the PC's message budget.
+    if (!transition && now - lastFlush < 8) return true;
+    const move = [quantize(moveX), quantize(moveY)], scroll = [quantize(scrollX), quantize(scrollY)];
+    for (const [type, x, y] of [['pointer.move', move[0], move[1]], ['pointer.scroll', scroll[0], scroll[1]]] as const) {
       if ((x || y) && !send(type, { dx: x, dy: y })) { reset(); return false; }
     }
-    moveX = moveY = scrollX = scrollY = 0; return true;
+    // Two-decimal frames stay small; sub-0.01 remainders (slow air motion) carry over instead of being dropped.
+    moveX = carry(moveX - move[0]); moveY = carry(moveY - move[1]); scrollX = carry(scrollX - scroll[0]); scrollY = carry(scrollY - scroll[1]);
+    lastFlush = now; return true;
   }
   function schedule() {
     if (frame) return;
@@ -83,13 +94,20 @@ export function setupTouchpad(send: Sender, congested: () => boolean) {
   drag.addEventListener('click', () => {
     if (button('left', dragging ? 'up' : 'down')) {
       dragging = !dragging; drag.setAttribute('aria-pressed', String(dragging));
-      dragLabel.textContent = dragging ? 'End drag' : 'Start drag'; pad.classList.toggle('dragging', dragging);
+      dragLabel.textContent = dragging ? 'End drag' : 'Start drag'; for (const p of pads) p.classList.toggle('dragging', dragging);
       hint.textContent = dragging ? 'Dragging · move, then End drag' : 'Move · tap · two-finger scroll';
     }
   });
   document.getElementById('release')!.addEventListener('click', release);
   return {
-    setEnabled(value: boolean) { if (!value) { reset(); active.clear(); blocked = false; } enabled = value; surface.inert = !value; surface.classList.toggle('disabled', !value); },
+    setEnabled(value: boolean) { if (!value) { reset(); active.clear(); blocked = false; } enabled = value; surface.inert = !value; surface.classList.toggle('disabled', !value); hooks.enabled?.(value); },
     release, flush: () => flush(true), held: () => dragging,
+    // Air pointer hooks: relative pixel deltas join the same per-frame aggregate; a tap reuses the left click.
+    motion(dx: number, dy: number) {
+      if (!enabled) return;
+      moveX = Math.max(-500, Math.min(500, moveX + dx)); moveY = Math.max(-500, Math.min(500, moveY + dy)); schedule();
+    },
+    click: () => button('left', 'click'),
+    hook(callbacks: { reset?: () => void; enabled?: (value: boolean) => void }) { Object.assign(hooks, callbacks); },
   };
 }

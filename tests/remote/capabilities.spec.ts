@@ -30,6 +30,9 @@ for (const viewport of [{ width: 390, height: 700 }, { width: 1280, height: 800 
     await expect(page.locator('vite-error-overlay')).toHaveCount(0);
     if (platform === 'macos') await expect(page.locator('#left-click')).toBeEnabled();
     else await expect(page.locator('#left-click')).toBeDisabled();
+    // The Air pointer switch follows the same pointer capability as the touchpad buttons.
+    if (platform === 'macos') await expect(page.locator('#mode-air')).toBeEnabled();
+    else await expect(page.locator('#mode-air')).toBeDisabled();
     await page.locator('#tab-keyboard').click();
     await expect(page.locator('[data-modifier="Windows"]')).toHaveText(platform === 'linux' ? 'Super' : 'Command');
     await expect(page.locator('[data-modifier="Alt"]')).toHaveText(platform === 'linux' ? 'Alt' : 'Option');

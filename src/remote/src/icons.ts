@@ -14,6 +14,8 @@ const icons: Record<string, string> = {
   volumeUp: '<path d="M2 9h3l5-4v14l-5-4H2zM14 8a6 6 0 0 1 0 8M19 12h4M21 10v4"/>',
   mute: '<path d="M3 9h4l5-4v14l-5-4H3zM16 8l5 8M21 8l-5 8M3 3l18 18"/>',
   keyboard: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.5M10 9h.5M14 9h.5M18 9h.5M6 12h.5M10 12h.5M14 12h.5M18 12h.5M7 16h10"/>',
+  air: '<rect x="8" y="2" width="8" height="20" rx="2"/><path d="M4.5 8a7 7 0 0 0 0 8M19.5 8a7 7 0 0 1 0 8M1.5 5a12 12 0 0 0 0 14M22.5 5a12 12 0 0 1 0 14"/>',
+  tune: '<path d="M3 7h9M17 7h4M3 17h5M13 17h8"/><circle cx="14.5" cy="7" r="2.5"/><circle cx="10.5" cy="17" r="2.5"/>',
   touchpad: '<rect x="6" y="2" width="12" height="20" rx="6"/><path d="M12 3v6M7 10h10"/>',
   leftClick: '<rect x="6" y="2" width="12" height="20" rx="6"/><path d="M12 3v7M7 10h10"/><path fill="currentColor" stroke="none" d="M11 3a5 5 0 0 0-4 5v1h4z"/>',
   rightClick: '<rect x="6" y="2" width="12" height="20" rx="6"/><path d="M12 3v7M7 10h10"/><path fill="currentColor" stroke="none" d="M13 3a5 5 0 0 1 4 5v1h-4z"/>',

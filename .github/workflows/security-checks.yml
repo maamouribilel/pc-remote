@@ -52,12 +52,13 @@ jobs:
         run: python scripts/portable.py linux-test
       - name: Desktop shell host and headless UI workflows
         run: python scripts/portable.py desktop-test
-      - name: Platform-aware browser checks
+      - name: Platform-aware browser checks and Air pointer math
         shell: bash
         run: |
           cd src/remote
           npx playwright install --with-deps chromium
           cd ../..
+          python scripts/portable.py remote-unit
           python scripts/portable.py browser-capabilities
       - name: Strict TLS positive and negative interoperability
         run: python scripts/portable.py tls

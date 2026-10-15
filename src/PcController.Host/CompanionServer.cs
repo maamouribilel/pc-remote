@@ -106,6 +106,8 @@ public sealed partial class CompanionServer : IAsyncDisposable
             { context.Response.StatusCode = 403; return; }
             context.Response.Headers.CacheControl = "no-store";
             context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+            // No Permissions-Policy header: the remote's Air pointer reads devicemotion at the top level. If one is
+            // ever added it must keep accelerometer and gyroscope for 'self' (tests/remote/air.spec.ts checks this).
             context.Response.Headers["Content-Security-Policy"] = $"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' wss://{host}; img-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
             context.Response.Headers["Referrer-Policy"] = "no-referrer";
             await next(context);

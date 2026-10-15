@@ -1,6 +1,7 @@
 import { readCapabilities, renderLabels, supports, unavailable, labels, type Capabilities } from './capabilities';
 import './style.css';
 import { setupTouchpad } from './touchpad';
+import { setupAirPointer } from './air-pointer';
 import { setupKeyboard } from './keyboard';
 import { setupMedia } from './media';
 import { setupTabs } from './tabs';
@@ -43,6 +44,7 @@ function sendControl(type: string, payload: object): number | false {
   return seq;
 }
 const controls = setupTouchpad((type, payload) => Boolean(sendControl(type, payload)), () => (socket?.bufferedAmount ?? 0) > 16384);
+setupAirPointer(controls);
 const keyboard = setupKeyboard((type, payload) => controls.flush() ? sendControl(type, payload) : false, controls.release);
 const media = setupMedia((type, payload) => controls.flush() ? sendControl(type, payload) : false, controls.release);
 const tabs = setupTabs(controls.release);
