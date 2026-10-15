@@ -1,6 +1,6 @@
 # Current limitations
 
-Current public release: **0.4.2 preview**. Windows is the primary platform; macOS and Ubuntu are experimental. This page states current limits first. Dated roadmap notes below describe earlier stages and are retained as history.
+Current public release: **0.4.3 preview**. Windows is the primary platform; macOS and Ubuntu are experimental. This page states current limits first. Dated roadmap notes below describe earlier stages and are retained as history.
 
 ## Connection and trust
 
@@ -35,7 +35,7 @@ Mac/Ubuntu login starts paused with fresh network approval and Wayland consent w
 
 All downloads lack distribution signing. Windows may show SmartScreen/Unknown publisher. Mac packages have an ad-hoc seal, without Developer ID or notarization; updates may require the explicit existing-Keychain approval and Accessibility review. There is no Linux distribution signature.
 
-Published versions (0.4.2 and earlier) never check for updates; watch the repository's releases on GitHub. The opt-in update notice in source is not yet released. On macOS, Ubuntu and the Windows portable ZIP it only notifies; a Windows installer copy can also download a verified update and restart into it, which has not yet been run on Windows.
+From 0.4.3 the companion can show opt-in update notices; 0.4.2 and earlier never check, so update them by hand once. On macOS, Ubuntu and the Windows portable ZIP the notice only links to the release; a Windows installer copy can also download a verified update and restart into it, which has passed hosted Windows checks but has not yet run on a physical PC. Updates need GitHub to be reachable; there is no other update source.
 
 Windows native input/audio/launcher/power and iPhone results are historical 0.2.x evidence; 0.3.x/0.4.x physical Windows installation/phone revalidation remains pending. macOS Apple Silicon has native and iPhone evidence on one Mac; Intel hardware, installed-current-version lifecycle and broader device coverage remain pending. Ubuntu has isolated automated evidence; real GNOME X11/Wayland desktop acceptance remains pending.
 
@@ -50,7 +50,7 @@ The text below records earlier milestones. Statements such as a feature being un
 
 # First-release limits
 
-Current public preview: **0.4.2** (Windows companion plus experimental macOS/Ubuntu archives). It bundles .NET 10.0.13 from the 2026-10-13 security release; 0.2.1 bundled the affected 10.0.12 runtime. It fixes the shared HTTP-budget and late media-authorization issues in 0.2.0; upgrade older builds. Automated dependency/security checks cannot guarantee absence of unknown bugs. Trusted-network, trusted-browser, certificate, and manual acceptance limits below still apply. See [security policy](../.github/SECURITY.md) and [current release evidence](release-evidence.md#version-021--security-hardening-2026-10-12).
+Current public preview: **0.4.3** (Windows companion plus experimental macOS/Ubuntu archives). It bundles .NET 10.0.13 from the 2026-10-13 security release; 0.2.1 bundled the affected 10.0.12 runtime. It fixes the shared HTTP-budget and late media-authorization issues in 0.2.0; upgrade older builds. Automated dependency/security checks cannot guarantee absence of unknown bugs. Trusted-network, trusted-browser, certificate, and manual acceptance limits below still apply. See [security policy](../.github/SECURITY.md) and [current release evidence](release-evidence.md#version-021--security-hardening-2026-10-12).
 
 - Trusted local network and a signed-in interactive desktop session only (Windows, macOS or Ubuntu). No internet routing, Bluetooth, Wake-on-LAN, screen streaming, file/clipboard transfer, arbitrary commands, simultaneous controllers or native phone apps; the remote is a browser page. Version 0.2.0 can open PC-configured executables, set Windows output volume, and request Sleep/Restart/Shut down after confirmation and a 30-second countdown.
 - Launcher focus is subject to Windows foreground activation restrictions; if focus is denied, the existing app flashes and the phone advises selecting it on the PC. Launcher buttons do not navigate to a video or start playback automatically. The volume slider controls the current Windows output, separately from app-specific volume; moving it unmutes Windows. Output-device switching is not included.

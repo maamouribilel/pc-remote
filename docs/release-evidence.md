@@ -919,3 +919,29 @@ Observed local checks:
 - `scripts/check-release-docs.ps1`, `git diff --check` and the staged diff check passed. Gitleaks **8.30.1** scanned the staged documentation/media before commit and found no leaks; binary screenshots were also visually inspected and checked for embedded metadata.
 
 No new physical-phone, Android/iPad/Firefox, native input/audio/player/login/power, clean-account/reboot/uninstall, macOS Intel or real Ubuntu/GNOME acceptance was performed by this documentation refresh. Air sensor samples in this capture are synthetic; historical iPhone flat-grip direction evidence remains separate. During this work, upstream documentation commit `08ed1c4` added the installed 0.4.2 paired-iPhone check across ten peer-to-peer bursts over twelve minutes, with the user reporting continued control and reconnection after auto-lock. That entry is preserved above and incorporated into current user-facing status. Longer sessions and other Macs remain unverified. Published binaries and tags are unchanged.
+
+## Version 0.4.3 — update notices and Windows Restart to update (2026-10-15)
+
+Feature release of the companions; the phone remote and the protocol (v1) are unchanged. It ships Phase 1 (`e43b188`) and Phase 2 (`61398aa`) of [AUTO_UPDATE_PLAN.md](../AUTO_UPDATE_PLAN.md):
+- **Every companion:** a one-time question, then opt-in update checks that read only the GitHub release list and a release's `update.json`/`update.json.sig`, accept a release only when the manifest verifies against the offline ECDSA P-256 release key embedded from `src/PcController.Host/update-signing-keys.pub`, and show a banner with **View release**, **Skip this version** and **Later**.
+- **Windows installer copies only:** **Download update** checks the installer's exact signed size and SHA-256 and keeps the file locked until the installer starts. **Restart to update** (no controlling phone, pending power action or open pairing approval) pauses control, releases input and runs the installer silently. The installer closes the companion with `--exit` and reopens it through the new `UpdateRelaunch` step.
+- Versions up to 0.4.2 have no update check, so 0.4.3 is installed by hand. It is also the first release to attach its own signed manifest.
+
+**Hosted run before the release commit:** the manual (non-final) dispatch [38801590541](https://github.com/maamouribilel/pc-remote/actions/runs/38801590541) on `61398aa` passed all 8 jobs. The Windows suite ran the update checks, including the Windows-only check that the verified installer can't be changed or deleted while held. The provisional installer compiled with the `UpdateRelaunch` Pascal code. Details are in the plan's execution log.
+
+**Local results on the release source (macOS 27.0 Apple Silicon, pinned .NET 10.0.402 and Node 24.21.0; no companion was running and port 8443 was free, so no installed app was stopped)**
+- `portable.py build` (Release): `--package-info` of the built shell reports `0.4.3` (`0.4.3+9460ccd…` from the uncommitted release tree) with .NET 10.0.13.
+- Shared portable **353**, including 81 update checks (feed, signature, tampering, redirects, limits, stalled bodies, preferences, verified downloads, install stages, installed-copy rules and the `PCRemote.iss` entries). Also Mac adapter **70**, Linux adapter **81** and desktop **100** (8 update-banner checks).
+- `portable.py browser`: Air pointer math **19**, connection and touch **6**, `air.spec.ts` **1**, on the real loopback fixture, run in sequence on 8443. `browser-capabilities`: recording compatibility (1), then the macOS, Linux and unavailable fixtures (2 each).
+- Strict TLS with Python 3.13.16: `tls` and `mac-tls` pass.
+- npm/NuGet audits: no advisories. Bundled runtime advisory feed (`audit-runtime.py`, anonymous): no matching advisories for 10.0.13.
+- `scripts/update-manifest.py selftest`: round trip plus six rejections passed.
+- Gitleaks 8.30.1 over the 283 tracked files reported one `generic-api-key` match: the update tests' `ScriptKey`. That value is the SubjectPublicKeyInfo of the throwaway key used to sign the cross-check fixture; its private key was deleted. The line is now marked `gitleaks:allow`, and a rescan found no leaks. The same public value is already in the pushed history at `e43b188`.
+- Provisional Apple Silicon candidate (`package-macos.py`, then `check-package.py --rid osx-arm64`): 476 inventoried files, checksum and self-contained read-only startup passed (`0.4.3`, .NET 10.0.13). Compared with the published 0.4.2 manifest, the differences are the candidate marker and the guides refreshed after 0.4.2 (`docs/demo.md`, `docs/development.md`, `docs/assets/v0.4.2/*`).
+- `check-release-docs.ps1` (portable PowerShell): passed for v0.4.3 with this entry; the `-BaseRef` comparison runs on the release commit.
+- Not run locally: the Windows suites, the native Linux suites and Windows packaging (the `final` dispatch runs them).
+
+**Not established before publication**
+- The `final` dispatch for the release commit, the final assets, the locally signed `update.json`/`update.json.sig` and public verification: recorded in a publication entry once they happen.
+- **Restart to update on a physical Windows PC:** silent install, `--exit`, relaunch and Defender/SmartScreen behavior for an unsigned installer started from `%LOCALAPPDATA%`. Also untested: update checks behind a proxy, the tray balloon and menu-bar item on real desktops, and a real installed N → N+1 update (0.4.2 copies can't see 0.4.3; a test build of this source can).
+- Every earlier gap remains: Windows installation on a physical PC, the Air pointer beyond the flat grip, a real Ubuntu desktop, macOS Intel hardware, and phone/LAN use beyond the one Mac used for these checks.

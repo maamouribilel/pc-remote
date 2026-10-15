@@ -2,7 +2,7 @@
 
 Created: 2026-10-15. Baseline at creation: app version **0.4.2**, commit `b1bd7b8`, public [v0.4.2 preview](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.2).
 
-This plan has four phases. Phase 1 (update notices) and Phase 2 (Windows **Restart to update**) are implemented in source but **not yet released**; Phase 2 has not run on Windows. Phases 3–4 are still only a plan. Record actual results in the execution log at the end. A check that has not been run on real hardware stays **Pending**.
+This plan has four phases. Phase 1 (update notices) and Phase 2 (Windows **Restart to update**) ship in **0.4.3** (prepared on 2026-10-15; publication pending authorization). Phase 2 has passed hosted Windows checks but has not run on a physical PC. Phases 3–4 are still only a plan. Record actual results in the execution log at the end. A check that has not been run on real hardware stays **Pending**.
 
 ## The problem
 
@@ -60,7 +60,7 @@ The companion rejects a manifest if the schema isn't 1, the product is wrong, th
 
 Candidates are checked in descending version order. A release without `update.json` is skipped. If a newer release fails verification and nothing newer verifies, the companion reports "could not be verified" and offers nothing. A verified older-but-still-newer release is still offered.
 
-## Release process additions (from the first release that ships Phase 1)
+## Release process additions (since 0.4.3)
 
 After the final assets are downloaded, checked and merged into `SHA256SUMS.txt`, and before `gh release create`:
 
@@ -76,7 +76,7 @@ Attach `update.json` and `update.json.sig` to the release along with the other a
 
 ## Phases
 
-### Phase 1 — signed update notices (Windows, macOS, Ubuntu) — implemented in source, unreleased
+### Phase 1 — signed update notices (Windows, macOS, Ubuntu) — in 0.4.3
 
 - Shared Host: `UpdateChecker` (feed, redirects, limits, signature, manifest validation) and `UpdateService` (preferences, one-time consent, 45-second startup delay then every 24 hours, Check now, Skip this version, Later).
 - Windows WPF: an update banner under the header (consent, then notices), an **Updates** section in Preferences, an **Update available…** tray menu item and one tray balloon per version while the companion runs (a cached notice is announced again after a restart until it is skipped or installed).
@@ -85,7 +85,7 @@ Attach `update.json` and `update.json.sig` to the release along with the other a
 - Checks: portable update checks (signature, tampering, wrong key, version/tag mismatch, redirects to other hosts, size limits, drafts and malformed tags, preference persistence and corruption) and headless desktop UI checks. All use in-memory handlers, never the network.
 - **Pending acceptance:** a real installed build of version N seeing a real signed release N+1 on Windows, macOS and Ubuntu; the tray balloon on Windows; the menu-bar item on macOS; behavior behind a proxy.
 
-### Phase 2 — "Restart to update" on Windows (installer installs only) — implemented in source, unreleased, not run on Windows
+### Phase 2 — "Restart to update" on Windows (installer installs only) — in 0.4.3, not yet run on a physical PC
 
 - **Download update** (only on that click) re-reads and re-verifies the release's signed `update.json`, takes its `win-x64`/`installer` entry, and streams that file from the release download URL (GitHub hosts only) into `%LOCALAPPDATA%\PcController\updates\<name>.partial`. It checks the exact signed size and SHA-256 while streaming, fails if no data arrives for 60 seconds, then renames the file and reopens it read-only with read-only sharing. It hashes again through that handle and keeps the handle open until the installer starts, so the checked file can't be changed, renamed or deleted in between. Cancel and every failure remove the partial file.
 - **Restart to update** is offered only when no phone is in control, no power countdown is pending and no pairing approval is open. It first pauses control and releases held input, and stops if that fails. It then runs `<installer> /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /relaunch=1 /LOG="%LOCALAPPDATA%\PcController\updates\install.log"`. The installer's `PrepareToInstall` closes the companion with `--exit`. The firewall helper doesn't run on silent installs (`Check: not WizardSilent`).
@@ -152,7 +152,7 @@ Attach `update.json` and `update.json.sig` to the release along with the other a
 - **Pending:**
   - The Inno Pascal changes are compiled only when the Windows CI job builds the provisional installer; that job hasn't run for this change.
   - The WPF banner, the Windows-only lock check, a real silent install with `--exit` and relaunch, and Defender/SmartScreen behavior for an unsigned installer run from `%LOCALAPPDATA%` have not run on Windows.
-  - A real installed N → N+1 update can only happen once two releases contain Phase 2 (the first must be installed by hand).
+  - A real installed N → N+1 update needs an installed build that contains Phase 2 and a later published release with a signed `update.json`. Correction (2026-10-15): this does not need two Phase 2 releases. A test build of the Phase 2 source (it reports 0.4.2) installed on a PC can update to the first Phase 2 release, 0.4.3, once that is published. Ordinary 0.4.2 users still have to install 0.4.3 by hand.
 
 ### 2026-10-15 — first hosted CI run for Phases 1–2
 
@@ -161,3 +161,9 @@ Attach `update.json` and `update.json.sig` to the release along with the other a
 - The provisional installer compiled with Inno Setup 7.1.0. `package.ps1` checks the compiler's exit code and then hashed the generated `setup.exe`, so the new `UpdateRelaunch` Pascal code compiles. The Windows package content checks passed.
 - `portable (windows-latest)`: 351 checks. This is 353 minus the three Unix-only file-mode and symlink checks, plus the Windows-only lock check. macOS and Ubuntu ran 353, and the manifest tool self-test passed on both.
 - Still pending, because CI does not install or run the app: a real silent install with `--exit` and relaunch, the WPF banner on screen, Defender/SmartScreen behavior, and a real installed N → N+1 update.
+
+### 2026-10-15 — 0.4.3 release preparation
+
+- At the maintainer's request (no tag or publication without separate approval), the version is set to 0.4.3 (shared `Directory.Build.props`, Windows project, packaging default, installer fallback). README, both agent files, download guide, security policy, limitations, readiness, setup, troubleshooting, media notes, the implementation/multiplatform plans and a dated release-evidence entry now describe 0.4.3.
+- 0.4.3 is the first release with update checks, so it attaches its own signed `update.json`/`update.json.sig` (created and signed locally after the final assets are verified). Installed 0.4.2 copies can't see it; a test build of the Phase 2 source can, which is the planned way to observe the full Windows update path.
+- Local and hosted check results for the release source are recorded in `docs/release-evidence.md`.

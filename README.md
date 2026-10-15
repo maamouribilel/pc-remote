@@ -9,7 +9,7 @@
 Turn your browser into a touchpad, an Air pointer, a keyboard and a media remote.<br>
 Run the companion on your computer. Pair locally. Keep your controls within reach.
 
-[![Download](https://img.shields.io/badge/Download-v0.4.2_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.2) [![Windows](https://img.shields.io/badge/Windows-primary-0078D4?style=flat-square)](#compatibility) [![macOS](https://img.shields.io/badge/macOS-experimental-8A8F98?style=flat-square)](#compatibility) [![Ubuntu](https://img.shields.io/badge/Ubuntu-experimental-E95420?style=flat-square)](#compatibility) [![License](https://img.shields.io/badge/License-MIT-5EE8BE?style=flat-square)](LICENSE)
+[![Download](https://img.shields.io/badge/Download-v0.4.3_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.3) [![Windows](https://img.shields.io/badge/Windows-primary-0078D4?style=flat-square)](#compatibility) [![macOS](https://img.shields.io/badge/macOS-experimental-8A8F98?style=flat-square)](#compatibility) [![Ubuntu](https://img.shields.io/badge/Ubuntu-experimental-E95420?style=flat-square)](#compatibility) [![License](https://img.shields.io/badge/License-MIT-5EE8BE?style=flat-square)](LICENSE)
 
 **[Download](#download)** · **[See it in action](#demo)** · **[Set it up](#getting-started)** · **[User guide](docs/setup.md)** · **[Build from source](docs/development.md)**
 
@@ -37,21 +37,22 @@ PC Remote controls the desktop you can see. Screen streaming, internet access, f
 
 ## Download
 
-**Current release: [v0.4.2 preview](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.2).** Windows is the primary platform; macOS and Ubuntu companions are experimental.
+**Current release: [v0.4.3 preview](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.3).** Windows is the primary platform; macOS and Ubuntu companions are experimental.
 
 | Your computer | Download | Setup |
 | :--- | :--- | :--- |
-| **Windows x64** | **[Installer](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.2/PCRemote-0.4.2-win-x64-setup.exe)** · [Portable ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.2/PCRemote-0.4.2-win-x64.zip) | [Windows guide](docs/setup.md#windows-companion) |
-| **macOS · Apple Silicon** | [Experimental ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.2/PCRemote-0.4.2-osx-arm64.zip) | [macOS guide](docs/macos-setup.md) |
-| **macOS · Intel** | [Experimental ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.2/PCRemote-0.4.2-osx-x64.zip) | [macOS guide](docs/macos-setup.md) · Intel hardware untested |
-| **Ubuntu 24.04 x64 · GNOME** | [Experimental archive](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.2/PCRemote-0.4.2-linux-x64.tar.gz) | [Ubuntu guide](docs/linux-setup.md) |
+| **Windows x64** | **[Installer](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.3/PCRemote-0.4.3-win-x64-setup.exe)** · [Portable ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.3/PCRemote-0.4.3-win-x64.zip) | [Windows guide](docs/setup.md#windows-companion) |
+| **macOS · Apple Silicon** | [Experimental ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.3/PCRemote-0.4.3-osx-arm64.zip) | [macOS guide](docs/macos-setup.md) |
+| **macOS · Intel** | [Experimental ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.3/PCRemote-0.4.3-osx-x64.zip) | [macOS guide](docs/macos-setup.md) · Intel hardware untested |
+| **Ubuntu 24.04 x64 · GNOME** | [Experimental archive](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.3/PCRemote-0.4.3-linux-x64.tar.gz) | [Ubuntu guide](docs/linux-setup.md) |
 
-[SHA-256 checksums](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.2/SHA256SUMS.txt) · [Release notes](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.2) · [All versions](https://github.com/maamouribilel/pc-remote/releases) · [Download help](docs/releases.md)
+[SHA-256 checksums](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.3/SHA256SUMS.txt) · [Release notes](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.3) · [All versions](https://github.com/maamouribilel/pc-remote/releases) · [Download help](docs/releases.md)
 
 Downloads are unsigned. Windows may show SmartScreen/Unknown publisher; macOS builds have an ad-hoc seal but no Developer ID signature or notarization. Read the platform guide and compare the download with `SHA256SUMS.txt`. GitHub's **Source code** archives require a development build.
 
 ### What's new
 
+- **Update notices in 0.4.3.** After a one-time question, the companion asks GitHub once a day whether a newer release exists, accepts it only if it is signed with the project's offline release key, and shows a banner with the release page. On a Windows installer copy, **Download update** fetches and checks the signed installer and **Restart to update** installs it and reopens PC Remote; macOS, Ubuntu and the portable ZIP show the notice only. Nothing is sent about your devices or settings. Versions 0.4.2 and earlier have no update check, so install 0.4.3 by hand once. Restart to update has passed hosted Windows checks but has not yet run on a physical PC. [Design and evidence](AUTO_UPDATE_PLAN.md).
 - **Air pointer, introduced in 0.4.0 and corrected in 0.4.1.** Point with your wrist using the phone's gyroscope. Motion readings stay on the phone; only pointer movement is sent. Flat-grip directions were confirmed on an iPhone; other grips, full permission/lifecycle acceptance and Android remain pending. [How to use Air](docs/setup.md#air-pointer).
 - **macOS network fix in 0.4.2.** Peer-to-peer Wi-Fi record updates no longer revoke the approved LAN. On the developer's installed build, approval survived ten bursts over twelve minutes with a paired iPhone; the user reported continued control and reconnection after auto-lock. Real network changes, sleep and user switches still require approval again. Longer sessions and other Macs remain unverified. [Evidence](docs/release-evidence.md#version-042-publication-and-public-verification-2026-10-15).
 - **Experimental macOS and Ubuntu companions, since 0.3.0.** A shared dashboard, platform-aware controls, explicit network approval and OS-backed credential storage accompany the existing Windows tray app. Packaged builds include .NET 10.0.13. [Compatibility and acceptance](docs/release-readiness.md).
@@ -67,7 +68,7 @@ You need a signed-in computer, a browser device on the same trusted network, and
 
 Remembered browser authentication lasts 30 days and can be revoked immediately. One browser owns input at a time; **Take over control** explicitly replaces it. A certificate warning needs to be resolved before use. After an address change, open the companion's new address.
 
-**Stay up to date.** Published versions (0.4.2 and earlier) don't check for updates themselves. Choose **Watch → Custom → Releases** on this repository to get an email for each new version.
+**Stay up to date.** From 0.4.3 the companion can tell you about new versions; it asks once before checking. Versions 0.4.2 and earlier never check, so install 0.4.3 by hand once. You can also choose **Watch → Custom → Releases** on this repository to get an email for each new version.
 
 **Updating a Mac?** Keep the app in its stable location, use **Allow Keychain access after update…** for the existing key, and review Accessibility before approving the network again. [Update and recovery steps](docs/macos-setup.md).
 
@@ -75,7 +76,7 @@ Remembered browser authentication lasts 30 days and can be revoked immediately. 
 
 ## Demo
 
-The animation above tours the **actual 0.4.2 browser interface**: Touch → Air → Keyboard → Navigation → Media → PC. It uses the isolated test fixture, recording adapters and a synthetic gyroscope. The test launcher and volume read-back illustrate the controls; no physical app, audio output or power action is exercised.
+The animation above tours the **actual 0.4.2 browser interface** (the phone remote is unchanged in 0.4.3): Touch → Air → Keyboard → Navigation → Media → PC. It uses the isolated test fixture, recording adapters and a synthetic gyroscope. The test launcher and volume read-back illustrate the controls; no physical app, audio output or power action is exercised.
 
 **[Follow the two-minute hands-on demo →](docs/demo.md)** for the same sequence on your own paired computer, including motion access, hold-to-point, sending text and choosing a media profile.
 
@@ -161,11 +162,11 @@ Pinned inputs: **.NET SDK 10.0.402**, **Node 24.21.0**, **npm 11.19.0**; TypeScr
 <summary>Windows packaging outputs</summary>
 
 ```powershell
-./scripts/package.ps1 -Version 0.4.2
+./scripts/package.ps1 -Version 0.4.3
 Get-Content ./artifacts/latest-release.txt
 ```
 
-Creates `PCRemote-0.4.2-win-x64-setup.exe`, `PCRemote-0.4.2-win-x64.zip`, the self-contained `PCRemote-win-x64/` folder and `SHA256SUMS.txt` in a new timestamped directory. Review [release requirements](docs/releases.md#publishing-the-next-version) before distribution. Generated packages and local credentials stay out of Git. Published assets are immutable.
+Creates `PCRemote-0.4.3-win-x64-setup.exe`, `PCRemote-0.4.3-win-x64.zip`, the self-contained `PCRemote-win-x64/` folder and `SHA256SUMS.txt` in a new timestamped directory. Review [release requirements](docs/releases.md#publishing-the-next-version) before distribution. Generated packages and local credentials stay out of Git. Published assets are immutable.
 
 </details>
 
