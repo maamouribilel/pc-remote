@@ -128,6 +128,7 @@ Supported controls depend on companion capabilities and local permissions. Mac r
 | Configure apps, volume or power | [Companion features](docs/pc-features.md) |
 | Fix trust, connection or input issues | [Certificates](docs/certificates.md) · [Troubleshooting](docs/troubleshooting.md) |
 | Check support and known gaps | [Limitations](docs/limitations.md) · [Release readiness](docs/release-readiness.md) |
+| Share or promote PC Remote | **Illustrated promo video** (28 s): [16:9](docs/promo/pc-remote-ad-28s.mp4) · [9:16 vertical](docs/promo/pc-remote-ad-28s-vertical.mp4). An animation that redraws the UI, not a screen capture. [About the video](docs/promo/README.md) |
 | Build, test or contribute | [Development guide](docs/development.md) · [Protocol](docs/protocol.md) · [Security policy](.github/SECURITY.md) |
 | Package or publish a release | [Release procedure](docs/releases.md) · [Release checklist](docs/release-checklist.md) |
 
