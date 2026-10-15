@@ -1,5 +1,32 @@
 # README media
 
+## Current captures — 0.4.2, 2026-10-15
+
+The README and [hands-on demo](../demo.md) use the new `v0.4.2/` directory. Older files below retain their original bytes and dates.
+
+| Asset | Source |
+| :--- | :--- |
+| `v0.4.2/mobile-{touchpad,air,keyboard,navigation,media,pc}.png` | Actual 0.4.2 production-built browser remote in Playwright 1.64 / Microsoft Edge at 390 × 844 CSS pixels, 2× density; direct PNG screenshot bytes |
+| `v0.4.2/desktop-remote.png` | The same paired remote at 1280 × 860 CSS pixels, 2× density |
+| `v0.4.2/demo.gif` | 13 actual viewport screenshots at 390 × 844, framed with external captions on a 1100 × 900 canvas; 26.6 seconds, looping; no UI reconstruction or labels painted over the app |
+| `v0.4.2/demo-preview.png` | Static full-color preview of the Air hold frame, with the same external captions |
+
+Source baseline: `0ed707c` (0.4.2). Exact SDK 10.0.402, Node 24.21.0/npm 11.19.0 and locked frontend dependencies. The frontend passed TypeScript checking and a production Vite build. Browser plugin not available; capture used the project's pinned Playwright with installed Edge. Its exact browser version is recorded with the dated documentation-refresh entry in [release evidence](../release-evidence.md).
+
+The existing `MouseBrowserFixture` now lives in `tests/PcController.PortableTests`. To leave the active companion on 8443 untouched, the capture used a disposable copy of Core/Host/PortableTests with **only the host port constant changed to 18443 in that temporary copy**. The current built `src/remote/dist` was copied unchanged. The fixture remained loopback-only, with temporary root/device storage, explicit test approval and recording input/PC adapters. No tracked runtime source, live companion, installed trust, production settings or browser profile was changed. The fixture was stopped and its temporary source/keys removed afterward.
+
+Only the isolated capture browser ignores its temporary fixture's certificate warning, matching existing UI tests. This is not certificate-onboarding or strict-TLS acceptance. Production HTTPS validation is unchanged. Air receives **synthetic** `devicemotion` samples; its Ready/Pointing states establish UI behavior, not physical sensor feel, directions or permission-dialog acceptance. **Test player**, initial **42%** volume and the illustrated **36%** read-back are recording-fixture data, not a native app/audio session.
+
+The capture paired a fresh context and checked Touch movement, explicit drag/release, Air hold/lift/settings, one composed Unicode text submission, navigation, VLC selection, volume read-back, test launcher selection (switching to Media), and dismissal of a sleep confirmation. Recording output included movement, held/released input, text length, navigation/media commands, `volume:36` and `launch:Test player`; **no power command** was dispatched. Page identity, meaningful content, no Vite error overlay, no console/page errors and no horizontal overflow were checked; additional 844 × 390 landscape checks passed.
+
+All public frames were captured after the pairing fragment/form disappeared, with no browser chrome, address, QR, certificate, cookie, device record or local path visible. The animation is assembled from screenshots with a shared palette; captions sit beside the app. Historical Windows native images remain historical; no current macOS/Ubuntu companion screenshot or physical-phone capture was added.
+
+### Re-capture safely
+
+Use the production frontend build and the test-project-owned `MouseBrowserFixture`, temporary storage and a new isolated browser context. The normal fixture uses 8443 and requires companions closed; if one must stay running, build a disposable source copy with a separate loopback port and disclose that capture-only change. Never pair the capture browser with the production companion or install fixture trust. Follow the interactions in [the demo](../demo.md), verify recorded commands and zero power dispatch, and save only approved paired screens into a **new** version/date directory. Stop the fixture and remove its unique temporary source/storage after capture. Keep raw metadata, credentials, logs and temporary scripts outside tracked files.
+
+## Historical captures — original notes
+
 These assets were captured from PC Remote 0.2.0 on 2026-10-12.
 
 | Asset | Source |

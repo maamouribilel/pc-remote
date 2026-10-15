@@ -1,6 +1,16 @@
-# Apps, volume and power — version 0.2.0
+# Apps, volume and power
 
-Reload the remote in your browser or reopen the Home Screen app after updating the companion. The five tabs are Touchpad, Keyboard, Navigation, Media and PC. This page describes the Windows companion; the macOS and Ubuntu companions offer the same tab with platform limits (macOS: sleep only; Ubuntu: what logind permits), listed in [release readiness](release-readiness.md).
+Current preview: **0.4.2**. Reload the remote or reopen the Home Screen app after updating. The browser adapts controls to the companion's capabilities; local permissions and service availability can disable individual actions. Windows is primary; macOS and Ubuntu are experimental. For Touch/Air, text and navigation, use [setup and everyday use](setup.md); for a guided tour, use [the demo](demo.md).
+
+| Feature | Windows | macOS (experimental) | Ubuntu (experimental) |
+| :--- | :--- | :--- | :--- |
+| System volume | Core Audio current output | Writable Core Audio current output | PulseAudio/PipeWire-Pulse current sink |
+| General media | System media keys | Native system media keys | Unambiguous controllable MPRIS player |
+| Launcher configuration | Local `.exe` | Local `.app` | Restricted ELF-backed `.desktop` |
+| Power | Sleep, restart, shut down | Sleep only | Actions logind permits without a prompt |
+| Sign-in startup | Per-user opt-in | OS approval/signing eligibility | Local GNOME XDG opt-in |
+
+The walkthrough below describes Windows controls; the final section explains Mac/Ubuntu differences. Implementation is separate from native acceptance: see [release readiness](release-readiness.md).
 
 ## App launcher
 
@@ -34,7 +44,7 @@ Actual iPhone operation and actual sleep/restart/shutdown remain device checks. 
 Native API references: [Core Audio volume](https://learn.microsoft.com/en-us/windows/win32/api/endpointvolume/nn-endpointvolume-iaudioendpointvolume), [foreground activation](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setforegroundwindow), [sleep](https://learn.microsoft.com/en-us/windows/win32/api/powrprof/nf-powrprof-setsuspendstate), and [normal Windows shutdown/restart](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-exitwindowsex).
 
 
-## Phase 5 macOS/Linux source candidates (2026-10-13)
+## macOS and Ubuntu behavior
 
 Since version 0.3.0, releases publish the macOS/Ubuntu adapters as experimental archives. [The feature/support matrix and exact manual checks](release-readiness.md) describe implemented candidates separately from native acceptance. Mac uses writable Core Audio default outputs; Linux uses PulseAudio/PipeWire-Pulse via libpulse with actual read-back and channel-balance preservation. Missing/read-only outputs fail. General playback is native system media keys on Mac, unambiguous controllable MPRIS on Linux. Player shortcuts are resolved in the current layout; Mac VLC uses Command+Right/Left, Command+Up/Down, Command+Option+Down mute, Command+Option+Left/Right seek and Command+F fullscreen. Linux VLC retains N/P, Ctrl+Up/Down, M, Shift+Left/Right and F. YouTube/Stremio retain documented player chords; browser tab/player focus and installed defaults need manual acceptance. Mac rejects mismatched frontmost app bundles. Linux Wayland has no global focus introspection: explicitly focus the matching player locally.
 

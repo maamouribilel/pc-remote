@@ -8,6 +8,8 @@ Current public release: [v0.4.2 preview](https://github.com/maamouribilel/pc-rem
 
 - Public documentation and GitHub metadata describe every supported platform and browser with its actual status: Windows primary; macOS and Ubuntu experimental; iPhone Safari and its Home Screen app verified on hardware; Chromium-based browsers covered by automated checks at phone and desktop sizes; Android, iPad and Firefox untested. Never present the product as Windows-only or iPhone/Safari-only, and never claim a device, browser or platform that has not been verified. Keep companion UI text device-neutral except where a step is genuinely platform-specific.
 
+- Keep user documentation focused on the current controls: `docs/setup.md` covers Touch/Air and pairing, `docs/demo.md` is the hands-on tour, and `docs/development.md` holds build/test detail. README demo media must be captured from the real bundled UI, versioned under `docs/assets/`, with dated provenance in `docs/assets/README.md`; label recording adapters and synthetic motion explicitly and retain historical captures.
+
 ## Portable backend, shared shell and platform development (Phases 1–5)
 
 - Version 0.4.2 distributes the Windows WPF companion as the primary platform plus experimental macOS/Ubuntu archives of the shared shell. `PcController.Host` and `PcController.Core` target `net10.0`; WPF/UI and native Windows integration stay in App/Windows. Read `docs/portable-host.md` and the dated `MULTIPLATFORM_PLAN.md` execution log before continuing the migration.

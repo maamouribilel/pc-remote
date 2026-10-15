@@ -1,45 +1,85 @@
-# PC Remote — setup and use
+# Setup and everyday use
 
-PC Remote has a **companion** for the computer you control and a browser **remote** for the device in your hand. Pick the companion for your platform, then onboard your phone or browser:
+PC Remote runs a companion on the computer you control and serves a browser remote to your device. This guide describes the current **0.4.2 preview**. Windows is primary; macOS and Ubuntu are experimental.
 
-- **Windows 10 1809+ x64** (primary): this page.
-- **macOS 14+** (experimental; Apple Silicon tested): [macOS guide](macos-setup.md).
-- **Ubuntu 24.04 x64 with GNOME** (experimental): [Linux guide](linux-setup.md).
-- **Remote:** any modern browser on the same trusted network. iPhone Safari and its Home Screen app are the verified path; Chromium-based browsers at phone and desktop sizes are covered by automated checks; Android, iPad and Firefox are untested. Each device must trust the companion's public root certificate ([certificates](certificates.md)).
+| Computer | Start here |
+| :--- | :--- |
+| Windows 10 1809+ x64 (Windows 11 tested) | [Windows companion](#windows-companion) below |
+| macOS 14+ · Apple Silicon or Intel | [macOS installation, Accessibility, Keychain and network approval](macos-setup.md) |
+| Ubuntu 24.04 x64 · GNOME X11/Wayland | [Ubuntu dependencies, keyring, consent and text opt-in](linux-setup.md) |
+
+The verified browser onboarding path is **iPhone Safari**, including the Home Screen app. Chromium/Edge has automated viewport coverage. Android, iPad and Firefox remain untested. [Compatibility](../README.md#compatibility) · [Limitations](limitations.md).
 
 ## Windows companion
 
-Version 0.2.0 adds the phone's **PC** tab for app launching and confirmed Sleep/Restart/Shut down, and **Media → Windows volume** for an exact system volume slider. Open Windows **Settings** to manage launcher apps and use matching volume/power controls. See [Apps, volume and power](pc-features.md) in source or `PC-CONTROLS.md` in the release folder.
+Run the [Windows installer](releases.md) as your normal signed-in user. It installs to `%LOCALAPPDATA%\Programs\PCRemote`, adds Start menu shortcuts and an uninstall entry. For portable use, extract the complete ZIP and run `PCRemote-win-x64\PcController.App.exe`; keep all adjacent files. Packaged releases need no SDK, Node.js or separate .NET runtime.
 
-Run the Windows x64 installer as your normal signed-in user. It installs under `%LOCALAPPDATA%\Programs\PCRemote`, adds a Start menu shortcut and an entry in Windows Settings → Apps. The optional Private LAN firewall step shows a Windows administrator prompt; only that short setup helper is elevated. The controller itself stays unelevated. Alternatively extract the portable ZIP and run `PCRemote-win-x64\PcController.App.exe`. Normal packaged operation needs no Node.js, .NET SDK or separately installed .NET runtime.
+<img src="assets/desktop-controls.jpg" alt="Windows companion preferences, captured from 0.2.0" width="900">
 
-Use a trusted home network marked Private in Windows Settings → Network & internet. The scoped rule permits only this executable, TCP 8443, Private profiles and LocalSubnet. The app never changes your network profile or router. If you skipped firewall setup, use the companion's Configure Private LAN firewall button. Export the public trust profile from the PC and transfer it to the phone (never `.protected` files). On an iPhone, install it under Settings → General → VPN & Device Management and enable full trust under Settings → General → About → Certificate Trust Settings; other devices import the public root certificate instead (not yet verified by the project). Compare the PC's displayed root fingerprint before trusting it. Follow CERTIFICATES.md for complete onboarding/cleanup.
+*Historical native capture from 0.2.0; the Windows dashboard is retained. The current browser captures and their provenance are in [media notes](assets/README.md).*
 
-Scan the pairing QR with the phone's camera and open the link in its browser. Enter a device name, Request PC approval, then Approve device in the PC dialog. A link lasts two minutes and is single use. Each browser, including a Home Screen app, may need its own approval. On iPhone: Safari → Share → Add to Home Screen → Open as Web App if shown; other browsers offer their own Add to Home Screen or Install option. Remembered authentication expires after 30 days; PC Revoke immediately removes it. One controller owns input; Take over explicitly replaces an existing controller.
+Use a trusted network marked **Private** in Windows Settings → Network & internet. **Configure Private LAN firewall** requests elevation for a program-specific TCP 8443 rule limited to Private profiles and LocalSubnet. The companion itself stays unelevated and does not change your network profile or router.
 
-Watch your PC screen. Touchpad: one finger moves, tap clicks, two fingers scroll, three fingers cancel. Dedicated buttons provide right/double click and Start drag → move → End drag. Keyboard sends text only with Send, supports accents/emoji and includes visible held modifiers. Navigation provides large arrows/Enter and Home/End/Page keys. Switching tabs releases held input. Media profiles target Windows media keys or focused YouTube, VLC or Stremio default shortcuts; Stremio Next means next episode, Previous is unavailable. Seek amount follows player settings. Quick playback/volume use the currently selected media profile.
+Expand **Certificate & network setup** for the public trust export, fingerprint, QR/manual pairing link and firewall setup. Open **Settings** for pointer sensitivity, natural scrolling, media preferences, launcher apps, volume, power and sign-in startup.
 
-Version 0.1.2 introduced the graphite interface; version 0.2.0 adds the fifth PC tab. The phone's gear opens connection/RTT/Home Screen setup and control help; opening it releases held input. Release input stays above the five bottom tabs. Keyboard → More shortcuts contains Copy/Paste/Alt+Tab. Scroll controls normally when landscape or the software keyboard reduces the available height. On Windows, expand Certificate & network setup for export, fingerprint, manual pairing link and firewall setup. Settings opens pointer, media and sign-in preferences.
+## Pair a browser
 
-X hides the setup window while the tray app runs. Right-click the tray icon (^ overflow if needed) for Open, Pause control, Resume control or Exit. Pause releases held keys/buttons. Choose optional sign-in startup in setup and Save preference; it starts quietly in the tray for this account. Keep the installed path stable. Phone lock/backgrounding suspends input; reopening reconnects without replay. Do not expect background control while the phone suspends the page.
+1. Start the companion and read its current HTTPS address. On macOS/Ubuntu, complete platform setup, approve the trusted interface and deliberately resume control. `localhost` is for the computer itself; use the approved LAN address from your other device.
+2. Export the installation's **public** trust profile/root and transfer it to your device. Compare its SHA-256 fingerprint with the companion. Never transfer private keys or `.protected` files.
+3. On iPhone, install the profile under **Settings → General → VPN & Device Management**, then enable full trust under **Settings → General → About → Certificate Trust Settings**. Follow [certificate setup](certificates.md); other platforms' import paths are unverified. Resolve any certificate warning before pairing.
+4. Create a fresh pairing link, scan the QR and open it in your browser. Name the device, tap **Request PC approval**, and approve it on the computer. The link lasts two minutes and is single use.
+5. Wait for **Connected securely**. The gear opens connection status, round-trip time and the connection test. On iPhone, optionally use Safari **Share → Add to Home Screen**, with **Open as Web App** if shown; approve that browser separately if asked.
 
-The PC address/QR and certificate SAN refresh automatically after network changes. If the IP changes, open the new address shown in setup; an old bookmarked address cannot discover it. Devices/settings/root trust persist. Elevation, Windows lock screen and secure desktop are unsupported.
+Remembered authentication expires after 30 days. **Revoke** on the companion removes it immediately. One browser owns input; **Take over control** explicitly replaces the current controller.
 
-Uninstall through Windows Settings → Apps → PC Remote. It exits the companion and removes its own startup entry, shortcuts, files and scoped firewall rule. Removing that rule may require the administrator prompt. Cancellation leaves the app installed so cleanup can be retried. Protected credentials/certificates remain under `%LOCALAPPDATA%\PcController` for reinstall; delete them only after removing phone/Windows root trust if permanently retiring the installation. Earlier developer firewall rules are separate and intentionally preserved.
+## Touchpad
 
-The installer and application are unsigned. Windows may show Unknown publisher/SmartScreen warnings; no signing or warning-free installation is claimed. Inspect the source and compare SHA256SUMS.txt before running. This build targets Windows 10 1809 or later x64; it has been tested on Windows 11 on the development PC. Clean-account/reboot tests require separate evidence.
+Use **Touch** for one-finger movement, tap to click, double tap, two-finger scrolling and three-finger cancellation. Dedicated controls provide right/double click. **Start drag** holds the left button; move using the pad, then choose **End drag** or **Release input**.
 
-## macOS/Linux development shell
+Adjust pointer sensitivity and natural scrolling in the companion. The software keyboard and landscape view can reduce usable height; scroll the controls normally.
 
-Since version 0.3.0, releases also publish experimental macOS and Ubuntu archives; see [download instructions](releases.md). The source-built Avalonia shell now composes real macOS/Linux services where supported; unavailable storage or required native services stop listeners. Build/run and the isolated loopback approval fixture are documented in [desktop shell setup](desktop-shell.md). Do not install fixture trust or treat recording checks as phone/LAN acceptance.
+## Air pointer
 
+Air turns your phone into a relative pointer using its gyroscope. It was introduced in 0.4.0; 0.4.1 corrected its motion axes, gravity handling and filtering. Use 0.4.1 or later.
 
-## macOS source-built development MVP
+1. Open **Touchpad → Air**.
+2. If **Enable motion** appears, tap it and allow motion access. On iOS, the request must come from that tap.
+3. When the pad says **Point the phone at the screen**, rest your thumb on it and turn your wrist. The pad changes to **Pointing**.
+4. Lift your thumb to stop. Re-grip and hold again when you want to move; pointing never restarts by itself.
+5. Tap the pad to click. Use **Start drag**, hold to move, then **End drag** to release.
 
-Since version 0.3.0, releases publish this `.app` as an experimental macOS ZIP. Phase 3's local `.app` uses real Accessibility/Quartz control and Keychain protection, with native/phone/LAN acceptance recorded separately. Follow [macOS build/onboarding/network/storage recovery](macos-setup.md). Enable only Accessibility, approve the current trusted interface locally, export only the public root/profile and verify strict phone trust before pairing. Startup/recovery remains paused until deliberate Resume. Linux native acceptance remains pending under Phase 4. Phase 5 supported Mac/Linux features and provisional packages are detailed in the release-readiness handoff.
+The button next to the Touch/Air switch opens **Air pointer settings**: speed **0.5–2.5×**, **Invert horizontal**, and **Invert vertical**. These preferences stay in this browser on the phone; companion sensitivity also applies. Raw motion readings stay on the phone; only rounded pointer deltas are sent.
 
-## Phase 4 Linux candidate (2026-10-13)
+If motion access was declined, reload the remote, select Air and tap **Enable motion** again, or choose **Use Touch**. A device without usable sensor samples shows **No motion sensor on this device** and offers Touch. Air needs the visible Touchpad tab and active control. Switching away, backgrounding, losing control or interrupted samples stops pointing; hold again after returning.
 
-Linux source startup now uses real XCB/XTEST or explicit GNOME RemoteDesktop portal consent, reviewed encrypted persistent GNOME login-keyring storage, local lifecycle/network monitoring and per-user instance lock. It starts paused, requires explicit session LAN approval, stops listeners on storage failure and retains failed input cleanup. Text defaults unavailable until local GTK Unicode opt-in; it is target-specific. Interrupted composition or unreachable ended-session holds need verified local recovery; that is not automatic cleanup evidence. The original Phase 4 scope excluded media/volume/launcher/power/start-at-login; supported Phase 5 adapters are now implemented with the limits below.
+Air is relative movement, so lift to re-grip rather than expecting absolute aiming at a spot on the screen. Flat-grip directions were confirmed on an iPhone against the Mac companion. Other grips, measured precision/drift, the complete Safari/Home Screen permission/lifecycle checks and Android remain pending. [Detailed acceptance](../AIR_POINTER_PLAN.md).
 
-Phase 4 remains **In progress**: actual Ubuntu 24.04 x64/GNOME X11 and Wayland Unicode/shortcut/permission-loss/cleanup/lock/suspend/tray/roaming checks and strict physical-phone/LAN acceptance are pending. Xvfb and fake-portal checks cannot establish those gates. Secret Service is not DPAPI-equivalent; blank-password/plaintext, locked/missing and unreviewed providers fail. Read [Linux prerequisites, storage properties, recovery and support matrix](linux-setup.md). Since version 0.3.0, releases publish an experimental Ubuntu 24.04 x64 archive with these limits.
+## Keyboard and navigation
+
+Focus a disposable text field on your computer. Type into **Keyboard**, then tap **Send text**; typing alone sends nothing. Each submission is limited to 256 characters. Accents and emoji are supported where the companion advertises text capability; Linux text requires explicit local GTK opt-in and has target limits.
+
+Lit modifiers stay held until tapped again or released. **More shortcuts** includes copy/paste and app switching; paste uses the computer's existing clipboard, with no clipboard synchronization. **Navigation** has large arrows, Enter, Home/End and Page keys. Labels/shortcuts adapt to the companion.
+
+## Media, apps and power
+
+**Media** offers General, YouTube, VLC and Stremio profiles. Focus the matching player on the computer; shortcuts follow its defaults. Stremio's Next means next episode, and Previous is unavailable. Seek distances depend on the player.
+
+The system volume slider controls the current output, separately from profile-specific volume buttons. In **PC**, configured apps open or request foreground activation, then switch the remote to their media profile. Focus may still need a local click.
+
+Power actions require confirmation and a cancellable 30-second countdown. Availability differs by platform. For learning the controls, dismiss with **Keep PC running**; this schedules nothing. [Configure apps, volume and power](pc-features.md).
+
+## Pause, reconnect and exit
+
+**Release input** stays above the five tabs. Switching tabs, opening connection settings, pausing or disconnecting releases held input. Locking/backgrounding the phone suspends control; reopen it to reconnect without replaying commands.
+
+Closing the companion window keeps it running. Use the Windows tray, macOS menu bar or supported Ubuntu tray/window controls to open, pause, resume or exit. Windows sign-in startup is opt-in; macOS/Ubuntu startup requires local OS approval and starts paused with fresh network approval (and Wayland consent).
+
+If the computer's address changes, reopen the address shown by the companion; old bookmarks cannot discover it. The root and remembered devices persist. Mac/Ubuntu require fresh approval after a real network change, sleep or user switch. Version 0.4.2 ignores the Mac peer-to-peer Wi-Fi record churn that previously revoked that approval. On the developer's installed build, approval survived ten bursts over twelve minutes with a paired iPhone; the user reported continued control and reconnection after auto-lock. Longer sessions and other Macs remain unverified. [Recorded check](release-evidence.md#version-042-publication-and-public-verification-2026-10-15).
+
+## Update or remove an installation
+
+Download the current platform archive/installer from [Releases](releases.md). Keep a stable installation path. On macOS, follow [Keychain and Accessibility update recovery](macos-setup.md); existing roots/devices must be retained.
+
+On Windows, uninstall through **Settings → Apps → PC Remote**. It exits the companion and removes its own startup entry, shortcuts, files and scoped firewall rule; rule removal may need elevation. Cancelling cleanup leaves the app installed for retry. Protected data under `%LOCALAPPDATA%\PcController` remains for reinstall. For permanent retirement, remove phone/computer certificate trust before deleting that data. Older developer firewall rules are intentionally separate.
+
+The application/installer is unsigned. Windows warnings, clean-account/reboot/uninstall and platform-specific acceptance remain documented in [limitations](limitations.md) and [release readiness](release-readiness.md). For a short guided tour, use the [two-minute demo](demo.md).
