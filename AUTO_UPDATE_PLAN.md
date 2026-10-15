@@ -2,7 +2,7 @@
 
 Created: 2026-10-15. Baseline at creation: app version **0.4.2**, commit `b1bd7b8`, public [v0.4.2 preview](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.2).
 
-This plan has four phases. Phase 1 (update notices) is implemented in source but **not yet released**. Phases 2–4 are still only a plan. Record actual results in the execution log at the end. A check that has not been run on real hardware stays **Pending**.
+This plan has four phases. Phase 1 (update notices) and Phase 2 (Windows **Restart to update**) are implemented in source but **not yet released**; Phase 2 has not run on Windows. Phases 3–4 are still only a plan. Record actual results in the execution log at the end. A check that has not been run on real hardware stays **Pending**.
 
 ## The problem
 
@@ -32,7 +32,7 @@ GitHub only delivers the files. Trust comes from the signature, not from TLS or 
 | D6 | **Companion only.** No v1 message, field, capability, endpoint or Host setting changes. The phone can't see, trigger or approve an update. | Same rule as the Air pointer: protocol and trust boundaries stay unchanged. The phone remote is served by the companion, so updating the companion also updates the phone page. |
 | D7 | **Preferences live in a plain `update-settings.json`** next to the other non-secret settings: Windows `%LOCALAPPDATA%\PcController`, macOS `~/Library/Application Support/PC Remote`, Ubuntu `~/.local/share/pc-remote`. It's written atomically. On Unix the directory is 0700 and the file 0600, and a symlinked file is refused. | Update checks must keep working when certificate storage is locked or setup failed. That's when an update matters most, so this file must not depend on DPAPI or the Keychain. A corrupted file falls back to "not asked yet"; trust data is never touched. |
 | D8 | **Several trusted keys are supported** (any `PUBLIC KEY` block in the `.pub` file). | Key rotation: release N+1 ships the new key alongside the old one, and is still signed with the old key. Later releases switch to the new key. |
-| D9 | **Installing stays manual until Phase 2.** The notice opens the release page, which lists downloads, checksums and per-platform update steps (Keychain access on Mac). | Each platform needs its own install path; see Phases 2–3. |
+| D9 | **Only a Windows installer copy installs updates itself (Phase 2), and only on request.** Elsewhere the notice opens the release page, which lists downloads, checksums and per-platform update steps (Keychain access on Mac). | Each platform needs its own install path; see Phases 2–3. |
 
 ## Manifest
 
@@ -85,13 +85,15 @@ Attach `update.json` and `update.json.sig` to the release along with the other a
 - Checks: portable update checks (signature, tampering, wrong key, version/tag mismatch, redirects to other hosts, size limits, drafts and malformed tags, preference persistence and corruption) and headless desktop UI checks. All use in-memory handlers, never the network.
 - **Pending acceptance:** a real installed build of version N seeing a real signed release N+1 on Windows, macOS and Ubuntu; the tray balloon on Windows; the menu-bar item on macOS; behavior behind a proxy.
 
-### Phase 2 — "Restart to update" on Windows (installer installs only)
+### Phase 2 — "Restart to update" on Windows (installer installs only) — implemented in source, unreleased, not run on Windows
 
-- Download the `win-x64` installer named in the verified manifest into `%LOCALAPPDATA%\PcController\updates`, streaming its SHA-256 and enforcing the signed size. Keep the file open with read-only sharing from verification until the installer process starts, so it can't be swapped.
-- Offer **Restart to update** only when no phone is in control and no power countdown is pending. Run `PCRemote-x.y.z-win-x64-setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART`. The installer's `PrepareToInstall` already calls `PcController.App.exe --exit` for a graceful exit, and failed input cleanup still blocks that exit. The firewall helper already doesn't run on silent installs (`Check: not WizardSilent`).
-- `installer/PCRemote.iss` needs a relaunch step for silent update installs. The existing "Open PC Remote setup" step is `skipifsilent`, so a silent install would otherwise finish without reopening the app.
-- Portable ZIP copies (no installer uninstall entry for this path) keep Phase 1 notices only.
-- Acceptance: install N on a real Windows PC, publish a test N+1 (or use a disposable test repository and key), update, and confirm that certificates, remembered devices, sign-in startup and the firewall rule survive.
+- **Download update** (only on that click) re-reads and re-verifies the release's signed `update.json`, takes its `win-x64`/`installer` entry, and streams that file from the release download URL (GitHub hosts only) into `%LOCALAPPDATA%\PcController\updates\<name>.partial`. It checks the exact signed size and SHA-256 while streaming, fails if no data arrives for 60 seconds, then renames the file and reopens it read-only with read-only sharing. It hashes again through that handle and keeps the handle open until the installer starts, so the checked file can't be changed, renamed or deleted in between. Cancel and every failure remove the partial file.
+- **Restart to update** is offered only when no phone is in control, no power countdown is pending and no pairing approval is open. It first pauses control and releases held input, and stops if that fails. It then runs `<installer> /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /relaunch=1 /LOG="%LOCALAPPDATA%\PcController\updates\install.log"`. The installer's `PrepareToInstall` closes the companion with `--exit`. The firewall helper doesn't run on silent installs (`Check: not WizardSilent`).
+- `installer/PCRemote.iss` has an `UpdateRelaunch` check: a `[Run]` entry reopens PC Remote only for silent installs started with `/relaunch=1`. This works from the first release that contains it, because each update runs the *new* version's installer.
+- If PC Remote is still running when the installer ends, the update failed. Exit code 7 (PrepareToInstall could not close it) and other codes are reported in the banner, and **Restart to update** can be retried. Control stays paused until the person resumes it.
+- Installed copy detection: the per-user Inno uninstall entry (`<AppId>_is1`) must name this folder as `InstallLocation`, with its `UninstallString` uninstaller inside it. Portable ZIP copies keep Phase 1 notices only.
+- On startup, the companion deletes only release-named files and `.partial` downloads in the updates folder. A file still in use (the installer that just reopened it) is left for the next start.
+- Acceptance (pending): install N on a real Windows PC, publish a test N+1 (or use a disposable test repository and key), update, and confirm that certificates, remembered devices, sign-in startup and the firewall rule survive and PC Remote reopens. Record Defender/SmartScreen behavior for the unsigned installer run from `%LOCALAPPDATA%`.
 
 ### Phase 3 — macOS and Ubuntu
 
@@ -131,3 +133,23 @@ Attach `update.json` and `update.json.sig` to the release along with the other a
   - Offscreen Skia renders of the Avalonia window (scratch only, not committed), each inspected: the question at 1020 px and 600 px, the notice at 1020 px, the security notice at 600 px, and the six-section Preferences grid. None was clipped.
 - Live read-only check, 2026-10-15: the production `UpdateChecker` read the real GitHub release list without authentication and reported **up to date** for both 0.4.2 and 0.1.0, as expected, because no published release carries `update.json` yet.
 - **Pending:** a Windows run of the WPF banner, tray item and balloon; an installed N → N+1 check on Windows, macOS and Ubuntu against a real signed release; behavior behind a proxy; offline backup of the signing key.
+
+### 2026-10-15 — Phase 2 source implementation (Windows "Restart to update")
+
+- Phase 1 was committed to `main` as `e43b188` (not pushed). Phase 2 started in the same session at the maintainer's request; no version bump or release is authorized.
+- Implemented:
+  - Host: `UpdateChecker.DownloadAsync` and `VerifiedDownload`, plus `IUpdateInstaller` and the `Idle → Downloading → Ready → Installing` stages, cancel, exit-code reporting and startup cleanup in `UpdateService`.
+  - Phase 1 fix found while doing this: response bodies had no time limit once headers arrived. Small fetches are now bounded by the 30-second request timeout and downloads by a 60-second stall timeout, and cancellation filters catch `OperationCanceledException`.
+  - Windows: `WindowsUpdateRules` (AppId, installed-copy rule, installer arguments; also compiled into the portable tests) and `WindowsUpdateInstaller` (registry read, process start).
+  - WPF: **Download update**, **Cancel download** and **Restart to update** in the banner, the blockers, revised consent and Preferences text.
+  - Installer: the `UpdateRelaunch` check and `[Run]` entry in `installer/PCRemote.iss`.
+- Automated results on the development Mac, 2026-10-15:
+  - `python3 scripts/portable.py test`: 353 checks passed (34 new). They cover a verified download and its progress; refusal with no file left for a changed hash, oversized, truncated or wrong Content-Length body, untrusted or other-version manifest, foreign redirect and missing platform; stall timeout and cancellation; cleanup name rules; install stages with a recording installer (exit code 7 and others, start failure, retry, download failure and cancel); installed-copy rules; installer arguments; and the `.iss` AppId, `--exit` and relaunch entries. The Windows-only "file cannot be changed or deleted while held" check runs only in the Windows suite.
+  - `python3 scripts/portable.py desktop-test`: 100 passed (shell unchanged). `update-manifest.py selftest` and `check-release-docs.ps1` passed.
+  - WPF app and `tests/PcController.Tests` compiled with `-p:EnableWindowsTargeting=true`; neither has run on Windows.
+- Reviewed for the relaunch: nothing in the companion creates inheritable handles (the single-instance `Mutex` and named pipe, Kestrel sockets and the verified file use .NET's non-inheritable defaults), so the installer started with `UseShellExecute = false` should not keep the old instance's mutex or port 8443 alive for the reopened companion. This is unverified until Windows runs it. `scripts/check-windows-package.py` doesn't inspect installer entries; `scripts/package.ps1` compiles the script.
+- While an update is downloading or ready, the Windows banner stays visible without **Later**, because it holds the only **Cancel download** and **Restart to update** buttons.
+- **Pending:**
+  - The Inno Pascal changes are compiled only when the Windows CI job builds the provisional installer; that job hasn't run for this change.
+  - The WPF banner, the Windows-only lock check, a real silent install with `--exit` and relaunch, and Defender/SmartScreen behavior for an unsigned installer run from `%LOCALAPPDATA%` have not run on Windows.
+  - A real installed N → N+1 update can only happen once two releases contain Phase 2 (the first must be installed by hand).

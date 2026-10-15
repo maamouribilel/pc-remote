@@ -4,6 +4,19 @@ namespace PcController.Host;
 
 // Automatic is null until the person answers the one-time question; Available is the last verified notice.
 public sealed record UpdatePreferences(bool? Automatic = null, DateTimeOffset? LastCheck = null, string? Skipped = null, UpdateRelease? Available = null);
+public enum UpdateStage { Idle, Downloading, Ready, Installing }
+
+// Platform hook for "Restart to update" (AUTO_UPDATE_PLAN.md Phase 2). Without one the service only notifies.
+public interface IUpdateInstaller
+{
+    string Platform { get; }          // manifest platform, e.g. win-x64
+    string Kind { get; }              // manifest kind, e.g. installer
+    string DownloadDirectory { get; } // owned by this feature; only release file names are written or cleaned there
+    // Starts the verified installer while its file stays locked. The task completes with the installer's exit code
+    // if this process is still running when it ends; a successful update closes the companion before that.
+    Task<int> Launch(VerifiedDownload download);
+}
+internal delegate Task<VerifiedDownload> UpdateDownloader(string version, string platform, string kind, string directory, IProgress<double>? progress, CancellationToken token);
 
 // Owns the opt-in, schedule and notice state shared by the Windows and macOS/Linux companions.
 // It is independent of the companion host: checks keep working while secure storage is locked
@@ -18,26 +31,41 @@ public sealed class UpdateService : IDisposable
     private readonly SemaphoreSlim gate = new(1, 1);
     private readonly CancellationTokenSource stopping = new();
     private readonly Timer timer;
+    private readonly IUpdateInstaller? installer;
+    private readonly UpdateDownloader? download;
+    private VerifiedDownload? prepared;
+    private CancellationTokenSource? downloadCancel;
     private string? dismissed;
     private volatile bool disposed;
     public Version Current { get; }
     public UpdatePreferences Preferences { get; private set; }
     public bool Checking { get; private set; }
     public string? Problem { get; private set; }
+    // Phase 2: only with a platform installer (Windows installer copies); downloads happen only on request.
+    public bool CanInstall => installer != null;
+    public UpdateStage Stage { get; private set; }
+    public double DownloadProgress { get; private set; }
+    public string? InstallProblem { get; private set; }
+    public string? ReadyVersion => prepared?.Version;
     public event Action? Changed;
 
     public static Version ProductVersion => UpdateChecker.Normalize(typeof(UpdateService).Assembly.GetName().Version ?? new Version(0, 0, 0));
-    // Production composition: the fixed GitHub feed and the embedded release keys.
-    public static UpdateService Create(string directory)
+    // Production composition: the fixed GitHub feed and the embedded release keys. A platform installer
+    // is passed only by a shell that can install updates (the Windows installer copy).
+    public static UpdateService Create(string directory, IUpdateInstaller? installer = null)
     {
         var checker = UpdateChecker.CreateProduction();
-        try { return new(directory, ProductVersion, checker.CheckAsync, checker); }
+        try { return new(directory, ProductVersion, checker.CheckAsync, checker, installer, checker.DownloadAsync); }
         catch { checker.Dispose(); throw; }
     }
-    internal UpdateService(string directory, Version current, Func<Version, CancellationToken, Task<UpdateResult>> check, IDisposable? owned = null)
+    internal UpdateService(string directory, Version current, Func<Version, CancellationToken, Task<UpdateResult>> check, IDisposable? owned = null,
+        IUpdateInstaller? installer = null, UpdateDownloader? download = null)
     {
-        path = Path.Combine(directory, FileName); this.check = check; this.owned = owned; Current = UpdateChecker.Normalize(current);
+        if (installer != null && download == null) throw new ArgumentException("Installing requires a verified downloader.", nameof(download));
+        path = Path.Combine(directory, FileName); this.check = check; this.owned = owned; this.installer = installer; this.download = download;
+        Current = UpdateChecker.Normalize(current);
         Preferences = Load(directory, path);
+        if (installer != null) CleanDownloads(installer.DownloadDirectory);
         timer = new Timer(_ => _ = RunAsync(manual: false));
     }
 
@@ -49,6 +77,13 @@ public sealed class UpdateService : IDisposable
     {
         get
         {
+            switch (Stage)
+            {
+                case UpdateStage.Downloading: return $"Downloading PC Remote {Notice?.Version ?? ReadyVersion}… {DownloadProgress:P0}";
+                case UpdateStage.Ready: return InstallProblem ?? $"PC Remote {ReadyVersion} is downloaded and verified. Choose Restart to update.";
+                case UpdateStage.Installing: return "Installing the update. PC Remote will close and reopen.";
+            }
+            if (InstallProblem != null) return InstallProblem;
             if (Checking) return "Checking GitHub for a newer version…";
             var last = Preferences.LastCheck is { } time ? $" Last checked {time.ToLocalTime():g}." : "";
             if (Problem != null) return "Update check failed: " + Problem + last;
@@ -73,6 +108,78 @@ public sealed class UpdateService : IDisposable
     public Task CheckNowAsync() => RunAsync(manual: true);
     public void Skip() { if (Notice is { } release) { Save(Preferences with { Skipped = release.Version }); Changed?.Invoke(); } }
     public void Later() { if (Notice is { } release) { dismissed = release.Version; Changed?.Invoke(); } }
+
+    // Phase 2: downloads the offered release's installer for this platform, verified against a freshly re-read signed manifest.
+    public async Task DownloadAsync()
+    {
+        if (installer == null || download == null || disposed || Notice is not { } release || Stage is UpdateStage.Downloading or UpdateStage.Installing) return;
+        if (prepared?.Version == release.Version) { Stage = UpdateStage.Ready; Changed?.Invoke(); return; }
+        prepared?.Dispose(); prepared = null;
+        var cancel = downloadCancel = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+        Stage = UpdateStage.Downloading; DownloadProgress = 0; InstallProblem = null; Changed?.Invoke();
+        var progress = new Reporter(value =>
+        {
+            // About one notification per percent keeps the UI current without flooding its dispatcher.
+            if (value < 1 && value - DownloadProgress < .01) return;
+            DownloadProgress = value; Changed?.Invoke();
+        });
+        try
+        {
+            var verified = await download(release.Version, installer.Platform, installer.Kind, installer.DownloadDirectory, progress, cancel.Token).ConfigureAwait(false);
+            if (disposed) { verified.Dispose(); return; }
+            prepared = verified; Stage = UpdateStage.Ready;
+        }
+        catch (Exception) when (disposed) { return; }
+        catch (OperationCanceledException) when (cancel.IsCancellationRequested) { Stage = UpdateStage.Idle; InstallProblem = "The download was cancelled."; }
+        catch (UpdateCheckException e) { Stage = UpdateStage.Idle; InstallProblem = "The update was not downloaded: " + e.Message; }
+        catch (Exception e) when (e is not OutOfMemoryException) { Stage = UpdateStage.Idle; InstallProblem = "The update could not be downloaded. Check the connection and try again."; }
+        finally
+        {
+            downloadCancel = null; cancel.Dispose();
+            if (!disposed) Changed?.Invoke();
+        }
+    }
+    public void CancelDownload() { try { downloadCancel?.Cancel(); } catch (ObjectDisposedException) { } }
+    // Starts the verified installer. The shell first checks that no phone controls the computer and no power action is pending.
+    public void Install()
+    {
+        if (installer == null || prepared is not { } verified || Stage != UpdateStage.Ready || disposed) throw new InvalidOperationException("No verified update is ready to install.");
+        Stage = UpdateStage.Installing; InstallProblem = null; Changed?.Invoke();
+        Task<int> run;
+        try { run = installer.Launch(verified); }
+        catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException)
+        { Stage = UpdateStage.Ready; InstallProblem = "The installer could not be started. Install the update from the release page instead."; Changed?.Invoke(); return; }
+        _ = WatchAsync(run);
+    }
+    private async Task WatchAsync(Task<int> run)
+    {
+        int code;
+        try { code = await run.ConfigureAwait(false); } catch (Exception e) when (e is not OutOfMemoryException) { code = -1; }
+        if (disposed) return;
+        // Reaching here means this companion is still running, so the update did not replace it.
+        Stage = UpdateStage.Ready;
+        InstallProblem = code switch
+        {
+            7 => "The installer could not close PC Remote. Release input, then choose Restart to update again.",
+            2 or 5 => "The update was cancelled. PC Remote was not changed.",
+            _ => $"The update was not installed (installer code {code}). PC Remote keeps running; try again or install from the release page.",
+        };
+        Changed?.Invoke();
+    }
+    private static void CleanDownloads(string directory)
+    {
+        // Only release files and partial downloads this feature wrote; a file still in use (the installer that
+        // just relaunched this companion) is left for the next start.
+        try
+        {
+            if (!Directory.Exists(directory)) return;
+            foreach (var file in Directory.EnumerateFiles(directory, "PCRemote-*"))
+                if (UpdateChecker.IsDownloadName(Path.GetFileName(file)))
+                    try { File.Delete(file); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+    }
+    private sealed class Reporter(Action<double> report) : IProgress<double> { public void Report(double value) => report(value); }
 
     private async Task RunAsync(bool manual)
     {
@@ -139,6 +246,6 @@ public sealed class UpdateService : IDisposable
     public void Dispose()
     {
         if (disposed) return;
-        disposed = true; stopping.Cancel(); timer.Dispose(); owned?.Dispose();
+        disposed = true; stopping.Cancel(); timer.Dispose(); prepared?.Dispose(); owned?.Dispose();
     }
 }

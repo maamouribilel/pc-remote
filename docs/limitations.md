@@ -35,7 +35,7 @@ Mac/Ubuntu login starts paused with fresh network approval and Wayland consent w
 
 All downloads lack distribution signing. Windows may show SmartScreen/Unknown publisher. Mac packages have an ad-hoc seal, without Developer ID or notarization; updates may require the explicit existing-Keychain approval and Accessibility review. There is no Linux distribution signature.
 
-Published versions (0.4.2 and earlier) never check for updates; watch the repository's releases on GitHub. The opt-in update notice in source is not yet released, and it only notifies: installing an update stays manual on every platform.
+Published versions (0.4.2 and earlier) never check for updates; watch the repository's releases on GitHub. The opt-in update notice in source is not yet released. On macOS, Ubuntu and the Windows portable ZIP it only notifies; a Windows installer copy can also download a verified update and restart into it, which has not yet been run on Windows.
 
 Windows native input/audio/launcher/power and iPhone results are historical 0.2.x evidence; 0.3.x/0.4.x physical Windows installation/phone revalidation remains pending. macOS Apple Silicon has native and iPhone evidence on one Mac; Intel hardware, installed-current-version lifecycle and broader device coverage remain pending. Ubuntu has isolated automated evidence; real GNOME X11/Wayland desktop acceptance remains pending.
 

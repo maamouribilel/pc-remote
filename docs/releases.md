@@ -38,7 +38,7 @@ These builds are experimental and are not signed for distribution. Their [releas
 
 Published versions up to 0.4.2 never check for updates themselves. On the repository page, choose **Watch → Custom → Releases** to get an email for each new version.
 
-The source now contains an opt-in update notice that is not yet in a published release. After a one-time question in the companion window, it asks GitHub once a day whether a newer signed release exists and shows a banner that opens the release page. It never downloads or installs anything itself. The design and its later phases are in [AUTO_UPDATE_PLAN.md](../AUTO_UPDATE_PLAN.md).
+The source now contains an opt-in update notice that is not yet in a published release. After a one-time question in the companion window, it asks GitHub once a day whether a newer signed release exists and shows a banner that opens the release page. Checks never download anything. On a Windows installer copy, **Download update** fetches the signed installer and **Restart to update** installs it and reopens PC Remote; portable, macOS and Ubuntu copies only show the notice. The design and its later phases are in [AUTO_UPDATE_PLAN.md](../AUTO_UPDATE_PLAN.md).
 
 ## Publishing the next version
 

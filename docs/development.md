@@ -145,7 +145,7 @@ See the [initial publication validation results](publication-checks.md) for buil
 
 The [release evidence](release-evidence.md) records per-version local and hosted results. Security and regression checks run on pull requests and manual workflow dispatch; the final release dispatch runs all OS suites and builds assets once. CI configuration and recording checks do not establish physical-phone, installed-app or native desktop acceptance.
 
-Update checks ([AUTO_UPDATE_PLAN.md](../AUTO_UPDATE_PLAN.md)) are covered by the portable/Windows suites (in-memory GitHub, signature, tampering, redirects, limits, preferences) and the headless desktop UI checks; none contacts GitHub. `python3 scripts/update-manifest.py selftest` checks the manifest tool with a throwaway key on macOS/Linux.
+Update checks ([AUTO_UPDATE_PLAN.md](../AUTO_UPDATE_PLAN.md)) are covered by the portable/Windows suites (in-memory GitHub, signature, tampering, redirects, limits, stalled bodies, preferences, verified installer downloads, install stages with a recording installer, installed-copy rules and the `PCRemote.iss` relaunch entry) and the headless desktop UI checks; none contacts GitHub or runs an installer. `python3 scripts/update-manifest.py selftest` checks the manifest tool with a throwaway key on macOS/Linux.
 
 For strict certificate interoperability, run `./scripts/test-certificate.ps1` with **Python 3.13+** available. It uses only Python's standard library and checks valid trust, incorrect-host rejection, and untrusted-certificate rejection. CI includes this check; Python is a validation tool and is not needed to run the packaged app.
 

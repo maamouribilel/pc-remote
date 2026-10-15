@@ -32,7 +32,7 @@ public partial class MainWindow : Window
         Title = $"PC Remote {typeof(App).Assembly.GetName().Version?.ToString(3)} — connection setup";
         ApplyDarkTitleBar(this);
         StartupAtSignIn.IsChecked = SignInStartup.Enabled;
-        refresh.Tick += (_, _) => RefreshPairing();
+        refresh.Tick += (_, _) => { RefreshPairing(); RenderUpdates(); };
         refresh.Start(); Closed += (_, _) => refresh.Stop();
     }
     public void ShowReady(CompanionServer server)
@@ -226,27 +226,68 @@ public partial class MainWindow : Window
         });
         return completion.Task;
     }
-    public void AttachUpdates(UpdateService service) { updates = service; RenderUpdates(); }
-    // Called on the UI thread after every update-state change.
+    public void AttachUpdates(UpdateService service)
+    {
+        updates = service;
+        if (service.CanInstall) UpdateExplanation.Text = "Checks only ask GitHub whether a newer signed release exists; they never download or install anything. An update is downloaded only when you choose Download update, checked against its signed size and SHA-256, and installed when you choose Restart to update. GitHub sees this PC's IP address; no device, pairing or setting information is sent.";
+        RenderUpdates();
+    }
+    // Restart to update closes the companion, so it waits for a moment with no phone in control, no power countdown and no open approval.
+    private string? UpdateBlocker() => host == null ? null
+        : host.Sessions.OwnerDeviceId != null ? "A phone is controlling this PC. Pause control or disconnect the phone, then choose Restart to update."
+        : host.Power.Pending != null ? "A power action is counting down. Cancel it first."
+        : host.Pairing.Status == "pending" ? "A pairing request is waiting for approval. Approve or deny it first." : null;
+    // Called on the UI thread after every update-state change and by the one-second refresh.
     public void RenderUpdates()
     {
         if (updates == null) return;
-        var notice = updates.Notice;
-        UpdateBanner.Visibility = updates.NeedsConsent || notice != null ? Visibility.Visible : Visibility.Collapsed;
-        UpdateConsentButtons.Visibility = updates.NeedsConsent && notice == null ? Visibility.Visible : Visibility.Collapsed;
-        UpdateNoticeButtons.Visibility = notice != null ? Visibility.Visible : Visibility.Collapsed;
+        var notice = updates.Notice; var stage = updates.Stage;
+        // A download in progress or ready to install keeps the banner: it holds the only Cancel and Restart buttons.
+        UpdateBanner.Visibility = updates.NeedsConsent || notice != null || stage != UpdateStage.Idle ? Visibility.Visible : Visibility.Collapsed;
+        UpdateConsentButtons.Visibility = updates.NeedsConsent && notice == null && stage == UpdateStage.Idle ? Visibility.Visible : Visibility.Collapsed;
+        UpdateNoticeButtons.Visibility = notice != null || stage != UpdateStage.Idle ? Visibility.Visible : Visibility.Collapsed;
+        static Visibility Show(bool visible) => visible ? Visibility.Visible : Visibility.Collapsed;
+        UpdateLater.Visibility = Show(stage == UpdateStage.Idle);
+        UpdateSkip.Visibility = Show(stage == UpdateStage.Idle);
+        UpdateView.Visibility = Show(stage is UpdateStage.Idle or UpdateStage.Ready);
+        UpdateDownload.Visibility = Show(updates.CanInstall && stage == UpdateStage.Idle);
+        UpdateCancel.Visibility = Show(stage == UpdateStage.Downloading);
+        UpdateRestart.Visibility = Show(stage == UpdateStage.Ready);
+        var blocker = UpdateBlocker();
+        UpdateRestart.IsEnabled = blocker == null;
+        // View release is the main action only where this copy cannot install updates itself.
+        UpdateView.SetResourceReference(StyleProperty, updates.CanInstall ? typeof(Button) : "PrimaryButton");
         // Same banner colors as the macOS/Linux window: neutral question, green notice, amber security notice.
-        var (background, border) = notice == null ? ("#141B23", "#3D4753") : notice.Security ? ("#211C12", "#6B5524") : ("#102620", "#2C6B58");
+        var (background, border) = notice == null && stage == UpdateStage.Idle ? ("#141B23", "#3D4753") : notice?.Security == true ? ("#211C12", "#6B5524") : ("#102620", "#2C6B58");
         UpdateBanner.Background = (Brush)new BrushConverter().ConvertFromString(background)!; UpdateBanner.BorderBrush = (Brush)new BrushConverter().ConvertFromString(border)!;
-        if (notice != null)
+        var version = updates.ReadyVersion ?? notice?.Version;
+        switch (stage)
         {
-            UpdateTitle.Text = (notice.Security ? "Security update: " : "") + $"PC Remote {notice.Version} is available";
-            UpdateText.Text = $"{notice.Summary} You have {UpdateService.Display(updates.Current)}. The release page lists the installer, portable ZIP, checksums and update steps.";
-        }
-        else if (updates.NeedsConsent)
-        {
-            UpdateTitle.Text = "Check for PC Remote updates automatically?";
-            UpdateText.Text = "PC Remote can ask GitHub once a day whether a newer version is published and tell you here. Nothing is downloaded or installed, and no device, pairing or setting information is sent; GitHub sees this PC's IP address. You can change this in Settings.";
+            case UpdateStage.Downloading:
+                UpdateTitle.Text = $"Downloading PC Remote {version}";
+                UpdateText.Text = $"{updates.DownloadProgress:P0} · The file is checked against its signed size and SHA-256 before it can be installed.";
+                break;
+            case UpdateStage.Ready:
+                UpdateTitle.Text = $"PC Remote {version} is ready to install";
+                UpdateText.Text = updates.InstallProblem ?? blocker ?? "PC Remote will close, install the update and reopen. Your certificate, paired devices and settings are kept.";
+                break;
+            case UpdateStage.Installing:
+                UpdateTitle.Text = $"Installing PC Remote {version}";
+                UpdateText.Text = "PC Remote will close and reopen in a moment.";
+                break;
+            default:
+                if (notice != null)
+                {
+                    UpdateTitle.Text = (notice.Security ? "Security update: " : "") + $"PC Remote {notice.Version} is available";
+                    UpdateText.Text = (updates.InstallProblem is { } problem ? problem + " " : "") + $"{notice.Summary} You have {UpdateService.Display(updates.Current)}. "
+                        + (updates.CanInstall ? "Download update to install it here, or open the release page." : "The release page lists the installer, portable ZIP, checksums and update steps.");
+                }
+                else if (updates.NeedsConsent)
+                {
+                    UpdateTitle.Text = "Check for PC Remote updates automatically?";
+                    UpdateText.Text = "PC Remote can ask GitHub once a day whether a newer version is published and tell you here. Checks never download or install anything; an update is downloaded and installed only when you choose it. No device, pairing or setting information is sent; GitHub sees this PC's IP address. You can change this in Settings.";
+                }
+                break;
         }
         UpdateAutomatic.IsChecked = updates.Preferences.Automatic == true;
         UpdateCheckNow.IsEnabled = !updates.Checking;
@@ -258,6 +299,23 @@ public partial class MainWindow : Window
     private async void CheckUpdatesNow(object sender, RoutedEventArgs e) { if (updates != null) await updates.CheckNowAsync(); }
     private void SkipUpdate(object sender, RoutedEventArgs e) => updates?.Skip();
     private void LaterUpdate(object sender, RoutedEventArgs e) => updates?.Later();
+    private async void DownloadUpdate(object sender, RoutedEventArgs e) { if (updates != null) await updates.DownloadAsync(); }
+    private void CancelUpdateDownload(object sender, RoutedEventArgs e) => updates?.CancelDownload();
+    private void RestartToUpdate(object sender, RoutedEventArgs e)
+    {
+        if (updates is not { Stage: UpdateStage.Ready }) return;
+        if (UpdateBlocker() is { } reason) { MessageBox.Show(this, reason, "PC Remote update"); RenderUpdates(); return; }
+        if (host != null)
+        {
+            // No phone may take control while the installer closes PC Remote; its graceful exit releases input again.
+            try { host.Sessions.Pause(true); host.Input.ReleaseAll(); }
+            catch (InputFailureException)
+            { MessageBox.Show(this, "Windows could not release held input. Control stays paused; resolve the input problem, then choose Restart to update again.", "PC Remote update"); RefreshPairing(); return; }
+            RefreshPairing();
+        }
+        try { updates.Install(); } catch (InvalidOperationException) { }
+        RenderUpdates();
+    }
     private void ViewRelease(object sender, RoutedEventArgs e)
     {
         // The address comes from a signed manifest and is re-checked against this repository's release pages.

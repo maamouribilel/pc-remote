@@ -41,7 +41,9 @@ public partial class App : Application
         // Update checks keep their own plain preferences and run even if Windows integration fails below.
         try
         {
-            updates = UpdateService.Create(System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PcController"));
+            var data = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PcController");
+            // Only the registered installer copy can install updates itself; a portable ZIP copy keeps notices only.
+            updates = UpdateService.Create(data, WindowsUpdateInstaller.ForInstalledCopy(data));
             setup.AttachUpdates(updates); updates.Changed += UpdatesChanged; updates.Start();
         }
         catch (Exception exception) when (exception is System.IO.IOException or UnauthorizedAccessException or InvalidOperationException or System.Security.Cryptography.CryptographicException) { updates = null; }

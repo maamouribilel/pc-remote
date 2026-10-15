@@ -4,6 +4,8 @@
     <ProjectReference Include="../../src/PcController.Host/PcController.Host.csproj" />
     <!-- Pure Windows mapping table regression data; no native/WPF assembly reference. -->
     <Compile Include="../../src/PcController.Windows/WindowsMediaMappings.cs" Link="WindowsMediaMappings.cs" />
+    <!-- Pure "Restart to update" rules (installed-copy detection, installer arguments); no registry or process use. -->
+    <Compile Include="../../src/PcController.Windows/WindowsUpdateRules.cs" Link="WindowsUpdateRules.cs" />
     <Content Include="../../src/remote/dist/**" Link="wwwroot/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
