@@ -125,12 +125,12 @@ The server sends no `Permissions-Policy` header today (only CSP, which does not 
 
 | Phase | Implementation | Automated checks | Real-device acceptance |
 | --- | --- | --- | --- |
-| 0. Spikes & measurements | Not started | — | Pending |
-| 1. Motion math | Not started | — | — |
-| 2. UI & integration | Not started | — | — |
-| 3. Automated browser tests | Not started | — | — |
+| 0. Spikes & measurements | Deferred: stated assumptions instead of measurements (2026-10-14) | Not possible without a phone | Pending |
+| 1. Motion math | Done 2026-10-14 (`air-math.ts`) | 18 page-less checks pass locally | — |
+| 2. UI & integration | Done 2026-10-14 | `tsc`/Vite build; local mocked-companion check with synthetic sensors | — |
+| 3. Automated browser tests | Done 2026-10-14 (`air.spec.ts`, capability assertion, scripts/CI wired) | Passed locally 2026-10-15 on the fixture (first run); hosted run pending in the 0.4.0 final dispatch | — |
 | 4. Real-device tuning & acceptance | Not started | — | Pending |
-| 5. Docs & release integration | Not started (needs release authorization) | — | — |
+| 5. Docs & release integration | In progress 2026-10-15: release 0.4.0 authorized by the user | see the 0.4.0 log entry | — |
 
 ## Phase 0 — spikes and measurements
 
@@ -318,3 +318,42 @@ Only with the user's separate release authorization. A user-visible feature sugg
 - Status: plan only. No source, test, version, or documentation changes besides this file.
 - Repository facts that shaped the plan: `pointer.move` accepts finite ±500 fractional deltas, and Host multiplies by the PC sensitivity (0.25–4) and accumulates fractions (`src/PcController.Core/ControlProtocol.cs`). The remote aggregates motion per animation frame with backpressure (`src/remote/src/touchpad.ts`). The CSP has no effect on sensors, and no `Permissions-Policy` header exists (`src/PcController.Host/CompanionServer.cs`). The remote does not use `localStorage` yet. The browser fixture records `move:x,y` after server accumulation (`tests/PcController.PortableTests/MouseChecks.cs`). The pinned .NET 10.0.402 and Node 24.21.0 are present in `.tools/`.
 - Next: Phase 0.
+
+### 2026-10-14 — Phases 1–3 implemented; Phase 0 replaced by stated assumptions; fixture run pending
+
+- Status: feature implemented in source on `main` after v0.3.6 (version unchanged, nothing packaged or published). Phase 0's physical measurements could not be made in this session, so the plan's "Phase 0 confirms" items are implemented as **explicit assumptions** that the Phase 4 device session must confirm or correct.
+- Implemented behavior and changed files:
+  - `src/remote/src/air-math.ts` (new, pure): sanitize/spike rejection, 4–50 ms dt clamp with `interval` fallback, gravity low-pass (τ 150 ms, 6–14 m/s² band, seeded), screen-axis remap from the clockwise orientation angle, yaw/pitch projection with the 0.35 right-axis guard, soft 1.5 °/s deadzone, One-Euro (1 Hz / 0.02 / 1 Hz), 40 px/° gain with a 1→2 curve between 20 and 200 °/s, two-decimal quantize, ±500 clamp, tap and settle rules, and `AirPipeline` (first sample after engage dropped, 100 ms settle, rotation integral).
+  - `src/remote/src/air-pointer.ts` (new): `Touch | Air` radiogroup, `#air-pad` clutch with pointer capture, states Idle → Probing → NeedsPermission / Denied / NoSensor / Ready ⇄ Holding, 300 ms stall watchdog ("Motion paused · hold again"), tap-to-click, Air settings dialog (speed 0.5–2.5×, invert horizontal, invert vertical) in `localStorage` (`pc-remote.air`, try/catch), subscription only while enabled ∧ Air ∧ Touchpad tab visible ∧ page visible (MutationObserver on the panel plus `visibilitychange`), stop on every touchpad reset path.
+  - `src/remote/src/touchpad.ts` (additive): `motion()`, `click()`, `hook({reset, enabled})`, dragging class on both pads, shared flush now rounds to two decimals, carries sub-0.01 remainders and spaces aggregates ≥ 8 ms apart (deliberate behavior change for touch output too; integer touch deltas are unaffected).
+  - `src/remote/index.html`, `style.css`, `icons.ts` (`air`, `tune`), `main.ts` (one construction line; lifecycle paths flow through the touchpad hooks). Control help gained an Air paragraph.
+  - `tests/remote/air-math.spec.ts` (new, page-less), `tests/remote/air.spec.ts` (new, fixture), `tests/remote/capabilities.spec.ts` (`#mode-air` follows the pointer capability), `scripts/portable.py` (`remote-unit` action; `browser` runs the unit spec, then `mouse`/`connection` on one fixture instance and `air.spec.ts` on a second because each fixture issues one single-use challenge), `.github/workflows/security-checks.yml` (`remote-unit` runs in the shared job's browser step, after Playwright installs Chromium), `src/PcController.Host/CompanionServer.cs` (comment only: a future Permissions-Policy must keep `accelerometer`/`gyroscope` for `self`; `air.spec.ts` asserts it).
+- Environment: macOS (Apple Silicon), pinned `.tools` .NET SDK 10.0.402 and Node 24.21.0/npm 11.19.0, Playwright 1.64 Chromium headless. The user's production companion (0.3.6) was running and holding port 8443 the whole session.
+- Commands/checks and actual results:
+  - `python3 scripts/portable.py remote-unit` → 18 passed.
+  - `npm run build` (strict `tsc --noEmit` + Vite) → built; `dotnet build tests/PcController.PortableTests -c Release` → 0 errors (bundle copied to `wwwroot`).
+  - Local throwaway check (scratch directory, not in the repository): the built bundle served over a self-signed HTTPS static server with `/api/*` and `/control/ws` answered by Playwright mocks, synthetic `devicemotion` events and CDP touch. Verified: permission states (needs-permission → denied → Use Touch → granted while `navigator.userActivation.isActive`), hold + yaw → negative `dx` only, hold + pitch → negative `dy` only, no motion without a hold, a tap sends exactly one left click and no movement, invert vertical flips `dy` and persists, stall pauses pointing without auto-resume, tab switch / connection settings / hidden page mid-hold stop pointing and send `input.releaseAll`, drag keeps `down → move → up` order, ~60 aggregates/s under 250 Hz injection (headless rAF), arrow keys toggle the switch, every visible control ≥ 44 px at 363/390/844/1280 widths, no console errors. This is **not** fixture evidence and is recorded only to explain why the untested fixture spec is expected to pass.
+- Synthetic / virtual-sensor evidence: injection method = `window.dispatchEvent(new DeviceMotionEvent('devicemotion', {rotationRate, accelerationIncludingGravity, interval}))` every 16 ms from an `addInitScript` helper; `DeviceMotionEvent.requestPermission` stubbed the same way. Headless Chromium itself exposes `requestPermission()` and answers `"prompt"` without a dialog, so the no-sensor path on desktop Chromium shows **Enable motion** first and reaches "No motion sensor" after the 1 s probe.
+- Real-device evidence: **none**. Pending.
+- Pending or unavailable checks and exact follow-up steps:
+  1. Quit the companion (or free port 8443), then `python3 scripts/portable.py browser` (unit spec, `mouse`/`connection`, then `air.spec.ts`) and `python3 scripts/portable.py browser-capabilities`. Record the results here. Windows `./scripts/test-browser-mouse.ps1` runs the same `browser` action.
+  2. Phase 0/4 on a phone against a disposable target (see Phase 4): hold the pad flat like a remote and turn left → the cursor must move left; raise the top edge → the cursor must move up. If a direction is mirrored, note the device/OS/browser and flip the matching invert toggle; a consistent mirror on a platform means the sign assumption below is wrong for it and should become a constant. Then upright and 30° roll grips, landscape, rest drift, tap jitter, lift jitter, lock/background/takeover/Wi-Fi drop mid-hold, iOS Safari vs Home Screen permission prompts and the deny/reload recovery, Android (no prompt expected).
+- Decisions, constants, deviations:
+  - Sensor axes: W3C `rotationRate` (alpha about z, beta about x, gamma about y, right-hand rule). Gravity sign is **auto-resolved per hold** from the low-passed vector by assuming the phone is held screen-up or upright (`resolveGravitySign`; needs ≥ 4 m/s² of projection, otherwise the previous sign is kept, default +1). This replaces the planned per-platform constant because iOS/Android conventions were not measured; both outputs are consistent for flat and upright grips under either convention.
+  - Both axes have invert toggles (the plan had vertical only): a wrong rotation-rate sign can mirror either axis and could not be measured.
+  - Air settings live in a `<dialog>` behind a gear button beside the switch instead of a `<details>` block, so the pad keeps its height at 390×700.
+  - The selected mode is not persisted; Touch is selected on every load (D2/D6). A later convenience could remember it.
+  - Switching Touch/Air calls the touchpad's `release()`: held input (an active drag) is released like on a tab switch, and pointing stops, before the surfaces swap.
+  - `requestPermission()` results other than `"denied"` fall through to the sample probe (Chromium answers `"prompt"`).
+  - Constants are the plan's starting values, untuned.
+- Handoff for the next phase: run the fixture suite first (step 1 above), fix anything it finds, then Phase 4 on real devices. Phase 5 (README row, screenshot, release integration) needs separate release authorization; README still describes the published 0.3.6.
+
+### 2026-10-15 — Phase 3 fixture run passed; Phase 5 release 0.4.0 started
+
+- Status: the user authorized committing and publishing so the feature can be tried on a phone. Version bumped to **0.4.0** (new user-visible feature → next minor, as planned).
+- Commands/checks and actual results (macOS 27 Apple Silicon, pinned toolchain, the user's 0.3.6 companion quit with SIGTERM to free port 8443 and relaunched afterwards): `portable.py build`; `test` 272; `mac-test` 69; `desktop-test` 92; `browser` → air-math 18, connection 5 + mouse 1, **`air.spec.ts` 1 passed in 14.5 s on the first run**; `browser-capabilities` all four fixtures; `audit` and `audit-runtime.py` clean; Gitleaks 8.30.1 no leaks in 252 files. `docs/assets/mobile-air.png` captured through the fixture with a zero-rate synthetic sensor (Ready state).
+- Synthetic / virtual-sensor evidence: same injection method as the 2026-10-14 entry, now against the real HTTPS/WSS recording fixture. Headless Chromium's own `requestPermission()` answered `"prompt"` before the stub was installed, and the pad reached "No motion sensor" after the probe, as designed.
+- Real-device evidence: still **none**; Phase 4 stays Pending. The 0.4.0 public build is what the user will try first.
+- Phase 5 work in this release: version files, README (download links, "New in 0.4.0", Features row, Air capture section, validation commands), both agent files, `docs/releases.md`, `docs/limitations.md`, `docs/protocol.md`, `docs/troubleshooting.md`, `docs/release-readiness.md`, `.github/SECURITY.md`, platform guides' download names, `docs/assets/README.md`, `IMPLEMENTATION_PLAN.md`, dated `docs/release-evidence.md`. Publication steps (final dispatch, tag, assets, public verification) are recorded in `docs/release-evidence.md`.
+- Handoff: after publication, Phase 4 on the user's phone against a disposable target, recording device/OS/browser, constants and results here; tune constants only from reported results.
+

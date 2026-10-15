@@ -8,6 +8,7 @@ These assets were captured from PC Remote 0.2.0 on 2026-10-12.
 | `mobile-*.png` | Actual bundled browser UI in Microsoft Edge, at a 390 × 844 CSS-pixel portrait viewport and 2× pixel density |
 | `desktop-remote.png` | The same browser application at a 1280 × 860 CSS-pixel viewport and 2× pixel density |
 | `walkthrough.gif` | Actual browser screenshots assembled into a looping GIF, at 390 × 844 pixels |
+| `mobile-air.png` | Actual bundled browser UI of version 0.4.0 in Playwright 1.64 Chromium on macOS, captured 2026-10-15 at a 390 × 844 CSS-pixel portrait viewport and 2× pixel density through the same loopback fixture. A page script dispatched zero-rate synthetic `devicemotion` events so the Air pad shows its Ready state; no physical gyroscope was involved |
 
 The browser media uses the existing `MouseBrowserFixture` in `tests/PcController.Tests`, with isolated temporary storage and real loopback HTTPS/WSS on port 8443. That fixture approves its own demo browser and uses recording input/power adapters. The displayed **Test player** launcher entry and **42%** browser volume come from that fixture, not a claimed physical player/audio session. No production browser cookies, credentials, certificate keys, or active pairing links are included.
 
@@ -19,4 +20,4 @@ For a fresh capture, close all companions, run the project's isolated fixture, p
 
 ## Version note
 
-These real captures were made from version 0.2.0. Version 0.2.1 changes server request limits and authorization; the pictured controls and layout are unchanged. Version 0.3.0 keeps the Windows companion and phone layout; the experimental macOS/Ubuntu Avalonia shell is not pictured. They are visual evidence, not proof of the newer security checks.
+These real captures were made from version 0.2.0. Version 0.2.1 changes server request limits and authorization; the pictured controls and layout are unchanged. Version 0.3.0 keeps the Windows companion and phone layout; the experimental macOS/Ubuntu Avalonia shell is not pictured. They are visual evidence, not proof of the newer security checks. The 0.4.0 Air pointer capture was taken from the 0.4.0 source on the pinned toolchain the same way; the other images were not re-captured and the pictured controls are otherwise unchanged.

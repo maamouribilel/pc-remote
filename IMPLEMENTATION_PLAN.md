@@ -538,3 +538,7 @@ Release 0.3.5 — 2026-10-14:
 
 Release 0.3.6 — 2026-10-14:
 - macOS-only fixes: Wi-Fi record (AirPort) bursts no longer revoke LAN approval unless the joined network name changed; pause-only transitions keep the host, pairing link and pending phone approvals; the pause text names the one blocking reason and a failed focus query falls back to the frontmost app; `scripts/sign-macos-local.py` keeps the Accessibility entry across updates. Windows/Ubuntu unchanged; Windows physical/installed acceptance remains open.
+
+
+Release 0.4.0 — 2026-10-15:
+- Phone remote: Air pointer (gyroscope mouse) on the Touchpad tab, hold-to-point with tap-to-click, iOS/Android permission states, phone-side speed/invert settings; protocol v1 and every companion unchanged. Verified with synthetic sensors in Chromium on the loopback fixture; physical-phone pointing and axis confirmation remain open (see `AIR_POINTER_PLAN.md`).

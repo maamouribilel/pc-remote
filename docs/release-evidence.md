@@ -679,3 +679,37 @@ At the user's request, the verified public Apple Silicon ZIP replaced the locall
 - The application data directory and the Keychain item were not touched.
 - 0.3.6 launched; tccd answered `Allowed (System Set)` for the new process with no `Failed to match` (the third different build matched by the local identity's requirement), and the window asks only for the per-build **Allow Keychain access after update…**.
 - After the user approved the Keychain dialog and the network, the public build reported Secure LAN ready and input ready, and a ten-minute watch logged one Wi-Fi record burst (22:54:50, 38 keys) with the LAN listener answering throughout and the approval kept.
+
+## 2026-10-14 — Air pointer (gyroscope mouse) in the phone remote (unreleased, after 0.3.6)
+
+Source changes on `main` after v0.3.6. Version stays **0.3.6**; no package was built or published, and the v0.3.6 tag and assets are unchanged. The phone remote gains an **Air** mode on the Touchpad tab: hold the pad and turn the phone to move the pointer, like a TV magic remote; lift to stop, tap to click. It is phone-client only (protocol v1 `pointer.move`, no new message, capability or companion setting), reads sensors only while Air is selected on a visible Touchpad tab with control enabled, and sends only rounded pixel deltas. Design and the dated execution log are in `AIR_POINTER_PLAN.md`.
+
+**Checks run on macOS with the pinned toolchain (synthetic sensors, not device evidence)**
+- `python3 scripts/portable.py remote-unit`: 18 page-less motion-math checks pass (grips, roll compensation, landscape remap, degeneracy, gravity sign resolution, dt clamps, spike/NaN rejection, deadzone, One-Euro, gain curve, settings, output bounds, tap rules).
+- `npm run build` (strict TypeScript + Vite) and `dotnet build tests/PcController.PortableTests -c Release` succeed.
+- A throwaway local check outside the repository (built bundle on a self-signed HTTPS static server, `/api/*` and `/control/ws` mocked by Playwright, synthetic `devicemotion` events, CDP touch) exercised every scenario of the new fixture spec and passed with no console errors; it explains why the fixture spec is expected to pass but is not fixture evidence.
+
+**Not run**
+- `python3 scripts/portable.py browser` (now: unit spec, `mouse`/`connection`, then `air.spec.ts` on a second fixture instance) and `browser-capabilities`: port 8443 was held by the running 0.3.6 companion. These must pass before the change is relied on.
+- Hosted CI for this commit (the shared job runs `remote-unit` after installing Chromium; the Windows browser job runs the extended `browser` action).
+- Real iPhone/Android pointing: axis signs, iOS Safari/Home Screen permission prompts and recovery, rest drift, tap/lift jitter, lifecycle under lock/background/takeover/Wi-Fi loss, and Windows/macOS/Ubuntu acceptance. Pending per the plan's Phase 4.
+- Release integration (README feature row and screenshot, version bump, packaging): needs separate authorization.
+
+## Version 0.4.0 — Air pointer (gyroscope mouse) in the phone remote (2026-10-15)
+
+Preview release of the feature described in the [2026-10-14 entry](#2026-10-14--air-pointer-gyroscope-mouse-in-the-phone-remote-unreleased-after-036). The companion is unchanged on every platform: no Host, Core, Windows, macOS, Linux or desktop-shell behavior changed (one comment in `CompanionServer.cs`), the protocol stays v1, and all 0.3.x fixes remain. The phone remote gains the **Air** mode on the Touchpad tab, the shared flush spacing/rounding described in `docs/protocol.md`, and new browser checks.
+
+**Local results before the release commit (macOS 27 Apple Silicon, pinned .NET 10.0.402 and Node 24.21.0, user's 0.3.6 companion quit for the run)**
+- `portable.py build` (Release), shared portable **272**, Mac adapter **69**, desktop **92**.
+- `portable.py browser`: Air pointer math **18** (page-less), connection **5** and touch gestures **1** on the first fixture instance, `air.spec.ts` **1** (14.5 s) on a second fixture instance: permission states with a stubbed `requestPermission` (denied, then granted inside a user activation), hold + yaw → `move:` events left only, hold + pitch → up only, no movement without a hold, a tap → one `click:left` and no movement, invert vertical flips `dy` and persists across a reload, a sensor stall pauses pointing without auto-resume, tab switch / connection settings / hidden page mid-hold stop pointing and record `release`, drag keeps `left:True → move → left:False`, 20–130 aggregates per second under 250 Hz injection (about 60 on headless Chromium), arrow keys on the switch, 44 px targets and no overflow at 363/390/844/1280 widths, no console errors, and the companion sends no `Permissions-Policy` header.
+- `portable.py browser-capabilities`: recording compatibility spec, then macOS, Linux and unavailable fixtures at 390 and 1280 widths; `#mode-air` follows the pointer capability.
+- npm/NuGet audits: no advisories. Bundled runtime advisory feed (`audit-runtime.py` with the system CA bundle and a read-only token): no matching advisories for 10.0.13.
+- Gitleaks 8.30.1 over the 252 tracked and new files of the working tree: no leaks.
+- `docs/assets/mobile-air.png` captured through the loopback fixture (see `docs/assets/README.md`).
+- Not run locally: `check-release-docs.ps1` (PowerShell is not installed on this Mac; the Release documentation workflow runs it on push) and strict TLS (`tls`, Python 3.13+; the final dispatch runs it on every OS).
+
+**Not established**
+- Hosted CI for this commit and the final assets: recorded in the publication entry below once the final dispatch has run.
+- Pointing with a physical iPhone or Android phone: axis directions, iOS Safari/Home Screen permission prompts and the deny/reload recovery, rest drift, tap/lift jitter, lifecycle under lock/background/takeover/Wi-Fi loss. Synthetic sensors prove the pipeline and gating, not sensor behavior (plan Phase 4).
+- Windows installation on a physical PC, a real Ubuntu desktop, macOS Intel hardware and every earlier 0.3.x gap.
+

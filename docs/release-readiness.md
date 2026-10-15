@@ -1,8 +1,8 @@
 # Multi-platform release readiness
 
-Version **0.3.6** is the current public preview: the Windows companion remains the primary platform, and macOS ARM64/Intel and Ubuntu 24.04 x64 archives are published as **experimental** builds of the shared companion. This page separates implemented source, automated evidence actually obtained, published packaging and the native/manual acceptance that is still pending. Candidate outputs (explicit `candidate` filename, dirty-source manifest) are never published; release assets come from `--final` builds of the exact tagged commit.
+Version **0.4.0** is the current public preview: the Windows companion remains the primary platform, and macOS ARM64/Intel and Ubuntu 24.04 x64 archives are published as **experimental** builds of the shared companion. 0.4.0 adds the phone remote's Air pointer (gyroscope mouse); its evidence is synthetic-sensor browser checks on every OS, and pointing with a physical phone is still pending. This page separates implemented source, automated evidence actually obtained, published packaging and the native/manual acceptance that is still pending. Candidate outputs (explicit `candidate` filename, dirty-source manifest) are never published; release assets come from `--final` builds of the exact tagged commit.
 
-## Published support matrix (0.3.6)
+## Published support matrix (0.4.0)
 
 | Asset | Status | Automated evidence for 0.3.x | Not yet established |
 | --- | --- | --- | --- |
@@ -57,6 +57,6 @@ The source/package pattern scan is useful evidence, not a replacement for a full
 
 ## Separately authorized publication
 
-Versions 0.3.0 through 0.3.6 followed this procedure; repeat it for every later version. Choose a new three-component version only after publication is authorized. Synchronize shared/Windows versions, Windows package default and installer fallback; README status/downloads/commands, both agent files, releases, dated evidence, affected setup/protocol/notices and `.github/`. Keep all gaps visible and preview status appropriate. Complete `AGENTS.md` and the release checklist; run documentation, Release/regression/strict-TLS/dependency/runtime advisory/secret/package checks.
+Versions 0.3.0 through 0.4.0 followed this procedure; repeat it for every later version. Choose a new three-component version only after publication is authorized. Synchronize shared/Windows versions, Windows package default and installer fallback; README status/downloads/commands, both agent files, releases, dated evidence, affected setup/protocol/notices and `.github/`. Keep all gaps visible and preview status appropriate. Complete `AGENTS.md` and the release checklist; run documentation, Release/regression/strict-TLS/dependency/runtime advisory/secret/package checks.
 
 Commit **all** corresponding source/docs to `main` before final packaging. Build final assets from that exact clean commit; verify each DLL informational revision, package inventories, runtime versions, licenses and aggregated checksums. Use `--final` packaging (or the CI `final` dispatch) instead of renaming candidates. Create a new annotated `vX.Y.Z` tag at that commit, push source/tag, attach accurate Windows/Mac/Ubuntu assets and a combined `SHA256SUMS.txt`, publish within the authorization, then independently verify public tag/commit, preview status, every URL/size/digest and rendered notes. Never move a published tag or replace its binaries.
