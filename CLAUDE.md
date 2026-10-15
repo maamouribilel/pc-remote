@@ -7,6 +7,7 @@ Current public release: [v0.4.2 preview](https://github.com/maamouribilel/pc-rem
 
 
 - Public documentation and GitHub metadata describe every supported platform and browser with its actual status: Windows primary; macOS and Ubuntu experimental; iPhone Safari and its Home Screen app verified on hardware; Chromium-based browsers covered by automated checks at phone and desktop sizes; Android, iPad and Firefox untested. Never present the product as Windows-only or iPhone/Safari-only, and never claim a device, browser or platform that has not been verified. Keep companion UI text device-neutral except where a step is genuinely platform-specific.
+- `docs/promo/` holds the illustrated 28-second promo (16:9 and 9:16 MP4s) and its generator in `docs/promo/source/`. It redraws the UI and synthesizes its sound, so it is neither README demo media nor evidence. Keep its on-screen claims in line with the support matrix, and rebuild it with `docs/promo/source/build.sh` when they change.
 
 - Keep user documentation focused on the current controls: `docs/setup.md` covers Touch/Air and pairing, `docs/demo.md` is the hands-on tour, and `docs/development.md` holds build/test detail. README demo media must be captured from the real bundled UI, versioned under `docs/assets/`, with dated provenance in `docs/assets/README.md`; label recording adapters and synthetic motion explicitly and retain historical captures.
 

@@ -1,0 +1,63 @@
+{
+  "duration": 28.0,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+
+  "hookMonitorIn": 0.15,
+  "hookText1": 0.45,
+  "hookPhoneIn": 1.55,
+  "hookText2": 1.8,
+  "hookLine": 2.45,
+  "hookSnap": 3.3,
+
+  "logoLand": 4.0,
+  "titleIn": 4.15,
+  "taglineIn": 4.6,
+
+  "zoomStart": 6.0,
+  "screenOn": 6.35,
+  "pairCaption": 6.6,
+  "approveClick": 7.3,
+  "connected": 7.5,
+  "appIn": 7.75,
+
+  "touchpadCaption": 8.5,
+  "fingerDown": 8.9,
+  "fingerUp": 10.3,
+  "searchClick": 10.6,
+
+  "keyboardCaption": 11.5,
+  "kbTab": 11.6,
+  "textareaTap": 11.95,
+  "typeStart": 12.2,
+  "typeStep": 0.16,
+  "typed": ["É", "t", "o", "i", "l", "e", "s", " ", "🚀"],
+  "sendText": 14.0,
+  "searchFilled": 14.15,
+
+  "mediaCaption": 15.0,
+  "mediaTab": 15.1,
+  "playTap": 15.6,
+  "volTaps": [16.6, 17.1, 17.6],
+  "volLevels": [40, 52, 64, 76],
+
+  "airCaption": 19.0,
+  "airTab": 19.1,
+  "airSeg": 19.4,
+  "airHold": 19.75,
+  "airSweepStart": 19.9,
+  "airSweepEnd": 21.8,
+  "airClick": 22.2,
+  "fullscreen": 22.35,
+
+  "trustIn": 23.0,
+  "chips": [23.45, 23.85, 24.25],
+
+  "endStart": 25.0,
+  "endLogo": 25.25,
+  "endTitle": 25.55,
+  "endTagline": 25.85,
+  "endFooter": 26.2,
+  "endUrl": 26.45
+}
