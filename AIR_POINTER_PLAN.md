@@ -130,7 +130,7 @@ The server sends no `Permissions-Policy` header today (only CSP, which does not 
 | 2. UI & integration | Done 2026-10-14 | `tsc`/Vite build; local mocked-companion check with synthetic sensors | — |
 | 3. Automated browser tests | Done 2026-10-14 (`air.spec.ts`, capability assertion, scripts/CI wired) | Passed locally 2026-10-15 on the fixture (first run); hosted run pending in the 0.4.0 final dispatch | — |
 | 4. Real-device tuning & acceptance | Not started | — | Pending |
-| 5. Docs & release integration | In progress 2026-10-15: release 0.4.0 authorized by the user | see the 0.4.0 log entry | — |
+| 5. Docs & release integration | Done 2026-10-15: published as [v0.4.0](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.0) | Final dispatch 38707534711 passed on every OS, including `air.spec.ts` on Windows | — |
 
 ## Phase 0 — spikes and measurements
 
@@ -355,5 +355,6 @@ Only with the user's separate release authorization. A user-visible feature sugg
 - Synthetic / virtual-sensor evidence: same injection method as the 2026-10-14 entry, now against the real HTTPS/WSS recording fixture. Headless Chromium's own `requestPermission()` answered `"prompt"` before the stub was installed, and the pad reached "No motion sensor" after the probe, as designed.
 - Real-device evidence: still **none**; Phase 4 stays Pending. The 0.4.0 public build is what the user will try first.
 - Phase 5 work in this release: version files, README (download links, "New in 0.4.0", Features row, Air capture section, validation commands), both agent files, `docs/releases.md`, `docs/limitations.md`, `docs/protocol.md`, `docs/troubleshooting.md`, `docs/release-readiness.md`, `.github/SECURITY.md`, platform guides' download names, `docs/assets/README.md`, `IMPLEMENTATION_PLAN.md`, dated `docs/release-evidence.md`. Publication steps (final dispatch, tag, assets, public verification) are recorded in `docs/release-evidence.md`.
-- Handoff: after publication, Phase 4 on the user's phone against a disposable target, recording device/OS/browser, constants and results here; tune constants only from reported results.
+- Publication (same day): v0.4.0 pre-release from commit `13aa270`, assets verified locally and publicly (see `docs/release-evidence.md`), the public Apple Silicon build installed and signed on the user's Mac.
+- Handoff: Phase 4 on the user's phone against a disposable target, recording device/OS/browser, constants and results here; tune constants only from reported results.
 

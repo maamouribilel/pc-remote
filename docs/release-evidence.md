@@ -713,3 +713,39 @@ Preview release of the feature described in the [2026-10-14 entry](#2026-10-14--
 - Pointing with a physical iPhone or Android phone: axis directions, iOS Safari/Home Screen permission prompts and the deny/reload recovery, rest drift, tap/lift jitter, lifecycle under lock/background/takeover/Wi-Fi loss. Synthetic sensors prove the pipeline and gating, not sensor behavior (plan Phase 4).
 - Windows installation on a physical PC, a real Ubuntu desktop, macOS Intel hardware and every earlier 0.3.x gap.
 
+### Version 0.4.0 publication and public verification (2026-10-15)
+
+Published as a **pre-release**: [v0.4.0](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.0). The annotated tag `v0.4.0` (object `14a74c0`, 08:53 UTC) points to the release commit `13aa270eae00fe6a119ecfcbd3825ff79c339a30` (feature commit `04c02ce`, release commit `13aa270`). Earlier tags and assets were not changed.
+
+Hosted runs on the release commit:
+- The `final` dispatch [38707534711](https://github.com/maamouribilel/pc-remote/actions/runs/38707534711) passed every job on the first attempt and supplied the assets: shared **272** and desktop **92** on Windows, macOS and Ubuntu; Air pointer math **18** on every OS; Mac adapter **68** on hosted macOS and the non-native subset **54** on Windows and Ubuntu; Linux adapter **88** on Ubuntu (81 elsewhere); Ubuntu private Xvfb/GTK US and French **41** each, portal/MPRIS/logind **31** and disposable encrypted keyring/TLS; platform-aware browser checks on every OS; the Windows default, security, pairing, lifecycle and PC-feature suites (151, 185, 193, 158, 180), the browser suite in Edge (connection and touch 6, **Air pointer 1**), strict TLS, installer and content/license/checksum checks; strict TLS probes, npm/NuGet audits and the runtime advisory feed on every OS.
+- The Release documentation workflow passed on the push (38707534469) and on the tag (38708977948).
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `PCRemote-0.4.0-win-x64-setup.exe` | 62,703,920 | `0b7ec7be7bc18f67eef78edcde3558a45427ac39ae21a8a98273ed0bd7373c2b` |
+| `PCRemote-0.4.0-win-x64.zip` | 89,746,104 | `aa4ebb3c32d81ccf420f64c5f9a22478cff3ae0efbdd62c8a494b81a59bb1b71` |
+| `PCRemote-0.4.0-osx-arm64.zip` | 61,161,556 | `e5d6cd23c94f0d60efccf9b7d694c48e27c6b2353da59239c73ed2ef3e2d1f3e` |
+| `PCRemote-0.4.0-osx-x64.zip` | 63,870,508 | `c84a350e4e1573a7904b169cdfded8fe8289db64a924eb4d1db813310b7deefd` |
+| `PCRemote-0.4.0-linux-x64.tar.gz` | 61,028,514 | `b5f7654fdf5d04c8aed992ffa15f5da67ef5366497ece245a77a592e31d537bf` |
+| `PCRemote-0.4.0-osx-arm64-manifest.json` | 109,747 | `694d59531537ac70461df1bd2d4f744d0e058dc5f59efa0d1dc4e73ff72ad3a0` |
+| `PCRemote-0.4.0-osx-x64-manifest.json` | 109,745 | `98a97aa2dfeee9bb7edf5c1a00da464c87a382c24f2a2371049a385fb2a36907` |
+| `PCRemote-0.4.0-linux-x64-manifest.json` | 50,478 | `1729de606f477d0bb6066c99429d9c391ad42b58361a31c07f7abf46e0e9eb07` |
+| `SHA256SUMS.txt` | 791 | covers the eight files above |
+
+Local verification of the downloaded workflow artifacts (new empty directory, independent script run with `python3 -I`, plus the repository's `scripts/check-package.py --final --output` for the three macOS/Ubuntu packages):
+- Every file matches its per-platform CI checksum; the combined `SHA256SUMS.txt` was built from those files and verified with `shasum -c`.
+- Manifests: `candidate: false`, `sourceDirty: false`, revision `13aa270`, version 0.4.0. Every extracted file (465 per macOS bundle, 464 for Ubuntu) matches its manifest and nothing is uninventoried.
+- Both macOS bundles pass `codesign --verify --deep --strict` with an ad-hoc seal and the correct architectures (main binary plus 17 dylibs); `--package-info` reports `0.4.0+13aa270…` with .NET 10.0.13, natively on Apple Silicon and under Rosetta emulation for Intel.
+- The bundled remote in all four packages contains the Air pointer (mode switch and pad markup in `index.html` and the built script).
+- The Ubuntu archive has normalized ownership (0/0), no links and an x86-64 launcher; the Windows ZIP contains `PcController.App.exe` and `wwwroot` with no debug symbols; the installer is a PE executable.
+- Gitleaks 8.30.1 over the four extracted package trees: no leaks. Scanning the build manifests as well reports 60 `generic-api-key` matches that are SHA-256 digests of .NET assemblies whose names contain "Authentication" or "Token" (file hashes, not secrets); the 0.3.6 scan had covered the trees only.
+
+After publication, all nine public URLs returned HTTP 200 with matching sizes and SHA-256 digests when downloaded anonymously into a new directory. The public `SHA256SUMS.txt` is byte-identical, GitHub's stored asset digests match, and the tag object resolves to the release commit.
+
+At the user's request ("so I can try it with my phone"), the verified public Apple Silicon ZIP replaced the installed 0.3.6 in `/Applications`:
+- The anonymous download's SHA-256 matched, the seal verified after extraction, and `--package-info` reported `0.4.0+13aa270…`.
+- The staged bundle was re-signed with the local identity (`scripts/sign-macos-local.py`, 26 s) before the swap; the 0.3.6 bundle was moved to a dated folder in the Trash, not permanently deleted, and the move is recorded under the ignored `.tools/mac-install-0.4.0/`.
+- The application data directory and the Keychain item were not touched. 0.4.0 launched; the per-build **Allow Keychain access after update…** dialog and the session-only network approval remain the user's steps.
+- Pointing with the phone had not yet been tried when this entry was written; the Air pointer plan's Phase 4 records that result.
+
