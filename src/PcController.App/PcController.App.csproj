@@ -5,7 +5,7 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-    <Version>0.4.1</Version>
+    <Version>0.4.2</Version>
     <Product>PC Remote</Product>
     <ApplicationIcon>../remote/public/pc-remote-v2.ico</ApplicationIcon>
   </PropertyGroup>

@@ -545,3 +545,6 @@ Release 0.4.0 — 2026-10-15:
 
 Release 0.4.1 — 2026-10-15:
 - Phone remote: the Air pointer reads `rotationRate` alpha/beta/gamma as rotation about x/y/z per the current DeviceMotion specification (0.4.0 used the stale alpha-about-z wording, so a tilt moved the pointer sideways on a real iPhone), seeds the gravity sign per platform, smooths before a 2 °/s deadzone and treats a seconds-valued `interval` as seconds. Confirmed on an iPhone in the flat grip against the macOS companion; the remaining Phase 4 acceptance rows stay pending (see `AIR_POINTER_PLAN.md`). Companion, protocol and storage unchanged.
+
+Release 0.4.2 — 2026-10-15:
+- macOS-only fix: the `State:` records of Apple's peer-to-peer Wi-Fi interfaces (`awdl<n>`/`llw<n>`, re-published about every 76 s on the user's Mac) no longer revoke LAN approval, which on 0.3.6–0.4.1 dropped to `localhost` within about a minute of approving while the phone showed "TypeError: Load failed". Verified by a deterministic Mac adapter row and side by side against the installed 0.4.1 bridge (15 revocations over three bursts before, 0 after). Windows, Ubuntu, the phone remote and the protocol are unchanged; a paired phone across the bursts on the installed build and the Windows physical/installed acceptance remain open.

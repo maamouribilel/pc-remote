@@ -131,17 +131,38 @@ static NSString *airport_record_key(CFStringRef key) {
     NSString *rest = [name substringFromIndex:marker.location + marker.length];
     return rest.length == 0 || [rest hasPrefix:@"/"] ? [name substringToIndex:marker.location + marker.length] : nil;
 }
+// Apple's peer-to-peer Wi-Fi interfaces (AWDL `awdl<n>` and its low-latency companion `llw<n>`,
+// used by AirDrop, AirPlay, Handoff/Continuity and Sidecar) carry only a randomized link-local
+// IPv6 address and no network service, so they can never be the approved LAN. macOS re-published
+// their IPv6 record about every 76 s on the user's Mac (observed 2026-10-15, 16:18-16:38: five keys
+// per burst with a new address each time); each burst dropped the LAN before this filter. Every State key of such an interface is ignored; Setup, Service and Global keys and the
+// keys of every other interface (Wi-Fi, Ethernet, VPN tunnels, VM bridges) still revoke.
+static BOOL peer_to_peer_interface_key(CFStringRef key) {
+    NSString *name = (__bridge NSString *)key;
+    NSString *prefix = @"State:/Network/Interface/";
+    if (![name hasPrefix:prefix]) return NO;
+    NSString *rest = [name substringFromIndex:prefix.length];
+    NSRange slash = [rest rangeOfString:@"/"];
+    NSString *interface = slash.location == NSNotFound ? rest : [rest substringToIndex:slash.location];
+    for (NSString *family in @[@"awdl", @"llw"]) {
+        if (![interface hasPrefix:family] || interface.length == family.length) continue;
+        NSString *unit = [interface substringFromIndex:family.length];
+        if ([unit rangeOfCharacterFromSet:[NSCharacterSet decimalDigitCharacterSet].invertedSet].location == NSNotFound) return YES;
+    }
+    return NO;
+}
 static void networkChanged(SCDynamicStoreRef store, CFArrayRef keys, void *info) {
     (void)info;
     // Wi-Fi signal quality (State:/Network/Interface/<if>/LinkQuality) updates every few seconds
     // and is not a connectivity change; revoking approval on it dropped the LAN within seconds.
+    // Peer-to-peer interface records (awdl/llw, see above) are not a LAN change either.
     // An AirPort record (or field) update counts only when the association changed (see above).
     // Any other changed key (addresses, routes, services, configuration) still counts.
     CFIndex count = keys ? CFArrayGetCount(keys) : 0;
     BOOL relevant = count == 0;
     for (CFIndex i = 0; i < count && !relevant; i++) {
         CFStringRef key = CFArrayGetValueAtIndex(keys, i);
-        if (CFStringHasSuffix(key, CFSTR("/LinkQuality"))) continue;
+        if (CFStringHasSuffix(key, CFSTR("/LinkQuality")) || peer_to_peer_interface_key(key)) continue;
         NSString *record = airport_record_key(key);
         if (record && store) { if (association_changed(record, association(store, (__bridge CFStringRef)record))) relevant = YES; continue; }
         relevant = YES;

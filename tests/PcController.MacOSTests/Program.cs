@@ -88,6 +88,16 @@ if (OperatingSystem.IsMacOS())
     // Wi-Fi LinkQuality changes every few seconds; it must not revoke LAN approval (it did before 0.3.5).
     Check(MacNative.pc_test_network_key("State:/Network/Interface/en0/LinkQuality") == 0 && MacNative.pc_test_network_key("State:/Network/Interface/en0/AirPort") == 1
         && MacNative.pc_test_network_key("State:/Network/Global/IPv4") == 1, "Wi-Fi signal-quality updates keep LAN approval; a first AirPort record and address changes still revoke it");
+    // Apple's peer-to-peer Wi-Fi interfaces (awdl0/llw0: AirDrop, Handoff, Sidecar) re-published a randomized link-local IPv6 record about every
+    // 76 s on the user's Mac (2026-10-15) and never carry the approved LAN; before this filter the LAN dropped within 76 s of approval (2026-10-15).
+    Check(MacNative.pc_test_network_key("State:/Network/Interface/awdl0/IPv6") == 0 && MacNative.pc_test_network_key("State:/Network/Interface/llw0/IPv6") == 0
+        && MacNative.pc_test_network_key("State:/Network/Interface/awdl0/Link") == 0 && MacNative.pc_test_network_key("State:/Network/Interface/awdl12/IPv6") == 0
+        && MacNative.pc_test_network_key("State:/Network/Interface/en0/IPv6") == 1 && MacNative.pc_test_network_key("State:/Network/Interface/en0/IPv4") == 1
+        && MacNative.pc_test_network_key("State:/Network/Interface/utun4/IPv6") == 1 && MacNative.pc_test_network_key("State:/Network/Interface/bridge100/IPv4") == 1
+        && MacNative.pc_test_network_key("State:/Network/Service/0C1B/IPv6") == 1 && MacNative.pc_test_network_key("Setup:/Network/Interface/awdl0/IPv6") == 1
+        && MacNative.pc_test_network_key("State:/Network/Interface/awdl/IPv6") == 1 && MacNative.pc_test_network_key("State:/Network/Interface/llwx/IPv6") == 1
+        && MacNative.pc_test_network_key("State:/Network/Interface/awdl0") == 0 && MacNative.pc_test_network_key("State:/Network/Interface/en0") == 1,
+        "peer-to-peer awdl/llw interface records keep LAN approval; Wi-Fi, Ethernet, tunnel, bridge, service and setup keys still revoke it");
     // The AirPort record also changes for scans, AWDL, Bluetooth audio, auto-join timestamps and access-point roaming; only a changed network name revokes.
     Check(MacNative.pc_test_airport("State:/Network/Interface/test0/AirPort", "home") == 1 && MacNative.pc_test_airport("State:/Network/Interface/test0/AirPort", "home") == 0
         && MacNative.pc_test_airport("State:/Network/Interface/test0/AirPort", "office") == 1 && MacNative.pc_test_airport("State:/Network/Interface/test0/AirPort", "office") == 0,
