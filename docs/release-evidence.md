@@ -749,3 +749,19 @@ At the user's request ("so I can try it with my phone"), the verified public App
 - The application data directory and the Keychain item were not touched. 0.4.0 launched; the per-build **Allow Keychain access after update…** dialog and the session-only network approval remain the user's steps.
 - Pointing with the phone had not yet been tried when this entry was written; the Air pointer plan's Phase 4 records that result.
 
+## 2026-10-15 — Air pointer Phase 4 on a physical iPhone (unreleased, after 0.4.0)
+
+Source changes on a branch after v0.4.0 (commit `995539d`); version stays **0.4.0**, no package built or published, the v0.4.0 tag and assets are unchanged. Full record: `AIR_POINTER_PLAN.md`, 2026-10-15 Phase 4 entries.
+
+**Physical evidence (iPhone, iOS 18.7; macOS 27 companion)**
+- The published 0.4.0 Air pointer "moves randomly" on the phone. Raw `devicemotion` captures (disposable lab page, kept outside the repository) show `rotationRate.alpha` is the rotation about the device x axis and `gamma` about z, at 60 Hz in °/s, with `accelerationIncludingGravity` pointing toward the ground (face-up z ≈ −9.7) and `interval` reported in seconds. The shipped code used the older "alpha about z" reading, so a tilt was sent as a turn; replaying the captures through the shipped pipeline reproduces it.
+- With the corrected pipeline served by the development shell from this source, the user reports the flat grip moves the pointer left, right, up and down correctly.
+- Rest noise measured at ±1.5 °/s (peaks ±4 °/s, hand-held alpha peaks ±8 °/s); replaying the 10 s hand-held capture gives 5 px drift with the new filter order and 2 °/s deadzone (35 px before).
+
+**Automated checks on the corrected source (macOS, pinned toolchain)**
+- `remote-unit` 19 (rewritten for the x/y/z order, platform gravity sign, seconds-valued interval, jitter drift bound, replay of recorded windows in `tests/remote/fixtures/ios-flat-motions.json`), `browser` connection 5 + mouse 1 and `air.spec.ts` 1, strict `tsc` + Vite build.
+
+**Not established**
+- The Phase 4 acceptance table (corner reach, precision, live rest drift, tap and lift jitter, drag with the corrected build), upright/rolled/landscape grips, lifecycle (lock, background, tab switch, PC Pause, takeover, Wi-Fi drop), the remote's permission flow in Safari and the Home Screen app, the preferred speed, Android, Windows 11 and Ubuntu rows: all pending.
+- Hosted CI for the branch (the `final` dispatch is the single gate and only runs for a release).
+
