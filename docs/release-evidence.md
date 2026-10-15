@@ -765,3 +765,21 @@ Source changes on a branch after v0.4.0 (commit `995539d`); version stays **0.4.
 - The Phase 4 acceptance table (corner reach, precision, live rest drift, tap and lift jitter, drag with the corrected build), upright/rolled/landscape grips, lifecycle (lock, background, tab switch, PC Pause, takeover, Wi-Fi drop), the remote's permission flow in Safari and the Home Screen app, the preferred speed, Android, Windows 11 and Ubuntu rows: all pending.
 - Hosted CI for the branch (the `final` dispatch is the single gate and only runs for a release).
 
+## Version 0.4.1 — Air pointer axis fix (2026-10-15)
+
+Bug-fix release of the phone remote's Air pointer; the companion is unchanged on every platform (no Host, Core, Windows, macOS, Linux or desktop-shell behavior changed, protocol v1). It ships the source recorded in the [2026-10-15 Phase 4 entry](#2026-10-15--air-pointer-phase-4-on-a-physical-iphone-unreleased-after-040): `rotationRate` alpha/beta/gamma read as rotation about x/y/z per the current W3C draft (0.4.0 used the stale alpha-about-z wording, so a tilt moved the pointer sideways on a real iPhone), the gravity sign seeded per platform (WebKit on iOS reports it toward the ground) with the per-hold resolver kept, One-Euro before a 2 °/s soft deadzone, the filter seeded at rest, and a seconds-valued `event.interval` handled. Physical evidence: an iPhone (iOS 18.7) against the macOS companion served from this source moved the pointer left, right, up and down correctly in the flat grip; the remaining Phase 4 rows stay pending.
+
+**Local results on the release source (macOS 27.0 Apple Silicon, pinned .NET 10.0.402 and Node 24.21.0, the user's 0.4.0 companion quit with SIGTERM for the loopback suites and relaunched afterwards)**
+- `portable.py build` (Release) with version 0.4.1 in every assembly.
+- Shared portable **272**, Mac adapter **69**, desktop **92**.
+- `portable.py browser`: Air pointer math **19** (page-less, including the replay of recorded iPhone windows), connection **5** + touch gestures **1**, `air.spec.ts` **1** (15.1 s) on the real loopback fixture, sequential on 8443.
+- `portable.py browser-capabilities`: recording compatibility, then the macOS, Linux and unavailable fixtures at 390 and 1280 widths.
+- Strict TLS with the pinned Python 3.13.16: `tls` (chain and hostname verification, incorrect-hostname and untrusted-certificate rejection) and `mac-tls` pass.
+- npm/NuGet audits: no advisories. Bundled runtime advisory feed (`audit-runtime.py` with the system CA bundle, anonymous): no matching advisories for 10.0.13.
+- Gitleaks 8.30.1 over the 253 tracked and new source files: no leaks.
+- Not run locally: `check-release-docs.ps1` (no PowerShell on this Mac; the Release documentation workflow runs it on push) and the Windows suites (the final dispatch runs them).
+
+**Not established before publication**
+- Hosted CI for the release commit and the final assets: recorded in the publication entry below once the final dispatch has run.
+- The Phase 4 acceptance table beyond the flat grip (measured corners/precision/drift/taps/lift/drag, other grips, lifecycle, Safari and Home Screen permission recovery, Android), Windows installation on a physical PC, a real Ubuntu desktop, macOS Intel hardware and every earlier 0.3.x/0.4.0 gap.
+

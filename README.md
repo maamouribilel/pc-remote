@@ -10,7 +10,7 @@ A touchpad, keyboard, media remote, and app launcher in the browser you already 
 Pair on your computer, connect over your own network, and keep control within reach.<br>
 <sub>Companions for Windows (primary), macOS and Ubuntu (experimental previews). Works from a phone, a tablet or another computer.</sub>
 
-[![Download](https://img.shields.io/badge/Download-v0.4.0_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.0)
+[![Download](https://img.shields.io/badge/Download-v0.4.1_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.1)
 [![Windows](https://img.shields.io/badge/Windows-x64_primary-0078D4?style=flat-square)](#supported-environments)
 [![macOS](https://img.shields.io/badge/macOS-14%2B_experimental-8A8F98?style=flat-square)](#supported-environments)
 [![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04_experimental-8A8F98?style=flat-square)](#supported-environments)
@@ -21,7 +21,7 @@ Pair on your computer, connect over your own network, and keep control within re
 [![Transport](https://img.shields.io/badge/Transport-HTTPS_%2B_WSS-5EE8BE?style=flat-square)](docs/protocol.md)
 [![License](https://img.shields.io/badge/License-MIT-5EE8BE?style=flat-square)](LICENSE)
 
-**[Download for Windows](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.0/PCRemote-0.4.0-win-x64-setup.exe)** · **[macOS](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.0/PCRemote-0.4.0-osx-arm64.zip)** · **[Ubuntu](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.0/PCRemote-0.4.0-linux-x64.tar.gz)** · **[All versions](https://github.com/maamouribilel/pc-remote/releases)** · **[Watch the walkthrough](#walkthrough)** · **[Build from source](#getting-started)**
+**[Download for Windows](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.1/PCRemote-0.4.1-win-x64-setup.exe)** · **[macOS](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.1/PCRemote-0.4.1-osx-arm64.zip)** · **[Ubuntu](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.1/PCRemote-0.4.1-linux-x64.tar.gz)** · **[All versions](https://github.com/maamouribilel/pc-remote/releases)** · **[Watch the walkthrough](#walkthrough)** · **[Build from source](#getting-started)**
 
 <img src="docs/assets/desktop-controls.jpg" alt="The Windows companion showing power, pointer, and media preferences" width="900">
 
@@ -50,7 +50,7 @@ PC Remote has two halves: the **companion** that runs on the computer being cont
 
 | Remote (where you hold the controls) | Status | Verified so far |
 | :--- | :--- | :--- |
-| **iPhone: Safari and the Home Screen web app** | Verified | Physical iPhone 15 Pro with the trusted certificate and touch control (Windows companion); an iPhone also controlled the macOS companion on 2026-10-14 |
+| **iPhone: Safari and the Home Screen web app** | Verified | Physical iPhone 15 Pro with the trusted certificate and touch control (Windows companion); an iPhone also controlled the macOS companion on 2026-10-14 and confirmed the 0.4.1 Air pointer directions on 2026-10-15 |
 | **Chromium-based browsers (Chrome, Edge, Brave)** | Automated checks | Playwright suites in Chromium (Edge on Windows) at phone-portrait, phone-landscape and desktop viewports; Brave on iOS reached the macOS companion in one session but kept flagging the private root in its address bar |
 | **A desktop browser on another computer** | Layout verified | The remote renders its desktop layout at 1280×800 in the automated checks; a desktop browser pairs exactly like a phone |
 | **Android phones and tablets, iPad, Firefox** | Not yet verified | The remote uses standard HTTPS, WebSockets and touch/pointer events, but these devices and browsers have not been tested, and trusting the companion's public root certificate on them is a manual step the project has not documented |
@@ -59,24 +59,24 @@ On every platform the companion and the remote share one trusted local network, 
 
 ## Download
 
-**[Download PC Remote v0.4.0 for Windows x64 →](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.0/PCRemote-0.4.0-win-x64-setup.exe)**
+**[Download PC Remote v0.4.1 for Windows x64 →](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.1/PCRemote-0.4.1-win-x64-setup.exe)**
 
 | Download | Choose this for |
 | :--- | :--- |
-| **[Windows installer](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.0/PCRemote-0.4.0-win-x64-setup.exe)** | Recommended: Start menu shortcuts and an uninstall entry |
-| **[Portable ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.0/PCRemote-0.4.0-win-x64.zip)** | Extract the complete archive, then run `PCRemote-win-x64/PcController.App.exe` |
-| **[macOS Apple Silicon](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.0/PCRemote-0.4.0-osx-arm64.zip)** · experimental | Extract and keep `PC Remote.app` in a stable folder. Unsigned; read the [macOS guide](docs/macos-setup.md) first |
-| **[macOS Intel](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.0/PCRemote-0.4.0-osx-x64.zip)** · experimental | Built for Intel Macs; not yet run on Intel hardware |
-| **[Ubuntu 24.04 x64 / GNOME](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.0/PCRemote-0.4.0-linux-x64.tar.gz)** · experimental | Extract and run `PCRemote-linux-x64/PcController.Desktop` as your desktop user; read the [Linux guide](docs/linux-setup.md) |
-| **[SHA-256 checksums](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.0/SHA256SUMS.txt)** | Verify every download, including the per-platform build manifests |
+| **[Windows installer](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.1/PCRemote-0.4.1-win-x64-setup.exe)** | Recommended: Start menu shortcuts and an uninstall entry |
+| **[Portable ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.1/PCRemote-0.4.1-win-x64.zip)** | Extract the complete archive, then run `PCRemote-win-x64/PcController.App.exe` |
+| **[macOS Apple Silicon](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.1/PCRemote-0.4.1-osx-arm64.zip)** · experimental | Extract and keep `PC Remote.app` in a stable folder. Unsigned; read the [macOS guide](docs/macos-setup.md) first |
+| **[macOS Intel](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.1/PCRemote-0.4.1-osx-x64.zip)** · experimental | Built for Intel Macs; not yet run on Intel hardware |
+| **[Ubuntu 24.04 x64 / GNOME](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.1/PCRemote-0.4.1-linux-x64.tar.gz)** · experimental | Extract and run `PCRemote-linux-x64/PcController.Desktop` as your desktop user; read the [Linux guide](docs/linux-setup.md) |
+| **[SHA-256 checksums](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.1/SHA256SUMS.txt)** | Verify every download, including the per-platform build manifests |
 
-**[Release notes for v0.4.0](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.0)** · **[Browse every published version](https://github.com/maamouribilel/pc-remote/releases)**
+**[Release notes for v0.4.1](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.1)** · **[Browse every published version](https://github.com/maamouribilel/pc-remote/releases)**
 
 On GitHub, open **Releases**, select the version you want, and expand **Assets**. GitHub's automatic **Source code** archives are for developers. See [download and version instructions](docs/releases.md).
 
-Version 0.4.0 is a public preview. The Windows companion targets Windows 10 1809 or later, x64; Windows 11 is the tested desktop OS. The app and installer are unsigned, and the remaining manual checks are documented in the [release checklist](docs/release-checklist.md). After installation, follow the [setup guide](docs/setup.md) for your platform and phone.
+Version 0.4.1 is a public preview. The Windows companion targets Windows 10 1809 or later, x64; Windows 11 is the tested desktop OS. The app and installer are unsigned, and the remaining manual checks are documented in the [release checklist](docs/release-checklist.md). After installation, follow the [setup guide](docs/setup.md) for your platform and phone.
 
-**New in 0.4.0: the Air pointer.** On the Touchpad tab, switch to **Air**, hold your thumb on the pad and turn your wrist to move the pointer, like a TV magic remote; lift to stop, tap to click, and use **Start drag** as before. It uses the phone's gyroscope through the browser's motion events, keeps speed and invert settings on the phone, and sends only pointer movement over the existing protocol, so every companion version works with it and nothing changed on the computer side. Allow motion access when the browser asks (iOS asks inside the **Enable motion** tap). It has been verified with synthetic sensors in Chromium at phone and desktop sizes; pointing with a physical phone is still pending, so if a direction feels mirrored, flip it in the Air settings. See the [0.4.0 evidence](docs/release-evidence.md#version-040--air-pointer-gyroscope-mouse-in-the-phone-remote-2026-10-15).
+**New in 0.4.1: the Air pointer follows your wrist on a real phone.** Version 0.4.0 introduced the Air pointer (Touchpad tab → **Air**: hold your thumb on the pad and turn your wrist to move the pointer like a TV magic remote; lift to stop, tap to click, **Start drag** as before) but read the gyroscope axes in a stale order, so on an actual iPhone a tilt moved the pointer sideways. 0.4.1 reads them as the current DeviceMotion specification defines, seeds the gravity sign per platform and smooths before the deadzone for less rest drift. Confirmed on an iPhone (iOS 18.7) in the flat grip against the macOS companion: left, right, up and down move as expected; the other grips, lifecycle, Safari/Home Screen permission recovery and Android are still pending. The pointer uses the phone's gyroscope through the browser's motion events, keeps speed and invert settings on the phone and sends only pointer movement over the existing protocol, so every companion version works with it. Allow motion access when the browser asks (iOS asks inside the **Enable motion** tap). See the [0.4.1 evidence](docs/release-evidence.md#version-041--air-pointer-axis-fix-2026-10-15).
 
 **Earlier 0.3.x previews:** 0.3.6 kept the approved macOS network across Wi-Fi record bursts, kept pending phone approvals across Space, display-sleep and Secure Input changes, named the pause reason, and added `scripts/sign-macos-local.py` so the Accessibility entry survives updates; 0.3.5 kept the approved macOS network across Wi-Fi signal-quality updates; 0.3.4 fixed the macOS server never starting once Accessibility was granted; 0.3.3 shows the phone address before you approve a network on macOS/Ubuntu; 0.3.2 redesigned the macOS/Ubuntu window to match the Windows dashboard and fixed phone-remote, host, macOS and Ubuntu defects (including two held arrow keys pausing control); 0.3.1 kept macOS network approval across Space, full-screen, display sleep and Secure Input changes. See the [release notes](https://github.com/maamouribilel/pc-remote/releases).
 
@@ -118,7 +118,7 @@ The [walkthrough below](#walkthrough) previews the real interface before install
 <table>
   <tr>
     <td align="center" width="33%"><strong>Air pointer</strong><br><sub>Hold the pad, turn your wrist, lift to stop.</sub><br><br><img src="docs/assets/mobile-air.png" alt="Actual PC Remote Touchpad tab in Air mode, ready to point" width="270"></td>
-    <td align="left" width="67%"><sub>New in 0.4.0. Switch the Touchpad tab to <strong>Air</strong>, hold your thumb on the pad and turn your wrist; the pointer follows like with an LG Magic Remote or a Wii Remote. Lift to re-grip, tap to click, and use <strong>Start drag</strong> to drag. Speed and invert options stay on the phone; the computer side is unchanged. The capture shows the real browser app on the loopback fixture with a synthetic motion sensor; pointing with a physical phone is still pending.</sub></td>
+    <td align="left" width="67%"><sub>Since 0.4.0, corrected in 0.4.1. Switch the Touchpad tab to <strong>Air</strong>, hold your thumb on the pad and turn your wrist; the pointer follows like with an LG Magic Remote or a Wii Remote. Lift to re-grip, tap to click, and use <strong>Start drag</strong> to drag. Speed and invert options stay on the phone; the computer side is unchanged. The capture shows the real browser app on the loopback fixture with a synthetic motion sensor; 0.4.1's axis fix was confirmed on an iPhone in the flat grip and the full acceptance table is still pending.</sub></td>
   </tr>
 </table>
 
@@ -137,7 +137,7 @@ Screenshots show the actual Windows companion and browser app, not generated moc
 | | What you can do |
 | :--- | :--- |
 | 🖱️ **Touchpad** | One-finger pointer movement, tap to click, two-finger scrolling, right/double click, and explicit start/end dragging. Adjust sensitivity and natural scrolling in the companion. |
-| 📡 **Air pointer** | Switch the Touchpad tab to **Air**, hold your thumb on the pad and turn your wrist to move the pointer, like a TV magic remote. Lift to stop, tap to click; speed and invert settings stay on the phone. Uses the phone's gyroscope through the browser; motion data never leaves the phone. New in 0.4.0, not yet tried on a physical phone. |
+| 📡 **Air pointer** | Switch the Touchpad tab to **Air**, hold your thumb on the pad and turn your wrist to move the pointer, like a TV magic remote. Lift to stop, tap to click; speed and invert settings stay on the phone. Uses the phone's gyroscope through the browser; motion data never leaves the phone. Since 0.4.0; 0.4.1 fixes the gyroscope axis order and was confirmed on an iPhone in the flat grip. |
 | ⌨️ **Keyboard** | Send composed text, including accents and emoji. Use held modifiers, common shortcuts, and **Release input**. |
 | 🧭 **Navigation** | Use arrows, Enter, Home, End, and Page keys in the application focused on your PC. |
 | 🎬 **Media profiles** | Choose General, YouTube, VLC, or Stremio. Controls follow each profile's supported shortcuts; Stremio includes **Next episode**. |
@@ -327,7 +327,7 @@ The browser fixture script needs Python 3.9+ on Windows too; strict TLS needs Py
 
 See the [initial publication validation results](docs/publication-checks.md) for build, browser, transport, desktop, packaging, documentation, and secret-scan evidence.
 
-The [v0.4.0 release evidence](docs/release-evidence.md#version-040--air-pointer-gyroscope-mouse-in-the-phone-remote-2026-10-15), the [v0.3.6 entry](docs/release-evidence.md#version-036--macos-lan-approval-pairing-approvals-and-local-signing-2026-10-14), the [v0.3.5 entry](docs/release-evidence.md#version-035--macos-lan-approval-on-wi-fi-2026-10-14), the [v0.3.4 entry](docs/release-evidence.md#version-034--macos-server-start-fix-2026-10-14), the [v0.3.3 entry](docs/release-evidence.md#version-033--clearer-macosubuntu-setup-state-2026-10-14), the [v0.3.2 entry](docs/release-evidence.md#version-032--bug-fixes-and-macoslinux-window-redesign-2026-10-14), the [v0.3.1 entry](docs/release-evidence.md#version-031--macos-lan-approval-fix-2026-10-13) and the earlier [v0.3.0 entry](docs/release-evidence.md#version-030--experimental-macos-and-ubuntu-preview-2026-10-13) record actual local and hosted CI results and remaining gaps. GitHub's **Security and regression checks** workflow runs portable build/security/TLS checks on Windows, macOS and Linux, Windows regressions and browser tests, isolated Linux checks and per-platform packaging. Hosted runs are automated evidence; they do not establish physical-phone, installed-app or native desktop acceptance.
+The [v0.4.1 release evidence](docs/release-evidence.md#version-041--air-pointer-axis-fix-2026-10-15), the [v0.4.0 entry](docs/release-evidence.md#version-040--air-pointer-gyroscope-mouse-in-the-phone-remote-2026-10-15), the [v0.3.6 entry](docs/release-evidence.md#version-036--macos-lan-approval-pairing-approvals-and-local-signing-2026-10-14), the [v0.3.5 entry](docs/release-evidence.md#version-035--macos-lan-approval-on-wi-fi-2026-10-14), the [v0.3.4 entry](docs/release-evidence.md#version-034--macos-server-start-fix-2026-10-14), the [v0.3.3 entry](docs/release-evidence.md#version-033--clearer-macosubuntu-setup-state-2026-10-14), the [v0.3.2 entry](docs/release-evidence.md#version-032--bug-fixes-and-macoslinux-window-redesign-2026-10-14), the [v0.3.1 entry](docs/release-evidence.md#version-031--macos-lan-approval-fix-2026-10-13) and the earlier [v0.3.0 entry](docs/release-evidence.md#version-030--experimental-macos-and-ubuntu-preview-2026-10-13) record actual local and hosted CI results and remaining gaps. GitHub's **Security and regression checks** workflow runs portable build/security/TLS checks on Windows, macOS and Linux, Windows regressions and browser tests, isolated Linux checks and per-platform packaging. Hosted runs are automated evidence; they do not establish physical-phone, installed-app or native desktop acceptance.
 
 For strict certificate interoperability, run `./scripts/test-certificate.ps1` with **Python 3.13+** available. It uses only Python's standard library and checks valid trust, incorrect-host rejection, and untrusted-certificate rejection. CI includes this check; Python is a validation tool and is not needed to run the packaged app.
 
@@ -365,7 +365,7 @@ Deploy the companion to the computer you want to control. Its web app is bundled
 
 ```powershell
 ./scripts/stop.ps1 -Configuration Release
-./scripts/package.ps1 -Version 0.4.0
+./scripts/package.ps1 -Version 0.4.1
 Get-Content ./artifacts/latest-release.txt
 ```
 
@@ -373,8 +373,8 @@ Packaging obtains the verified local Inno Setup compiler if needed, rebuilds Rel
 
 | Output | Use |
 | :--- | :--- |
-| `PCRemote-0.4.0-win-x64-setup.exe` | Per-user installation, Start menu shortcut, uninstall entry |
-| `PCRemote-0.4.0-win-x64.zip` | Portable distribution; keep the executable and adjacent files together |
+| `PCRemote-0.4.1-win-x64-setup.exe` | Per-user installation, Start menu shortcut, uninstall entry |
+| `PCRemote-0.4.1-win-x64.zip` | Portable distribution; keep the executable and adjacent files together |
 | `PCRemote-win-x64/` | App, bundled runtime, web assets, documentation, license notices |
 | `SHA256SUMS.txt` | Installer and archive hashes |
 

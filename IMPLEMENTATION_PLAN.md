@@ -542,3 +542,6 @@ Release 0.3.6 — 2026-10-14:
 
 Release 0.4.0 — 2026-10-15:
 - Phone remote: Air pointer (gyroscope mouse) on the Touchpad tab, hold-to-point with tap-to-click, iOS/Android permission states, phone-side speed/invert settings; protocol v1 and every companion unchanged. Verified with synthetic sensors in Chromium on the loopback fixture; physical-phone pointing and axis confirmation remain open (see `AIR_POINTER_PLAN.md`).
+
+Release 0.4.1 — 2026-10-15:
+- Phone remote: the Air pointer reads `rotationRate` alpha/beta/gamma as rotation about x/y/z per the current DeviceMotion specification (0.4.0 used the stale alpha-about-z wording, so a tilt moved the pointer sideways on a real iPhone), seeds the gravity sign per platform, smooths before a 2 °/s deadzone and treats a seconds-valued `interval` as seconds. Confirmed on an iPhone in the flat grip against the macOS companion; the remaining Phase 4 acceptance rows stay pending (see `AIR_POINTER_PLAN.md`). Companion, protocol and storage unchanged.

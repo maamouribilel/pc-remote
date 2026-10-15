@@ -1,4 +1,4 @@
-param([string]$Version = '0.4.0')
+param([string]$Version = '0.4.1')
 . "$PSScriptRoot/toolchain.ps1"
 if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Use a three-component release version.' }
 & "$PSScriptRoot/check-release-docs.ps1" -Version $Version
