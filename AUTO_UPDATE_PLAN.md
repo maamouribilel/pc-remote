@@ -2,7 +2,7 @@
 
 Created: 2026-10-15. Baseline at creation: app version **0.4.2**, commit `b1bd7b8`, public [v0.4.2 preview](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.2).
 
-This plan has four phases. Phase 1 (update notices) and Phase 2 (Windows **Restart to update**) ship in **0.4.3** (prepared on 2026-10-15; publication pending authorization). Phase 2 has passed hosted Windows checks but has not run on a physical PC. Phases 3–4 are still only a plan. Record actual results in the execution log at the end. A check that has not been run on real hardware stays **Pending**.
+This plan has four phases. Phase 1 (update notices) and Phase 2 (Windows **Restart to update**) ship in **0.4.3**, published 2026-10-16 as a pre-release. Phase 2 has passed hosted Windows checks but has not run on a physical PC. Phases 3–4 are still only a plan. Record actual results in the execution log at the end. A check that has not been run on real hardware stays **Pending**.
 
 ## The problem
 
@@ -167,3 +167,9 @@ Attach `update.json` and `update.json.sig` to the release along with the other a
 - At the maintainer's request (no tag or publication without separate approval), the version is set to 0.4.3 (shared `Directory.Build.props`, Windows project, packaging default, installer fallback). README, both agent files, download guide, security policy, limitations, readiness, setup, troubleshooting, media notes, the implementation/multiplatform plans and a dated release-evidence entry now describe 0.4.3.
 - 0.4.3 is the first release with update checks, so it attaches its own signed `update.json`/`update.json.sig` (created and signed locally after the final assets are verified). Installed 0.4.2 copies can't see it; a test build of the Phase 2 source can, which is the planned way to observe the full Windows update path.
 - Local and hosted check results for the release source are recorded in `docs/release-evidence.md`.
+
+### 2026-10-16 — 0.4.3 published
+
+- [v0.4.3](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.3) was published as a pre-release at 05:11 UTC from `b41133b` (annotated tag `23f85a0`) with its signed `update.json` (SHA-256 `fc7c477b…`) and `update.json.sig`. All eleven public files match the verified local copies; see the [publication record](docs/release-evidence.md#version-043-publication-and-public-verification-2026-10-16).
+- Live, with the production code against the real GitHub: a 0.4.2-versioned build is offered 0.4.3, a 0.4.3 build is up to date, and the verified download of the public Windows installer succeeds (not run). This is the first observed end-to-end run of Phases 1 and 2 against a published release. It runs the Host code, not an installed companion.
+- Still pending: the banner on an installed 0.4.3 desktop, and **Restart to update** on a physical Windows PC (install a test build of `b41133b`, or wait for the next signed release). The signing key still needs an offline backup and, optionally, a passphrase (`update-manifest.py protect`).

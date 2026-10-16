@@ -945,3 +945,51 @@ Feature release of the companions; the phone remote and the protocol (v1) are un
 - The `final` dispatch for the release commit, the final assets, the locally signed `update.json`/`update.json.sig` and public verification: recorded in a publication entry once they happen.
 - **Restart to update on a physical Windows PC:** silent install, `--exit`, relaunch and Defender/SmartScreen behavior for an unsigned installer started from `%LOCALAPPDATA%`. Also untested: update checks behind a proxy, the tray balloon and menu-bar item on real desktops, and a real installed N → N+1 update (0.4.2 copies can't see 0.4.3; a test build of this source can).
 - Every earlier gap remains: Windows installation on a physical PC, the Air pointer beyond the flat grip, a real Ubuntu desktop, macOS Intel hardware, and phone/LAN use beyond the one Mac used for these checks.
+
+### Version 0.4.3 publication and public verification (2026-10-16)
+
+Published as a **pre-release**: [v0.4.3](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.3). The annotated tag `v0.4.3` (object `23f85a0`, created 05:09 UTC) points to the release commit `b41133bacdb9938cdf25ce2f99cb1c38f6a606f4`. The release was published at 05:11 UTC with the maintainer's approval. Earlier tags and assets were not changed: `v0.4.2` still resolves to `65e9cff` → `8c1bba0` and lists its nine assets.
+
+Hosted runs on the release commit:
+- The `final` dispatch [38805594924](https://github.com/maamouribilel/pc-remote/actions/runs/38805594924) passed every job on the first attempt in eight minutes and supplied the assets:
+  - Shared **353** on macOS and Ubuntu and **351** on Windows (Unix-only file-mode/symlink checks skipped; the Windows-only verified-installer lock check added). Desktop **100** and Air pointer math **19** on every OS.
+  - Mac adapter **69** on hosted macOS and the non-native subset **54** on Windows and Ubuntu. Linux adapter **88** on Ubuntu and **81** elsewhere. On the isolated Ubuntu job: Xvfb/GTK US and French layouts **41** each and portal/MPRIS/logind **31**, plus the disposable encrypted keyring and TLS checks.
+  - Windows default, security, pairing, lifecycle and PC-feature suites: **230**, **264**, **272**, **237** and **259**, each 79 above 0.4.2 because of the update checks.
+  - The Windows browser suite (19, 6, 1), strict TLS, the installer build with the `UpdateRelaunch` step, and the Windows content checks.
+  - The manifest tool self-test on macOS and Ubuntu.
+- The Release documentation workflow passed on the push (38805594558) and on the tag (38854350517).
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `PCRemote-0.4.3-win-x64-setup.exe` | 62,722,940 | `1f6d245e1bc5b7beff6261c2a4f8bc58a2d57c43b0922294bb47a1f8186d9611` |
+| `PCRemote-0.4.3-win-x64.zip` | 89,781,554 | `28666e02e527d13f9987f7d01800e6a6ebbebb7fabf1c7317d72bf65d3e016df` |
+| `PCRemote-0.4.3-osx-arm64.zip` | 63,680,388 | `f8fd00ec0aa215d017690b304b9c5a459541005256f0c88a536d401f1dea4a4c` |
+| `PCRemote-0.4.3-osx-x64.zip` | 66,389,335 | `a608f4481dd46158f6cce30ce8ffae381a46bcad3304e469f714b0a7c7075c43` |
+| `PCRemote-0.4.3-linux-x64.tar.gz` | 63,551,675 | `8d93311b97e2d345b6427989303e824bc75913e82c9ced5641d7418779e0fa8c` |
+| `PCRemote-0.4.3-osx-arm64-manifest.json` | 111,138 | `1426bd0ba7c625449bf9fa300d96768b5c49a611fa1454c5fffd10e77aaf2c22` |
+| `PCRemote-0.4.3-osx-x64-manifest.json` | 111,136 | `d6744f585a2f283aef810c708142b65c8d6e829b42cdcf46346db9e1cc957327` |
+| `PCRemote-0.4.3-linux-x64-manifest.json` | 51,762 | `39110ae97766e2cdcf3158b6aea915f627d40348b51da80c10273e59e739095d` |
+| `SHA256SUMS.txt` | 791 | `2f08df457133fc95286e56ebc640671c936f6dab231f9ef6d3ee6fe893b99c9d` (covers the eight files above) |
+| `update.json` | 1,456 | `fc7c477b102a23fcd9f01a0be039525ebab1a5519edcb4a0daac1c86be50fd65` |
+| `update.json.sig` | 97 | `ea806a7733d68f7ade8e0c7d352c879c4c90f1100cb55fb93fe7bbb1307f976d` |
+
+Local verification of the downloaded workflow artifacts, in a new empty directory with independent `python3 -I` scripts:
+- Every file matches its per-platform CI checksum. The Windows checksum file has CRLF line endings and was compared after stripping the carriage returns. The combined `SHA256SUMS.txt` was built from those files and passes `shasum -c`.
+- Manifests: `candidate: false`, `sourceDirty: false`, revision `b41133b`, version 0.4.3. `scripts/check-package.py --final --output` passed for all three extracted packages (476 files per macOS bundle, 475 for Ubuntu).
+- Both macOS bundles pass `codesign --verify --deep --strict` with an ad-hoc seal and the correct architectures (main binary and 17 dylibs). `--package-info` reports `0.4.3+b41133b…` with .NET 10.0.13, natively on Apple Silicon and under Rosetta for Intel.
+- The Ubuntu archive has 487 entries with owner 0/0, no links and an x86-64 launcher. The Windows ZIP has 648 files, `PcController.App.exe` and `wwwroot`, and no debug symbols. The installer is a PE executable.
+- The Windows assemblies contain `WindowsUpdateInstaller`, its `/relaunch=1` arguments and the **Restart to update** banner text, and `PcController.Host.dll` embeds release key 1.
+- Gitleaks 8.30.1 over the four extracted package trees: no leaks.
+
+`update.json` was created from those verified files with `scripts/update-manifest.py create` (summary: "Adds opt-in update notices to every companion and Restart to update for Windows installer copies.", `security: false`). It was signed on the maintainer's Mac with the offline key in `~/.config/pc-remote-release/` (unencrypted, not yet backed up offline) and checked twice: `scripts/update-manifest.py verify`, and the companion's own `UpdateChecker.Verify`/`ParseManifest` with the embedded production key, which also rejected a one-byte change.
+
+After publication:
+- All eleven public URLs returned HTTP 200 when downloaded anonymously (no token) into a new directory. Every file is byte-identical to the local file, and GitHub's stored size and `sha256:` digest match for each asset; the public `SHA256SUMS.txt` passes `shasum -c`.
+- The tag reference resolves to the annotated tag object `23f85a0` and that object to `b41133b`. Every v0.4.3 release and download link in the README, the download guide, the security policy and both agent files answered HTTP 200.
+- The public `update.json`/`update.json.sig` pass `scripts/update-manifest.py verify` with the committed key.
+- **Live end-to-end with the production update code** (a scratch program using `UpdateChecker.CreateProduction()` against the real GitHub):
+  - A build reporting 0.4.2 is offered **0.4.3** (not a security release, exact release page).
+  - A 0.4.3 build reports **up to date**.
+  - `DownloadAsync("0.4.3", "win-x64", "installer")` fetched the public installer through GitHub's redirect and accepted it against the signed size and SHA-256 (62,722,940 bytes, `1f6d245e…`). The file was deleted without being run.
+
+Not established: a 0.4.3 companion showing the banner on a real desktop, and **Restart to update** on a physical Windows PC (silent install, `--exit`, relaunch, Defender/SmartScreen). A real update needs a test build of this source, or a later signed release. Every gap listed in the 0.4.3 entry above remains.
