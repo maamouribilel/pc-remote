@@ -992,4 +992,10 @@ After publication:
   - A 0.4.3 build reports **up to date**.
   - `DownloadAsync("0.4.3", "win-x64", "installer")` fetched the public installer through GitHub's redirect and accepted it against the signed size and SHA-256 (62,722,940 bytes, `1f6d245e…`). The file was deleted without being run.
 
-Not established: a 0.4.3 companion showing the banner on a real desktop, and **Restart to update** on a physical Windows PC (silent install, `--exit`, relaunch, Defender/SmartScreen). A real update needs a test build of this source, or a later signed release. Every gap listed in the 0.4.3 entry above remains.
+The verified public Apple Silicon ZIP replaced the installed 0.4.2 in `/Applications` at the maintainer's request (approved in chat after publication):
+- The anonymous download's SHA-256 (`f8fd00ec…`) matched the public `SHA256SUMS.txt`. The seal verified after extraction with `ditto`, and `--package-info` reported `0.4.3+b41133b…` with .NET 10.0.13.
+- The staged bundle was re-signed with the local identity (`scripts/sign-macos-local.py`, 28 s) before the swap; its designated requirement matches the installed 0.4.2's, so the Accessibility entry keeps matching.
+- The 0.4.2 bundle was not running. It was moved to a dated folder in the Trash (not permanently deleted), and the move was recorded under the ignored `.tools/mac-install-0.4.3/`. 0.4.3 launched from `/Applications` at 06:15 local time.
+- The application data directory and the Keychain item were not touched. The per-build **Allow Keychain access after update…** dialog, the new one-time update question and the session-only network approval remain the user's steps.
+
+Not established: a 0.4.3 companion showing the banner on a real desktop (installed on the developer's Mac, but not yet observed), and **Restart to update** on a physical Windows PC (silent install, `--exit`, relaunch, Defender/SmartScreen). A real update needs a test build of this source, or a later signed release. Every gap listed in the 0.4.3 entry above remains.
