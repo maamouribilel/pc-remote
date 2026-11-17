@@ -1,6 +1,6 @@
 # Nuvio Desktop controls
 
-**Unreleased source change after PC Remote 0.4.2 (2026-11-17).** Published 0.4.2 downloads do not include this profile. Windows remains primary; macOS and Ubuntu remain experimental.
+**Available since PC Remote 0.4.4 (2026-11-17).** Earlier downloads do not include this profile. Windows remains primary; macOS and Ubuntu remain experimental.
 
 Select **Media → Nuvio Desktop** on the phone, then click the video in official Nuvio Desktop on the computer. You can also add Nuvio's local executable/app in the companion's app launcher and choose its **Nuvio** media profile. Opening that configured app selects the profile. Existing launcher entries can be removed and re-added with that profile; Nuvio is not automatically discovered.
 

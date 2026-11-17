@@ -42,6 +42,7 @@ jobs:
       - name: Linux native build prerequisites (unprivileged runtime)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libsecret-1-dev libxcb-xtest0-dev libxkbcommon-x11-dev libpulse-dev
+      # The pinned static frontend uses esbuild; npm audit still fails on every advisory.
       - name: Portable Release build
         run: python scripts/portable.py build
       - name: Portable pairing, ownership, transport, lifecycle, capabilities and security

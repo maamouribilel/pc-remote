@@ -6,7 +6,7 @@ from pathlib import Path
 import urllib.parse
 import urllib.request
 
-VERSION = '10.0.13'  # SDK 10.0.402 runtime; packaging independently verifies actual runtime.
+VERSION = '10.0.15'  # SDK 10.0.404 runtime; packaging independently verifies actual runtime.
 PACKAGES = ['Microsoft.NETCore.App', 'Microsoft.AspNetCore.App', 'Microsoft.WindowsDesktop.App'] + [
     'Microsoft.NETCore.App.Runtime.' + rid for rid in ['win-x64', 'osx-arm64', 'osx-x64', 'linux-x64']]
 

@@ -1,6 +1,6 @@
 # Current limitations
 
-Current public release: **0.4.3 preview**. Windows is the primary platform; macOS and Ubuntu are experimental. This page states current limits first. Dated roadmap notes below describe earlier stages and are retained as history.
+Current public release: **0.4.4 preview**. Windows is the primary platform; macOS and Ubuntu are experimental. This page states current limits first. Dated roadmap notes below describe earlier stages and are retained as history.
 
 ## Connection and trust
 
@@ -16,6 +16,7 @@ Current public release: **0.4.3 preview**. Windows is the primary platform; macO
 - **Air pointer** is relative pointing, not absolute aiming. Hold to move, lift to re-grip. Gyroscope bias can drift while held, and phone speed combines with companion sensitivity/OS acceleration. Devices without usable sensors fall back to Touch. A denied iOS motion request needs a reload before retrying. Version 0.4.0 had incorrect axis mapping; use 0.4.1 or later.
 - Air flat-grip directions were confirmed on an iPhone against macOS. Upright/rolled/landscape grips, measured precision/drift/tap/lift checks, lifecycle, Safari/Home Screen permission recovery and Android remain pending. Synthetic sensor tests and the README demo are browser UI evidence. [Air acceptance log](../AIR_POINTER_PLAN.md).
 - Player shortcuts need the matching focused player and its default hotkeys. General uses system media keys on Windows/macOS and an unambiguous controllable MPRIS player on Linux. YouTube Previous needs a playlist; Stremio Next needs another episode and has no supported Previous action. Seek distance follows player settings.
+- Nuvio Desktop uses official 0.1.37-alpha defaults. **Skip intro / recap** sends Enter for the current skip prompt; detection/timing and next-episode availability come from Nuvio, with no playback-state feedback to PC Remote. Close panels and click the video first, since Enter can activate a focused control. External players need their own profile. Actual Nuvio playback/phone acceptance is pending; [details](nuvio.md).
 - System volume controls the current output, separately from a player's volume, and can unmute it. Output-device selection is not included. Missing/read-only outputs make the control unavailable.
 - Launcher requests use locally configured app IDs. OS focus rules may require selecting the app locally; opening it does not start a video. Linux supports restricted ELF-backed `.desktop` launchers, excluding many wrappers, Snap/Flatpak entries, terminals, interpreters and arbitrary arguments.
 
@@ -50,7 +51,7 @@ The text below records earlier milestones. Statements such as a feature being un
 
 # First-release limits
 
-Current public preview: **0.4.3** (Windows companion plus experimental macOS/Ubuntu archives). It bundles .NET 10.0.13 from the 2026-10-13 security release; 0.2.1 bundled the affected 10.0.12 runtime. It fixes the shared HTTP-budget and late media-authorization issues in 0.2.0; upgrade older builds. Automated dependency/security checks cannot guarantee absence of unknown bugs. Trusted-network, trusted-browser, certificate, and manual acceptance limits below still apply. See [security policy](../.github/SECURITY.md) and [current release evidence](release-evidence.md#version-021--security-hardening-2026-10-12).
+Current public preview: **0.4.4** (Windows companion plus experimental macOS/Ubuntu archives). It bundles .NET 10.0.15 from the 2026-11-10 security release; 0.2.1 bundled the affected 10.0.12 runtime. It fixes the shared HTTP-budget and late media-authorization issues in 0.2.0; upgrade older builds. Automated dependency/security checks cannot guarantee absence of unknown bugs. Trusted-network, trusted-browser, certificate, and manual acceptance limits below still apply. See [security policy](../.github/SECURITY.md) and [current release evidence](release-evidence.md#version-021--security-hardening-2026-10-12).
 
 - Trusted local network and a signed-in interactive desktop session only (Windows, macOS or Ubuntu). No internet routing, Bluetooth, Wake-on-LAN, screen streaming, file/clipboard transfer, arbitrary commands, simultaneous controllers or native phone apps; the remote is a browser page. Version 0.2.0 can open PC-configured executables, set Windows output volume, and request Sleep/Restart/Shut down after confirmation and a 30-second countdown.
 - Launcher focus is subject to Windows foreground activation restrictions; if focus is denied, the existing app flashes and the phone advises selecting it on the PC. Launcher buttons do not navigate to a video or start playback automatically. The volume slider controls the current Windows output, separately from app-specific volume; moving it unmutes Windows. Output-device switching is not included.

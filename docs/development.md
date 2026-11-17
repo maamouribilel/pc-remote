@@ -8,7 +8,7 @@ Build the companion for the computer being controlled. User installation and pai
 - Internet access for the initial toolchain/dependency downloads.
 - For control: a phone, tablet or computer with a modern browser on the same trusted network. iPhone Safari is the verified path; on Windows that network must be marked **Private**, on macOS and Ubuntu you approve the interface in the companion.
 
-The scripts prefer a verified portable toolchain in `.tools/`: **.NET SDK 10.0.402**, **Node.js 24.21.0**, and **npm 11.19.0**. Packaged releases bundle .NET runtime 10.0.13 and do not need development tools.
+The scripts prefer a verified portable toolchain in `.tools/`: **.NET SDK 10.0.404**, **Node.js 24.21.0**, and **npm 11.19.0**. Packaged releases bundle .NET runtime 10.0.15 and do not need development tools.
 
 ## Install, build, and run
 
@@ -33,7 +33,9 @@ python3 scripts/portable.py build
 python3 scripts/portable.py desktop
 ```
 
-`build.ps1` runs `npm ci`, TypeScript checking, a production Vite build, and a .NET solution build, and copies the built web app into the companion's `wwwroot/`; `run.ps1` selects the portable runtime when available. `portable.py build` does the same for the shared companion, and `desktop` starts it; packaging commands for each platform are under [Shared backend development](#shared-backend-development-on-macoslinux) and [Build and deploy](#build-and-deploy).
+`build.ps1` runs `npm ci`, TypeScript checking, a production esbuild bundle, and a .NET solution build, and copies the built web app into the companion's `wwwroot/`; `run.ps1` selects the portable runtime when available. `portable.py build` does the same for the shared companion, and `desktop` starts it; packaging commands for each platform are under [Shared backend development](#shared-backend-development-on-macoslinux) and [Build and deploy](#build-and-deploy).
+
+Since 0.4.4, `src/remote/build.mjs` bundles the local TypeScript/CSS with pinned esbuild 0.28.2, emits hashed asset URLs into the HTML and copies `public/` to `dist/`. The remote has no development server or runtime npm dependency. This replaces Vite's currently affected picomatch dependency graph; `npm audit` still fails on any advisory. SDK 10.0.404 provides the 10.0.15 runtime security servicing update.
 
 ## Environment configuration
 
@@ -183,7 +185,7 @@ Deploy the companion to the computer you want to control. Its web app is bundled
 
 ```powershell
 ./scripts/stop.ps1 -Configuration Release
-./scripts/package.ps1 -Version 0.4.2
+./scripts/package.ps1 -Version 0.4.4
 Get-Content ./artifacts/latest-release.txt
 ```
 
@@ -191,8 +193,8 @@ Packaging obtains the verified local Inno Setup compiler if needed, rebuilds Rel
 
 | Output | Use |
 | :--- | :--- |
-| `PCRemote-0.4.2-win-x64-setup.exe` | Per-user installation, Start menu shortcut, uninstall entry |
-| `PCRemote-0.4.2-win-x64.zip` | Portable distribution; keep the executable and adjacent files together |
+| `PCRemote-0.4.4-win-x64-setup.exe` | Per-user installation, Start menu shortcut, uninstall entry |
+| `PCRemote-0.4.4-win-x64.zip` | Portable distribution; keep the executable and adjacent files together |
 | `PCRemote-win-x64/` | App, bundled runtime, web assets, documentation, license notices |
 | `SHA256SUMS.txt` | Installer and archive hashes |
 

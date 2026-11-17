@@ -1,6 +1,6 @@
 # Setup and everyday use
 
-PC Remote runs a companion on the computer you control and serves a browser remote to your device. This guide describes the current **0.4.3 preview**. Windows is primary; macOS and Ubuntu are experimental. From 0.4.3 the companion asks once whether to check GitHub for new versions; see [download help](releases.md#find-out-about-new-versions).
+PC Remote runs a companion on the computer you control and serves a browser remote to your device. This guide describes the current **0.4.4 preview**. Windows is primary; macOS and Ubuntu are experimental. From 0.4.3 the companion asks once whether to check GitHub for new versions; see [download help](releases.md#find-out-about-new-versions).
 
 | Computer | Start here |
 | :--- | :--- |
@@ -62,7 +62,7 @@ Lit modifiers stay held until tapped again or released. **More shortcuts** inclu
 
 ## Media, apps and power
 
-**Media** offers General, YouTube, VLC and Stremio profiles. Focus the matching player on the computer; shortcuts follow its defaults. Stremio's Next means next episode, and Previous is unavailable. Seek distances depend on the player.
+**Media** offers General, YouTube, VLC, Stremio and Nuvio Desktop profiles. Focus the matching player on the computer; shortcuts follow its defaults. Stremio and Nuvio's Next means next episode, and Previous is unavailable. Nuvio adds **Skip intro / recap** for its current skip prompt, plus subtitles, audio, sources, episodes and picture in picture; close its panels and click the video before skipping. [Nuvio controls and limits](nuvio.md). Seek distances depend on the player.
 
 The system volume slider controls the current output, separately from profile-specific volume buttons. In **PC**, configured apps open or request foreground activation, then switch the remote to their media profile. Focus may still need a local click.
 

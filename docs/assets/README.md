@@ -1,5 +1,9 @@
 # README media
 
+## Nuvio captures — 0.4.4, 2026-11-17
+
+`v0.4.4/nuvio-controls.png` and `v0.4.4/nuvio-panels.png` are direct PNG screenshots of the real bundled remote at 390×700 CSS pixels in pinned Playwright/Edge. The source includes the 0.4.3 update work, Nuvio profile and esbuild 0.28.2 static bundle, built with SDK 10.0.404/Node 24.21.0/npm 11.19.0. The existing loopback fixture serves production web assets over HTTPS/WSS with a temporary test store and recording input. The test selects Nuvio, dispatches playback/next/skip/panel chords, reloads to check the saved profile, and captures the initial and scrolled player controls. At 1280×800 it also checks rendering and button targets. Browser plugin is unavailable; the existing Playwright fallback uses its explicit loopback-only TLS bypass. The screenshots have no UI reconstruction or overlays and do not establish native Nuvio playback, segment detection, episode transitions, system audio or phone/LAN use. Earlier captures below retain their original bytes and dates.
+
 ## Current captures — 0.4.2, 2026-10-15
 
 The README and [hands-on demo](../demo.md) use the new `v0.4.2/` directory. Older files below retain their original bytes and dates.

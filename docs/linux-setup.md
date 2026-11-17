@@ -5,15 +5,15 @@ Since version **0.3.0**, releases publish an **experimental** Ubuntu 24.04 x64 a
 ## Install the preview
 
 1. On Ubuntu 24.04 x64 with GNOME, install the runtime packages from [Phase 5 feature/archive notes](#phase-5-featurearchive-candidate) (`libglib2.0-0t64 libsecret-1-0 libxcb1 libxcb-xtest0 libxkbcommon0 libxkbcommon-x11-0 libpulse0 libx11-6 libice6 libsm6 libfontconfig1 libgl1` plus the GNOME keyring, portal and NetworkManager services that a standard Ubuntu desktop provides).
-2. Download `PCRemote-0.4.3-linux-x64.tar.gz` and `SHA256SUMS.txt` from the [v0.4.3 release](releases.md) and compare `sha256sum PCRemote-0.4.3-linux-x64.tar.gz`.
-3. Extract with `tar -xzf PCRemote-0.4.3-linux-x64.tar.gz` into a stable folder you own and run `./PCRemote-linux-x64/PcController.Desktop` as your desktop user, never with `sudo`.
+2. Download `PCRemote-0.4.4-linux-x64.tar.gz` and `SHA256SUMS.txt` from the [v0.4.4 release](releases.md) and compare `sha256sum PCRemote-0.4.4-linux-x64.tar.gz`.
+3. Extract with `tar -xzf PCRemote-0.4.4-linux-x64.tar.gz` into a stable folder you own and run `./PCRemote-linux-x64/PcController.Desktop` as your desktop user, never with `sudo`.
 4. It starts paused with loopback HTTPS. On Wayland, request Remote Desktop consent; enable GTK Unicode text only for a verified GTK target. Then approve your trusted network for the session and pair the phone.
 
 This archive has no distribution signature; verify the checksum. It was built and its metadata startup checked on a hosted Ubuntu 24.04 x64 runner, not on a GNOME desktop. Do not treat a build, portal dialog, XWayland shell, private-bus fixture or Xvfb check as that acceptance. [Dated evidence and support matrix](../MULTIPLATFORM_PLAN.md#execution-log) separate each backend.
 
 ## Baseline and prerequisites
 
-Candidate baseline: **Ubuntu 24.04 LTS x64, GNOME 46**, local signed-in session, NetworkManager, logind, GNOME ScreenSaver interface and password-encrypted persistent GNOME **login** keyring. Ubuntu lists GNOME 46 in its [24.04 release notes](https://documentation.ubuntu.com/release-notes/24.04/); 24.04 standard security maintenance continues to 2029 in [Ubuntu's release cycle](https://ubuntu.com/about/release-cycle). Avalonia **12.1.4** remains pinned, with Ubuntu 24.x x64/ARM64 Tier 2; SDK **10.0.402** (runtime 10.0.13, updated for the 2026-10-13 .NET security release), Node **24.21.0** and npm **11.19.0** are pinned. The production factory explicitly limits startup to Ubuntu 24.04 x64/GNOME; ARM64 container execution uses test-only entry points and is development evidence, not production desktop support. KDE, other providers/distributions, headless/SSH sessions and privileged input daemons are unsupported.
+Candidate baseline: **Ubuntu 24.04 LTS x64, GNOME 46**, local signed-in session, NetworkManager, logind, GNOME ScreenSaver interface and password-encrypted persistent GNOME **login** keyring. Ubuntu lists GNOME 46 in its [24.04 release notes](https://documentation.ubuntu.com/release-notes/24.04/); 24.04 standard security maintenance continues to 2029 in [Ubuntu's release cycle](https://ubuntu.com/about/release-cycle). Avalonia **12.1.4** remains pinned, with Ubuntu 24.x x64/ARM64 Tier 2; SDK **10.0.404** (runtime 10.0.15, updated for the 2026-11-10 .NET security release), Node **24.21.0** and npm **11.19.0** are pinned. The production factory explicitly limits startup to Ubuntu 24.04 x64/GNOME; ARM64 container execution uses test-only entry points and is development evidence, not production desktop support. KDE, other providers/distributions, headless/SSH sessions and privileged input daemons are unsupported.
 
 Development packages (one-time administrator package installation, not privileged app operation):
 

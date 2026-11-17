@@ -1,0 +1,4 @@
+# Reviewed false positive: DER SubjectPublicKeyInfo of a throwaway ECDSA test key.
+# The corresponding private key was deleted; the current line has gitleaks:allow.
+# Scope this exception to the exact historical commit/file/rule/line only.
+e43b1887da8978d5e5411e023ec20b277b74f8e5:tests/PcController.PortableTests/UpdateChecks.cs:generic-api-key:14

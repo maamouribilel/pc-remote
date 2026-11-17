@@ -552,3 +552,8 @@ Release 0.4.2 — 2026-10-15:
 Release 0.4.3 — prepared 2026-10-15, published 2026-10-16 as a [pre-release](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.3) (tag `23f85a0` → `b41133b`):
 - Opt-in update notices on every companion (`AUTO_UPDATE_PLAN.md` Phase 1): a one-time question, then a daily check of the GitHub release list; a release is offered only when its `update.json` verifies against the offline release key embedded from `src/PcController.Host/update-signing-keys.pub`. Windows installer copies add **Download update** (exact signed size and SHA-256, file locked until the installer starts) and **Restart to update** (silent install, graceful `--exit`, relaunch); portable, macOS and Ubuntu copies only notify (Phase 2). No phone message, capability or Host setting changes; protocol v1 is unchanged.
 - Evidence so far: shared portable 353 (Windows 351), desktop 100 and the manifest tool self-test, locally and in hosted run 38801590541 on `61398aa`, where the Windows suite also passed the verified-installer lock check and the provisional installer compiled with the relaunch step. A physical Windows silent install and relaunch, Defender/SmartScreen behavior and a real N → N+1 update remain pending.
+
+
+### 2026-11-17 — 0.4.4 release preparation
+
+Nuvio Desktop controls, SDK 10.0.404/runtime 10.0.15 security servicing and a static esbuild bundle are prepared. Existing v0.4.3 signed update behavior is retained. Native Nuvio playback, phone/LAN and other manual gates remain separate; exact local/hosted results are recorded in docs/release-evidence.md.

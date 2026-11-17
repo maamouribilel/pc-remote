@@ -1,6 +1,6 @@
 # Try PC Remote in two minutes
 
-This tour uses your paired browser and the computer screen in front of you. Complete [setup and certificate trust](setup.md#pair-a-browser) first. The animation is a preview of the actual **0.4.2** interface, which 0.4.3 leaves unchanged.
+This tour uses your paired browser and the computer screen in front of you. Complete [setup and certificate trust](setup.md#pair-a-browser) first. The animation is a preview of the actual **0.4.2** interface, which predates the Nuvio controls added in 0.4.4. See [Nuvio setup and controls](nuvio.md).
 
 <img src="assets/v0.4.2/demo.gif" alt="Captioned PC Remote demo covering Touch, Air, keyboard, navigation, media and apps" width="900">
 
@@ -39,6 +39,7 @@ Focus a player on the computer, then select its profile in **Media**:
 | YouTube | The focused browser player and its default shortcuts. |
 | VLC | The focused VLC window and its default shortcuts. |
 | Stremio | The focused Stremio player; Next is next episode. |
+| Nuvio Desktop | The focused built-in player; next episode, contextual intro/recap skipping and player panels. [Nuvio controls](nuvio.md). |
 
 Tap **Play / pause**. The separate system-volume slider sets the current output; it can unmute it. If you try it, note the old level and restore it afterward. Controls depend on platform capabilities.
 

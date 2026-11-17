@@ -1,5 +1,22 @@
 # Release evidence
 
+## Version 0.4.4 — Nuvio Desktop and security servicing, 2026-11-17 (preparation)
+
+This release is being prepared from the existing 0.4.3 source plus Nuvio Desktop controls. It is not yet published. SDK 10.0.404 bundles .NET/ASP.NET Core/Windows Desktop 10.0.15 from Microsoft’s 2026-11-10 security release; the release-day advisory check found older 10.0.13 runtime packages affected. The static frontend now uses esbuild 0.28.2 plus the existing strict TypeScript checks, removing Vite/picomatch/fdir/tinyglobby from the build graph because the current picomatch release remains affected by GHSA-fc5q-39xc-vjpf. `npm ci`, the new bundle and `npm audit --audit-level=low` passed with zero advisories. No dependency audit is suppressed.
+
+The initial Nuvio checks below were run before merging the subsequent 0.4.3 update work and before the SDK/bundler changes. They remain historical evidence. The final release source needs fresh Release/regression/browser/strict-TLS/audit validation and the full hosted `final` dispatch before its assets may be published. The existing offline update key must sign the verified asset manifest locally; the key is not available at its standard location on this Windows PC. Native Nuvio playback, physical-phone/LAN, clean-account/reboot/uninstall, real Mac Intel/Ubuntu GNOME and power acceptance remain pending. Windows stays primary; macOS/Ubuntu stay experimental. Final asset/public verification and installation results will be added as a dated documentation-only follow-up.
+
+Fresh local validation on the merged 0.4.4 source and new toolchain:
+
+- Release solution build: zero warnings/errors; strict TypeScript and the esbuild static bundle passed.
+- Windows default **275**, Security **309**, Pairing **317**, Lifecycle **282**, PC features **304** checks passed. These do not execute native keyboard/mouse smoke or physical power actions.
+- Portable **396**, headless Desktop **101**, Mac adapter **70** and Linux adapter **95** checks passed on Windows. Recording/fault adapters do not establish native Mac/Linux input or Nuvio playback.
+- Browser suites: **19** Air math checks plus **14** browser tests passed (connection/input/Air, legacy/malformed capabilities, Mac/Linux/unavailable fixtures). Real bundled assets ran in Playwright/Edge over loopback HTTPS/WSS with recording input and synthetic Air sensors. Nuvio rendering/dispatch and saved profile checks passed at 390×700 and 1280×800; dated screenshots are under `docs/assets/v0.4.4/`.
+- Python 3.13 strict TLS: trusted chain/name succeeds; incorrect hostname and untrusted certificate both rejected. Loopback HTTP suites ran sequentially on 8443 while the installed companion was closed, then it was reopened.
+- npm and NuGet audits: zero findings. The authenticated public runtime-advisory query returned no matches for the seven checked framework/runtime package IDs at 10.0.15. Primary servicing metadata: [Microsoft .NET 10 releases](https://github.com/dotnet/core/blob/main/release-notes/10.0/releases.json).
+- The update manifest self-test passed using Git for Windows' OpenSSL after its `usr/bin` was added to this check process's PATH; the throwaway key never entered source or CI secrets. The initial attempt with no OpenSSL on PowerShell's PATH failed explicitly.
+- Source scan: Gitleaks over all Git history initially flagged the DER public test key in `e43b188` (`UpdateChecks.ScriptKey`), a reviewed SubjectPublicKeyInfo rather than a credential. `.gitleaksignore` records only that exact historical fingerprint; the current line already has the public-key explanation. No actual secret is suppressed. The staged release diff is scanned separately before commit.
+
 > Publication note: `192.0.2.10` is a documentation-only replacement for the original LAN address. Use the live address shown by your companion.
 ## Current release — 0.1.2, 2026-10-12
 

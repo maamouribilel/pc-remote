@@ -12,9 +12,9 @@ function Get-VerifiedToolArchive([string]$Url, [string]$Name, [string]$Algorithm
     if ((Get-FileHash -LiteralPath $taskArchive -Algorithm $Algorithm).Hash -ne $Expected) { throw "Checksum mismatch: $Name" }
     return $taskArchive
 }
-if (-not (Test-Path -LiteralPath (Join-Path $taskTools 'dotnet/dotnet.exe'))) {
-    $taskArchive = Get-VerifiedToolArchive 'https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.402/dotnet-sdk-10.0.402-win-x64.zip' 'dotnet-sdk-10.0.402-win-x64.zip' 'SHA512' 'ae4fd528cb7e9f6af6aaf7de36715a69f761f183744f1bb3025d19f5a92447090ec561410e46266c1d10a63781ed6f3de771760bc76c876d87daabc367b898cd'
-    Expand-Archive -LiteralPath $taskArchive -DestinationPath (Join-Path $taskTools 'dotnet') -Force
+if (-not (Test-Path -LiteralPath (Join-Path $taskTools 'dotnet/sdk/10.0.404'))) {
+    $taskArchive = Get-VerifiedToolArchive 'https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.404/dotnet-sdk-10.0.404-win-x64.zip' 'dotnet-sdk-10.0.404-win-x64.zip' 'SHA512' '330ddd2665b43cd2e428216a0d8ea1ac7bb19b5434fdc530e62010dc3b52823a620bf95489d628e1ed6f5122401793ee4887cca4a019122361a1231497f632ee'
+    Expand-Archive -LiteralPath $taskArchive -DestinationPath (Join-Path $taskTools 'dotnet') -Force -ErrorAction Stop
 }
 if (-not (Test-Path -LiteralPath (Join-Path $taskTools 'node-v24.21.0-win-x64/node.exe'))) {
     $taskArchive = Get-VerifiedToolArchive 'https://nodejs.org/dist/v24.21.0/node-v24.21.0-win-x64.zip' 'node-v24.21.0-win-x64.zip' 'SHA256' '158F7685B44DE51F6C0DF1D153526CBCD3E1BC739A8DFC607721CEF75DE9E541'

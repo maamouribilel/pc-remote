@@ -9,7 +9,7 @@
 Turn your browser into a touchpad, an Air pointer, a keyboard and a media remote.<br>
 Run the companion on your computer. Pair locally. Keep your controls within reach.
 
-[![Download](https://img.shields.io/badge/Download-v0.4.3_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.3) [![Windows](https://img.shields.io/badge/Windows-primary-0078D4?style=flat-square)](#compatibility) [![macOS](https://img.shields.io/badge/macOS-experimental-8A8F98?style=flat-square)](#compatibility) [![Ubuntu](https://img.shields.io/badge/Ubuntu-experimental-E95420?style=flat-square)](#compatibility) [![License](https://img.shields.io/badge/License-MIT-5EE8BE?style=flat-square)](LICENSE)
+[![Download](https://img.shields.io/badge/Download-v0.4.4_preview-5EE8BE?style=flat-square)](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.4) [![Windows](https://img.shields.io/badge/Windows-primary-0078D4?style=flat-square)](#compatibility) [![macOS](https://img.shields.io/badge/macOS-experimental-8A8F98?style=flat-square)](#compatibility) [![Ubuntu](https://img.shields.io/badge/Ubuntu-experimental-E95420?style=flat-square)](#compatibility) [![License](https://img.shields.io/badge/License-MIT-5EE8BE?style=flat-square)](LICENSE)
 
 **[Download](#download)** · **[See it in action](#demo)** · **[Set it up](#getting-started)** · **[User guide](docs/setup.md)** · **[Build from source](docs/development.md)**
 
@@ -28,36 +28,43 @@ Watch your computer's screen while your phone handles the controls. PC Remote se
 | **Touchpad** | Move with one finger, tap to click, scroll with two fingers, right/double click, and explicitly start/end a drag. |
 | **Air pointer** | Select **Air**, hold your thumb on the pad and turn your wrist. Lift to stop and re-grip; tap to click. Adjust speed and invert either axis on your phone. |
 | **Keyboard & navigation** | Compose text, including accents and emoji, then tap **Send text**. Use modifiers, shortcuts, large arrows, Enter, Home/End and Page keys. |
-| **Media & volume** | Choose General, YouTube, VLC or Stremio controls. Set the current system output volume with read-back. Player shortcuts need the matching player in focus. |
+| **Media & volume** | Choose General, YouTube, VLC, Stremio or Nuvio Desktop controls; Nuvio adds contextual intro/recap skipping, next episode and player panels. Set the current system output volume with read-back. Player shortcuts need the matching player in focus. |
 | **App launcher** | Open locally configured apps and switch to their media profile. Configure up to 24 entries in the companion; the browser sends app IDs. |
 | **Power** | Confirm a supported action, then cancel during its 30-second countdown. Windows supports sleep/restart/shutdown; macOS supports sleep; Ubuntu exposes permitted logind actions. |
 | **Session controls** | Approve and revoke browsers on the computer, explicitly take over control, pause from the companion, or tap **Release input**. |
 
 PC Remote controls the desktop you can see. Screen streaming, internet access, file transfer, clipboard synchronization and Wake-on-LAN are outside its scope. See [current limitations](docs/limitations.md).
 
-**Unreleased source addition:** [Nuvio Desktop controls](docs/nuvio.md), including next episode, skip intro/recap and player panels. These are not included in the published 0.4.2 downloads.
+**New in 0.4.4:** [Nuvio Desktop controls](docs/nuvio.md), including next episode, skip intro/recap and player panels. Focus the built-in player; skipping requires Nuvio’s current skip prompt.
+
+<img src="docs/assets/v0.4.4/nuvio-controls.png" alt="Actual Nuvio Desktop profile and contextual skip button in the bundled phone remote" width="250"> <img src="docs/assets/v0.4.4/nuvio-panels.png" alt="Actual Nuvio next episode, subtitles, audio, sources, episodes and picture-in-picture controls, scrolled into view" width="250">
+
+<sub>Real bundled UI with recording input; no Nuvio playback is executed. [Capture provenance](docs/assets/README.md).</sub>
 
 ## Download
 
-**Current release: [v0.4.3 preview](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.3).** Windows is the primary platform; macOS and Ubuntu companions are experimental.
+**Current release: [v0.4.4 preview](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.4).** Windows is the primary platform; macOS and Ubuntu companions are experimental.
 
 | Your computer | Download | Setup |
 | :--- | :--- | :--- |
-| **Windows x64** | **[Installer](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.3/PCRemote-0.4.3-win-x64-setup.exe)** · [Portable ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.3/PCRemote-0.4.3-win-x64.zip) | [Windows guide](docs/setup.md#windows-companion) |
-| **macOS · Apple Silicon** | [Experimental ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.3/PCRemote-0.4.3-osx-arm64.zip) | [macOS guide](docs/macos-setup.md) |
-| **macOS · Intel** | [Experimental ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.3/PCRemote-0.4.3-osx-x64.zip) | [macOS guide](docs/macos-setup.md) · Intel hardware untested |
-| **Ubuntu 24.04 x64 · GNOME** | [Experimental archive](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.3/PCRemote-0.4.3-linux-x64.tar.gz) | [Ubuntu guide](docs/linux-setup.md) |
+| **Windows x64** | **[Installer](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.4/PCRemote-0.4.4-win-x64-setup.exe)** · [Portable ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.4/PCRemote-0.4.4-win-x64.zip) | [Windows guide](docs/setup.md#windows-companion) |
+| **macOS · Apple Silicon** | [Experimental ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.4/PCRemote-0.4.4-osx-arm64.zip) | [macOS guide](docs/macos-setup.md) |
+| **macOS · Intel** | [Experimental ZIP](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.4/PCRemote-0.4.4-osx-x64.zip) | [macOS guide](docs/macos-setup.md) · Intel hardware untested |
+| **Ubuntu 24.04 x64 · GNOME** | [Experimental archive](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.4/PCRemote-0.4.4-linux-x64.tar.gz) | [Ubuntu guide](docs/linux-setup.md) |
 
-[SHA-256 checksums](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.3/SHA256SUMS.txt) · [Release notes](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.3) · [All versions](https://github.com/maamouribilel/pc-remote/releases) · [Download help](docs/releases.md)
+[SHA-256 checksums](https://github.com/maamouribilel/pc-remote/releases/download/v0.4.4/SHA256SUMS.txt) · [Release notes](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.4) · [All versions](https://github.com/maamouribilel/pc-remote/releases) · [Download help](docs/releases.md)
 
 Downloads are unsigned. Windows may show SmartScreen/Unknown publisher; macOS builds have an ad-hoc seal but no Developer ID signature or notarization. Read the platform guide and compare the download with `SHA256SUMS.txt`. GitHub's **Source code** archives require a development build.
 
 ### What's new
 
+- **Nuvio Desktop in 0.4.4.** Playback, next episode, contextual intro/recap skipping, subtitles, audio, sources, episodes and picture in picture. Shortcuts checked against official Nuvio Desktop 0.1.37-alpha; real Nuvio playback and phone acceptance remain pending. [Controls and limits](docs/nuvio.md).
+- **Security servicing in 0.4.4.** Bundles .NET 10.0.15 from Microsoft’s 2026-11-10 release; the static browser build uses esbuild instead of Vite’s affected glob dependency graph.
+
 - **Update notices in 0.4.3.** After a one-time question, the companion asks GitHub once a day whether a newer release exists, accepts it only if it is signed with the project's offline release key, and shows a banner with the release page. On a Windows installer copy, **Download update** fetches and checks the signed installer and **Restart to update** installs it and reopens PC Remote; macOS, Ubuntu and the portable ZIP show the notice only. Nothing is sent about your devices or settings. Versions 0.4.2 and earlier have no update check, so install 0.4.3 by hand once. Restart to update has passed hosted Windows checks but has not yet run on a physical PC. [Design and evidence](AUTO_UPDATE_PLAN.md).
 - **Air pointer, introduced in 0.4.0 and corrected in 0.4.1.** Point with your wrist using the phone's gyroscope. Motion readings stay on the phone; only pointer movement is sent. Flat-grip directions were confirmed on an iPhone; other grips, full permission/lifecycle acceptance and Android remain pending. [How to use Air](docs/setup.md#air-pointer).
 - **macOS network fix in 0.4.2.** Peer-to-peer Wi-Fi record updates no longer revoke the approved LAN. On the developer's installed build, approval survived ten bursts over twelve minutes with a paired iPhone; the user reported continued control and reconnection after auto-lock. Real network changes, sleep and user switches still require approval again. Longer sessions and other Macs remain unverified. [Evidence](docs/release-evidence.md#version-042-publication-and-public-verification-2026-10-15).
-- **Experimental macOS and Ubuntu companions, since 0.3.0.** A shared dashboard, platform-aware controls, explicit network approval and OS-backed credential storage accompany the existing Windows tray app. Packaged builds include .NET 10.0.13. [Compatibility and acceptance](docs/release-readiness.md).
+- **Experimental macOS and Ubuntu companions, since 0.3.0.** A shared dashboard, platform-aware controls, explicit network approval and OS-backed credential storage accompany the existing Windows tray app. Packaged builds include .NET 10.0.15. [Compatibility and acceptance](docs/release-readiness.md).
 
 ## Getting started
 
@@ -70,7 +77,7 @@ You need a signed-in computer, a browser device on the same trusted network, and
 
 Remembered browser authentication lasts 30 days and can be revoked immediately. One browser owns input at a time; **Take over control** explicitly replaces it. A certificate warning needs to be resolved before use. After an address change, open the companion's new address.
 
-**Stay up to date.** From 0.4.3 the companion can tell you about new versions; it asks once before checking. Versions 0.4.2 and earlier never check, so install 0.4.3 by hand once. You can also choose **Watch → Custom → Releases** on this repository to get an email for each new version.
+**Stay up to date.** From 0.4.3 the companion can tell you about new versions; it asks once before checking. Versions 0.4.2 and earlier never check, so install the latest version by hand once. You can also choose **Watch → Custom → Releases** on this repository to get an email for each new version.
 
 **Updating a Mac?** Keep the app in its stable location, use **Allow Keychain access after update…** for the existing key, and review Accessibility before approving the network again. [Update and recovery steps](docs/macos-setup.md).
 
@@ -78,7 +85,7 @@ Remembered browser authentication lasts 30 days and can be revoked immediately. 
 
 ## Demo
 
-The animation above tours the **actual 0.4.2 browser interface** (the phone remote is unchanged in 0.4.3): Touch → Air → Keyboard → Navigation → Media → PC. It uses the isolated test fixture, recording adapters and a synthetic gyroscope. The test launcher and volume read-back illustrate the controls; no physical app, audio output or power action is exercised.
+The animation above tours the **actual 0.4.2 browser interface** (0.4.4 adds the Nuvio profile; the older tour does not show it): Touch → Air → Keyboard → Navigation → Media → PC. It uses the isolated test fixture, recording adapters and a synthetic gyroscope. The test launcher and volume read-back illustrate the controls; no physical app, audio output or power action is exercised.
 
 **[Follow the two-minute hands-on demo →](docs/demo.md)** for the same sequence on your own paired computer, including motion access, hold-to-point, sending text and choosing a media profile.
 
@@ -158,17 +165,17 @@ python3 scripts/portable.py build
 python3 scripts/portable.py desktop
 ```
 
-Pinned inputs: **.NET SDK 10.0.402**, **Node 24.21.0**, **npm 11.19.0**; TypeScript 7, Vite 8 and Avalonia 12.1.4. There is no required `.env`, API key or database. [Development commands, architecture and validation](docs/development.md).
+Pinned inputs: **.NET SDK 10.0.404**, **Node 24.21.0**, **npm 11.19.0**; TypeScript 7, esbuild 0.28.2 and Avalonia 12.1.4. There is no required `.env`, API key or database. [Development commands, architecture and validation](docs/development.md).
 
 <details>
 <summary>Windows packaging outputs</summary>
 
 ```powershell
-./scripts/package.ps1 -Version 0.4.3
+./scripts/package.ps1 -Version 0.4.4
 Get-Content ./artifacts/latest-release.txt
 ```
 
-Creates `PCRemote-0.4.3-win-x64-setup.exe`, `PCRemote-0.4.3-win-x64.zip`, the self-contained `PCRemote-win-x64/` folder and `SHA256SUMS.txt` in a new timestamped directory. Review [release requirements](docs/releases.md#publishing-the-next-version) before distribution. Generated packages and local credentials stay out of Git. Published assets are immutable.
+Creates `PCRemote-0.4.4-win-x64-setup.exe`, `PCRemote-0.4.4-win-x64.zip`, the self-contained `PCRemote-win-x64/` folder and `SHA256SUMS.txt` in a new timestamped directory. Review [release requirements](docs/releases.md#publishing-the-next-version) before distribution. Generated packages and local credentials stay out of Git. Published assets are immutable.
 
 </details>
 
