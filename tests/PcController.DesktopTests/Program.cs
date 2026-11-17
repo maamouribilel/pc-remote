@@ -40,6 +40,7 @@ internal sealed class UiChecks : IDisposable
         var featurePreferences = window.GetVisualDescendants().OfType<Expander>().Single(e => Equals(e.Header, "Preferences"));
         featurePreferences.IsExpanded = true; Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
         T FindControl<T>(Window owner, string id) where T : Control => owner.GetVisualDescendants().OfType<T>().Single(c => AutomationProperties.GetAutomationId(c) == id);
+        check(FindControl<ComboBox>(window, "profile").Items.Cast<string>().Contains("Nuvio"), "shared shell offers Nuvio in its media profile picker");
         check(!Find(window, "add-app").IsEnabled && !FindControl<Slider>(window, "system-volume").IsEnabled && !Find(window, "save-startup").IsEnabled && new[] { "sleep", "restart", "shutdown" }.All(a => !Find(window, "power-" + a).IsEnabled), "uncomposed shell disables feature and login integrations");
         featurePreferences.IsExpanded = false; Dispatcher.UIThread.RunJobs();
         check(!Find(window, "approve-network").IsEnabled, "network approval requires an explicitly selected observable candidate");

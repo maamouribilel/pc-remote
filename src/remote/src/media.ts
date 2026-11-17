@@ -10,18 +10,22 @@ export function setupMedia(send: (type: string, payload: object) => number | fal
   let capabilities: Capabilities = unavailable;
   let profile = 'General', enabled = false, saving = false;
   function apply(value: string) {
-    if (!['General', 'YouTube', 'VLC', 'Stremio'].includes(value) || saving) return;
+    if (!['General', 'YouTube', 'VLC', 'Stremio', 'Nuvio'].includes(value) || saving) return;
     profile = value; select.value = value;
     for (const button of buttons) {
       button.hidden = !capabilities.mediaActions[value]?.includes(button.dataset.media!) || (value === 'General' && ['seekBack', 'seekForward', 'fullscreen'].includes(button.dataset.media!)) || (value === 'Stremio' && button.dataset.media === 'previous');
       if (button.dataset.media === 'previous') button.querySelector('.button-label')!.textContent = value === 'YouTube' ? 'Previous (playlist)' : 'Previous';
-      if (button.dataset.media === 'next') button.querySelector('.button-label')!.textContent = value === 'Stremio' ? 'Next episode' : 'Next';
+      if (button.dataset.media === 'next') button.querySelector('.button-label')!.textContent = ['Stremio', 'Nuvio'].includes(value) ? 'Next episode' : 'Next';
+    }
+    for (const group of section.querySelectorAll<HTMLElement>('[data-media-group]')) {
+      group.hidden = ![...group.querySelectorAll<HTMLButtonElement>('[data-media]')].some(button => !button.hidden);
     }
     renderIcon(document.getElementById('profile-icon')!, value === 'Stremio' ? 'stremio' : 'media');
-    note.textContent = !capabilities.mediaActions[value]?.length ? 'Media control is unavailable on this companion.' : value === 'General' ? `Active media session · ${labels(capabilities).system} volume` : `Focus the player on your ${labels(capabilities).computer}.`;
+    note.textContent = !capabilities.mediaActions[value]?.length ? 'Media control is unavailable on this companion.' : value === 'General' ? `Active media session · ${labels(capabilities).system} volume` : value === 'Nuvio' ? `Focus Nuvio’s built-in player on your ${labels(capabilities).computer}.` : `Focus the player on your ${labels(capabilities).computer}.`;
     document.getElementById('media-help')!.textContent = value === 'General' ? capabilities.platform === 'linux' ? 'General controls one eligible MPRIS player, preferring the only playing one. Ambiguous players fail; volume controls system output. Seek/fullscreen need a focused app profile.' : `${labels(capabilities).system} media keys target the active media session; volume controls system volume. Seek and fullscreen need an app profile.`
       : value === 'YouTube' ? `YouTube shortcuts: click the ${labels(capabilities).computer} video player first; focus its seek bar for volume. Previous needs a playlist. Other browser players may use different keys.`
       : value === 'Stremio' ? `Focus Stremio’s built-in player on the ${labels(capabilities).computer}. Seek amount follows its settings. Next episode needs an available next episode; Previous has no supported shortcut. Use Touchpad or Navigation to browse, and Keyboard for search.`
+      : value === 'Nuvio' ? `Official Nuvio Desktop 0.1.37-alpha default shortcuts. Click the video first and close player panels for playback or skipping. Skip intro / recap sends Enter for Nuvio’s current skip prompt; outside a prompt it can activate a focused control. Skip timing and next-episode availability come from Nuvio. Subtitles, Audio, Sources and Episodes open player panels; use Navigation or Touchpad to choose and Esc to close. External players need their own profile.`
       : `Focus VLC on the ${labels(capabilities).computer}. These controls use its default hotkeys; customized hotkeys may differ. Seek amount follows VLC settings.`;
   }
   select.addEventListener('change', async () => {

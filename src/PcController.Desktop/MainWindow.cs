@@ -24,7 +24,7 @@ namespace PcController.Desktop;
 // preferences. Automation IDs are stable; UI checks and assistive technology rely on them.
 public sealed class MainWindow : Window
 {
-    private static readonly string[] Profiles = ["General", "YouTube", "VLC", "Stremio"];
+    private static readonly string[] Profiles = MediaProfiles.Actions.Keys.ToArray();
     private readonly DesktopController controller;
     private readonly bool mac;
     private readonly TextBlock status = Text("Setup required", "caption"), readiness = Text(""), networkNote = Text("", "caption"), pairingNote = Text("", "caption");

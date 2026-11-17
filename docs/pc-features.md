@@ -14,6 +14,8 @@ The walkthrough below describes Windows controls; the final section explains Mac
 
 ## App launcher
 
+**Unreleased after 0.4.2:** the source now includes a [Nuvio Desktop media profile](nuvio.md) with next episode, contextual intro/recap skipping, subtitles, audio, sources, episodes and picture in picture. Add Nuvio locally and choose its Nuvio profile; it is not automatically discovered. Published 0.4.2 downloads retain the existing profiles.
+
 In **PC**, tap an app to open it or bring an existing instance forward. The app's configured media profile is selected and the phone opens Media. Stremio, VLC, Chrome and Edge are discovered when present. The Windows companion's **Settings → App launcher** lets you add a local `.exe`, choose its displayed name/media profile, or remove an entry. There are up to 24 apps. Removed entries stay removed after restart.
 
 The phone can send only an opaque configured app ID. It cannot supply a path, arguments, script or shell command. Paths remain in the PC's local `launcher-settings.json`, alongside the protected device data. Missing apps are shown as unavailable. Windows can deny foreground activation; in that case the app flashes and the phone tells you to select it on the PC taskbar. Opening an app does not select a video or begin playback.

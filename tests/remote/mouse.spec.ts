@@ -171,9 +171,33 @@ test('approved real WSS gestures preserve ordering and release on cancellation a
   await expect(page.locator('#state')).toHaveText('Connected securely');
   await page.locator('#tab-media').click();
   await expect(profile).toHaveValue('Stremio');
+  await profile.selectOption('Nuvio');
+  await expect(page.locator('#media-feedback')).toHaveText('Profile saved on the PC.');
+  await expect(page.locator('#media-controls [data-media="previous"]')).toBeHidden();
+  await expect(page.locator('#media-controls [data-media="next"]')).toHaveText('Next episode');
+  await expect(page.locator('#nuvio-skip-note')).toContainText('When Nuvio shows a skip prompt');
+  for (const [action, chord] of Object.entries({ playPause: 'K', next: 'Shift+N', skipSegment: 'Enter', subtitles: 'S', audio: 'A', sources: 'Q', episodes: 'E', pictureInPicture: 'P' })) {
+    const before = events().filter(e => e === `chord:${chord}`).length;
+    await page.locator(`#media-controls [data-media="${action}"]`).click();
+    await expect.poll(() => events().filter(e => e === `chord:${chord}`).length).toBeGreaterThan(before);
+  }
+  await page.reload(); await expect(page.locator('#state')).toHaveText('Connected securely');
+  await page.locator('#tab-media').click(); await expect(profile).toHaveValue('Nuvio');
+  for (const viewport of [{ width: 390, height: 700 }, { width: 1280, height: 800 }]) {
+    await page.setViewportSize(viewport);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const controls = await page.locator('#media-controls button:visible').evaluateAll(elements => elements.map(element => { const r = element.getBoundingClientRect(); return { width: r.width, height: r.height }; }));
+    expect(controls.every(r => r.width >= 44 && r.height >= 44)).toBe(true);
+    await page.screenshot({ path: path.join(os.tmpdir(), `pc-nuvio-${viewport.width}.png`), fullPage: true, animations: 'disabled' });
+    await page.locator('#media-controls [data-media="pictureInPicture"]').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: path.join(os.tmpdir(), `pc-nuvio-panels-${viewport.width}.png`), animations: 'disabled' });
+  }
+  await page.setViewportSize({ width: 390, height: 700 });
   await profile.selectOption('General');
   await expect(page.locator('#media-feedback')).toHaveText('Profile saved on the PC.');
   await expect(page.locator('#media-controls [data-media="fullscreen"]')).toBeHidden();
+  await expect(page.locator('#media-controls [data-media="skipSegment"]')).toBeHidden();
+  await expect(page.locator('#media-controls [data-media="subtitles"]')).toBeHidden();
   await page.locator('#tab-touchpad').click();
   await page.locator('#drag').click();
   await expect.poll(() => events().at(-1)).toBe('left:True');

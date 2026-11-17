@@ -35,6 +35,8 @@ Watch your computer's screen while your phone handles the controls. PC Remote se
 
 PC Remote controls the desktop you can see. Screen streaming, internet access, file transfer, clipboard synchronization and Wake-on-LAN are outside its scope. See [current limitations](docs/limitations.md).
 
+**Unreleased source addition:** [Nuvio Desktop controls](docs/nuvio.md), including next episode, skip intro/recap and player panels. These are not included in the published 0.4.2 downloads.
+
 ## Download
 
 **Current release: [v0.4.2 preview](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.2).** Windows is the primary platform; macOS and Ubuntu companions are experimental.

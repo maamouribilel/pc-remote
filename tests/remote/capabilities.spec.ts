@@ -2,6 +2,7 @@ import { test, expect } from '../../src/remote/node_modules/@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { readCapabilities, supports } from '../../src/remote/src/capabilities';
 const metadata = process.env.PC_CONTROLLER_MOUSE_FIXTURE;
 const platform = process.env.PC_CONTROLLER_TEST_PLATFORM;
 test.skip(!metadata || !platform, 'Run scripts/portable.py browser-capabilities');
@@ -45,6 +46,9 @@ for (const viewport of [{ width: 390, height: 700 }, { width: 1280, height: 800 
     } else await expect(page.locator('#remote-text')).toBeDisabled();
     await page.screenshot({ path: path.join(os.tmpdir(), `pc-capabilities-${platform}-${viewport.width}.png`), fullPage: true });
     await page.locator('#tab-media').click();
+    expect(supports(readCapabilities({ protocol: 1 }), 'media.action', { profile: 'Nuvio', action: 'skipSegment' })).toBe(false);
+    await expect(page.locator('#media-profile option[value="Nuvio"]')).toBeDisabled();
+    await expect(page.locator('#media-controls [data-media="skipSegment"]')).toBeHidden();
     await expect(page.locator('#system-volume')).toBeDisabled();
     if (platform === 'macos') {
       await expect(page.locator('#media-controls [data-media="playPause"]')).toBeEnabled();

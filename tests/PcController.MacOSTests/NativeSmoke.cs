@@ -72,7 +72,7 @@ internal static class NativeSmoke
             server=factory.Create(new([], [], "Native smoke loopback only")); await server.StartAsync(); check(Released() && server.Certificates.Fingerprint==fingerprint && server.Sessions.Paused, "ACTUAL host restart retains Keychain CA and starts paused");
             await SwitchApp.Run(input, targetPid, directory, check);
             Focus();
-            check(MacNative.pc_player_focus("VLC") == 0 && MacNative.pc_player_focus("YouTube") == 0 && MacNative.pc_player_focus("Stremio") == 0, "ACTUAL unrelated disposable Cocoa bundle rejected by native player focus guard");
+            check(MacNative.pc_player_focus("VLC") == 0 && MacNative.pc_player_focus("YouTube") == 0 && MacNative.pc_player_focus("Stremio") == 0 && MacNative.pc_player_focus("Nuvio") == 0, "ACTUAL unrelated disposable Cocoa bundle rejected by native player focus guard");
             var mediaInput = new MacInput(new GuardedPlayerEvents(targetPid), targetPid);
             var keysBefore = State().GetProperty("counts").GetProperty("10").GetInt32();
             foreach (var profile in MediaProfiles.Actions.Where(p => p.Key != "General")) foreach (var action in profile.Value) { Focus(); mediaInput.Media(profile.Key, action); }

@@ -533,6 +533,7 @@ int pc_player_focus(const char *profile) { @autoreleasepool {
     NSString *bundle=[NSRunningApplication runningApplicationWithProcessIdentifier:pc_frontmost()].bundleIdentifier;
     if(!strcmp(profile,"VLC")) return [bundle isEqualToString:@"org.videolan.vlc"];
     if(!strcmp(profile,"Stremio")) return [bundle isEqualToString:@"com.smartcodeltd.stremio"] || [bundle isEqualToString:@"com.stremio.stremio"];
+    if(!strcmp(profile,"Nuvio")) return [bundle isEqualToString:@"com.nuvio.media.desktop"];
     if(!strcmp(profile,"YouTube")) return [@[@"com.apple.Safari",@"com.google.Chrome",@"org.mozilla.firefox",@"com.microsoft.edgemac"] containsObject:bundle ?: @""];
     return 0;
 } }

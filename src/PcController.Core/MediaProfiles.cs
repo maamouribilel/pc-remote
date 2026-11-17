@@ -7,6 +7,7 @@ public static class MediaProfiles
         ["YouTube"] = new HashSet<string> { "playPause", "next", "previous", "volumeUp", "volumeDown", "mute", "seekBack", "seekForward", "fullscreen" },
         ["VLC"] = new HashSet<string> { "playPause", "next", "previous", "volumeUp", "volumeDown", "mute", "seekBack", "seekForward", "fullscreen" },
         ["Stremio"] = new HashSet<string> { "playPause", "next", "volumeUp", "volumeDown", "mute", "seekBack", "seekForward", "fullscreen" },
+        ["Nuvio"] = new HashSet<string> { "playPause", "next", "volumeUp", "volumeDown", "mute", "seekBack", "seekForward", "fullscreen", "skipSegment", "subtitles", "audio", "sources", "episodes", "pictureInPicture" },
     };
     public static bool Supports(string profile, string action) => Actions.TryGetValue(profile, out var actions) && actions.Contains(action);
 }

@@ -22,6 +22,11 @@ public static class DesktopMediaBindings
             ("VLC", "seekForward") => platform == "macos" ? ["Windows", "Alt", "ArrowRight"] : ["Shift", "ArrowRight"],
             ("VLC", "fullscreen") when platform == "macos" => ["Windows", "f"],
             ("Stremio", "next") => ["Shift", "n"], ("Stremio", "seekBack") => ["ArrowLeft"], ("Stremio", "seekForward") => ["ArrowRight"],
+            // Official Nuvio Desktop 0.1.37-alpha defaults, shared across desktop OSes.
+            ("Nuvio", "playPause") => ["k"], ("Nuvio", "next") => ["Shift", "n"],
+            ("Nuvio", "seekBack") => ["ArrowLeft"], ("Nuvio", "seekForward") => ["ArrowRight"],
+            ("Nuvio", "skipSegment") => ["Enter"], ("Nuvio", "subtitles") => ["s"], ("Nuvio", "audio") => ["a"],
+            ("Nuvio", "sources") => ["q"], ("Nuvio", "episodes") => ["e"], ("Nuvio", "pictureInPicture") => ["p"],
             (_, "volumeUp") => ["ArrowUp"], (_, "volumeDown") => ["ArrowDown"], (_, "mute") => ["m"], (_, "fullscreen") => ["f"],
             _ => throw new InputFailureException("Unsupported player action.")
         };

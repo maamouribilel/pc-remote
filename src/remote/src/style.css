@@ -121,6 +121,9 @@ summary { min-height: 44px; padding: 12px 2px; font-size: 14px; line-height: 1.4
 .volume-row button, .media-extras button { min-height: 108px; flex-direction: column; gap: 10px; font-size: 15px; }
 .volume-row .icon, .media-extras .icon { width: 30px; height: 30px; }
 .media-extras { margin-top: 22px; }
+.nuvio-skip, .nuvio-panels { margin-top: 18px; }
+.nuvio-skip button { width: 100%; min-height: 56px; gap: 10px; }
+.nuvio-skip p { margin: 8px 0 0; }
 dialog { width: calc(100% - 24px); max-width: 440px; max-height: calc(var(--view-height, 100dvh) - 24px); padding: 20px; margin: auto; background: #111821; color: var(--text); border: 1px solid #465361; border-radius: 20px; overflow-y: auto; overscroll-behavior: contain; }
 dialog::backdrop { background: #03080dc9; backdrop-filter: blur(6px); }
 .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }

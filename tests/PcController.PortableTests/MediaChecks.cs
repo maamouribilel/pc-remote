@@ -12,6 +12,27 @@ internal static class MediaChecks
         check(Parse("Stremio", "next") && Parse("Stremio", "mute") && !Parse("Stremio", "previous"), "Stremio supports next episode and rejects unsupported previous");
         check(WindowsMediaMappings.Mappings["Stremio"]["next"].SequenceEqual(["Shift", "N"]) && WindowsMediaMappings.Mappings["Stremio"]["seekBack"].SequenceEqual(["ArrowLeft"]), "Stremio next episode and seek shortcuts");
         check(WindowsMediaMappings.Mappings["YouTube"]["previous"].SequenceEqual(["Shift", "P"]) && WindowsMediaMappings.Mappings["VLC"]["volumeUp"].SequenceEqual(["Control", "ArrowUp"]), "verified application-specific media chords");
+        var nuvio = new Dictionary<string, string[]>
+        {
+            ["playPause"] = ["K"], ["next"] = ["Shift", "N"], ["volumeUp"] = ["ArrowUp"], ["volumeDown"] = ["ArrowDown"],
+            ["mute"] = ["M"], ["seekBack"] = ["ArrowLeft"], ["seekForward"] = ["ArrowRight"], ["fullscreen"] = ["F"],
+            ["skipSegment"] = ["Enter"], ["subtitles"] = ["S"], ["audio"] = ["A"], ["sources"] = ["Q"], ["episodes"] = ["E"], ["pictureInPicture"] = ["P"]
+        };
+        foreach (var (action, chord) in nuvio)
+        {
+            check(Parse("Nuvio", action) && WindowsMediaMappings.Mappings["Nuvio"][action].SequenceEqual(chord), "official Nuvio allowlist and Windows shortcut: " + action);
+            var desktop = chord.Select(key => key.Length == 1 ? key.ToLowerInvariant() : key);
+            check(DesktopMediaBindings.Chord("macos", "Nuvio", action).SequenceEqual(desktop) && DesktopMediaBindings.Chord("linux", "Nuvio", action).SequenceEqual(desktop), "official Nuvio Mac/Linux shortcut: " + action);
+        }
+        check(!Parse("Nuvio", "previous") && !Parse("Nuvio", "execute") && !Parse("General", "skipSegment") && !Parse("Stremio", "skipSegment"), "Nuvio additions do not widen other profiles or permit arbitrary commands");
+        var withoutSkip = PlatformCapabilities.ProtocolV1 with { MediaActions = new Dictionary<string, IReadOnlySet<string>> { ["Nuvio"] = new HashSet<string> { "playPause" } } };
+        var deniedInput = new RecordingMouse();
+        using (var restricted = new InputController(deniedInput, new(), startWatchdog: false, capabilities: withoutSkip))
+        {
+            var denied = false;
+            try { restricted.Execute(new(1, "media.action", Action: "skipSegment", Profile: "Nuvio")); } catch (InputFailureException) { denied = true; }
+            check(denied && deniedInput.Events.SequenceEqual(["release"]), "unadvertised Nuvio skip is denied before input with cleanup");
+        }
         var now = DateTimeOffset.UtcNow; var input = new RecordingMouse();
         using var controller = new InputController(input, new(), () => now, false);
         foreach (var profile in WindowsMediaMappings.Mappings)
@@ -28,7 +49,11 @@ internal static class MediaChecks
         bool limited = false; try { controller.Execute(new(1, "media.action", Action: "mute", Profile: "General")); } catch (InputFailureException) { limited = true; }
         check(limited && input.Events.Last() == "release", "media action rate bounded with cleanup");
         var directory = Path.Combine(Path.GetTempPath(), "PcMediaTests", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
-        try { var settings = new MediaSettings(directory); settings.Save("Stremio"); check(new MediaSettings(directory).Profile == "Stremio", "media profile persists across reload"); }
+        try
+        {
+            var settings = new MediaSettings(directory); settings.Save("Stremio"); check(new MediaSettings(directory).Profile == "Stremio", "media profile persists across reload");
+            settings.Save("Nuvio"); check(new MediaSettings(directory).Profile == "Nuvio", "Nuvio media profile persists across reload");
+        }
         finally { Directory.Delete(directory, true); }
     }
 }

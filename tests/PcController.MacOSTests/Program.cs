@@ -46,10 +46,11 @@ using (var controller = new InputController(input, new(), () => now, false, MacH
     controller.Execute(new(13, "pointer.button", Button: "left", Action: "down")); now = now.AddMilliseconds(1201);
     Check(controller.CheckWatchdog(), "held-input expiry uses Mac adapter cleanup");
 }
-Check(MacHostFactory.Capabilities(true).Volume && MacHostFactory.Capabilities(true).Launcher && MacHostFactory.Capabilities(true).MediaActions.Count == 4 && MacHostFactory.Capabilities(true).PowerActions.Count == 0, "native feature adapters declared; power requires live OS inspection");
+Check(MacHostFactory.Capabilities(true).Volume && MacHostFactory.Capabilities(true).Launcher && MacHostFactory.Capabilities(true).MediaActions.ContainsKey("Nuvio") && MacHostFactory.Capabilities(true).PowerActions.Count == 0, "native feature adapters declared including Nuvio; power requires live OS inspection");
 Check(MacHostFactory.Capabilities(false).MediaActions.Count == 0 && !MacHostFactory.Capabilities(false).Pointer, "missing permission disables input and media independently");
 input = new MacInput(events); events.Log.Clear();
 events.Focused = false; Fails(() => input.Media("VLC", "volumeUp"), "wrong foreground player blocks media before insertion"); Check(events.Log.Count == 0, "focus rejection posts nothing"); events.Focused = true;
+events.Focused = false; Fails(() => input.Media("Nuvio", "skipSegment"), "wrong foreground player blocks Nuvio skip before insertion"); Check(events.Log.Count == 0, "Nuvio focus rejection posts nothing"); events.Focused = true;
 input.Media("VLC", "mute"); Check(events.Log.Contains("key:58:1:0:1572864") && events.Log.Contains("key:125:0:0:1572864") && events.Log.Last() == "key:55:0:0:0", "VLC Mac mute uses Command Option Down with complete cleanup");
 foreach (var profile in MediaProfiles.Actions.Where(p => p.Key != "General")) foreach (var action in profile.Value) { input.Media(profile.Key, action); Check(events.Log.Last().Contains(":0:0:"), "player shortcut mapped/released " + profile.Key + ":" + action); }
 events.Log.Clear(); input.Media("General", "playPause"); Check(events.Log.SequenceEqual(new[] { "system:16:1", "system:16:0" }), "General playback uses native system events");
