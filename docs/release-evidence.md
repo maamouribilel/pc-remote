@@ -1037,3 +1037,43 @@ Observed locally on Windows with pinned SDK 10.0.402, Node 24.21.0/npm 11.19.0:
 | Dependency audit | **Not clean:** `npm audit --json` reports four high-severity affected packages in the existing build-tool graph (`picomatch`, `fdir`, `tinyglobby`, `vite`), from [GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf). Package pins/lockfiles were not changed by this feature. This remains a dependency follow-up before release. |
 
 All HTTP/browser fixture suites ran sequentially on port 8443 after the user authorized closing the installed companion for testing. The installed companion was reopened afterward and its listener verified. Browser QA uses the existing loopback-only temporary-certificate bypass; it does not establish trusted-phone TLS. No installed-app update, release packaging/tag/publication, physical input/power action or Nuvio playback execution was performed. Actual intro/recap detection, episode transitions, panels, PiP, layouts, Mac bundle focus, real Ubuntu and physical-phone/LAN acceptance remain pending. The skip button sends Enter for Nuvio's active prompt; the remote has no player-state telemetry and cannot infer prompt/episode availability.
+
+
+## 2026-11-17 — 0.4.4 final CI, verified draft and Windows installation
+
+Release source is `35597f6cee300ef5d0693a91be96ca4ded07245f`; the pushed annotated `v0.4.4` tag points to it. [Final dispatch 44150072550](https://github.com/maamouribilel/pc-remote/actions/runs/44150072550) passed all eight jobs. The first attempt passed all six test/Windows/Ubuntu jobs; GitHub cancelled the two Mac packaging jobs before execution with "The job was not acquired by Runner of type hosted even after multiple attempts" and ARM64 capacity notices. Retrying only those two jobs completed the same release run successfully on attempt 2. No source change or test bypass was used. The release-documentation workflow passed on the release commit.
+
+Independent artifact checks: all four workflow ZIP sizes/digests match GitHub, every per-platform checksum passes, and all three Unix manifests report version 0.4.4, SDK 10.0.404, `candidate: false`, `sourceDirty: false`, exact revision `35597f6…`. Every Mac archive member (479 files each), inventoried public code-signature metadata and each Linux member (478 files, normalized owner 0/0) matches its manifest. Main Mach-O/ELF and Windows PE architectures match their assets. Hosted Mac packaging independently verified seals after extraction and native metadata startup; this Windows-side inspection does not establish Mac hardware/installed acceptance. Windows has 648 payload files and included .NET, ASP.NET Core and Windows Desktop frameworks all at 10.0.15. Required notices are present. Gitleaks over the Windows and all three extracted Unix package trees found no leaks; the separate byte-pattern inspection also passed.
+
+The eight installers/archives/manifests are covered by one LF `SHA256SUMS.txt`. `update.json` describes the five binary downloads, uses `security: true`, and was created from those verified bytes. Ten assets are uploaded to the **unpublished draft** (ID 449074271), and GitHub reports each stored size and SHA-256 identical to the local file. `update.json.sig` is still missing because the existing offline release key is on the maintainer’s Mac, not at its default location on this Windows PC. The draft remains unpublished until that signature verifies. Public release/download/digest/signature verification remains pending.
+
+Windows current-account installation: the verified final CI installer upgraded 0.4.2 to `0.4.4+35597f6…`, exited 0 and relaunched the companion with no OS restart. All 648 installed payload files match the final ZIP. An independent read-only .NET probe validated the installation root/hostname and fetched the new Nuvio HTML, JavaScript and CSS over HTTPS. The existing `root.protected` and `devices.protected` retain modification times from before installation. No trust-store, firewall or startup registration was changed by the installation automation; no new clean-account/reboot/firewall/phone acceptance is claimed.
+
+Two verification-helper details remain visible: PowerShell initially waited for the installer’s relaunched descendant, so the installed companion was gracefully reopened before the independent read-only check. The strict preferences comparison then detected that the media profile had been changed to **Nuvio** after installation (19:58 local); that newer choice was retained rather than overwritten. The root/device file checks and actual HTTPS probe above are separate evidence; no claim is made that every preference stayed byte-identical. No automated physical input, Nuvio playback or power action was executed.
+
+GitHub Markdown rendering accepted the README and release notes, and all 135 checked local documentation paths resolve. Current-account installation is observed; the existing native Nuvio/player/audio/login/power, physical-phone/LAN, Mac Intel and real Ubuntu/GNOME acceptance gaps remain.
+
+Verified draft asset inventory (these are not yet public download claims):
+
+| File | Bytes | SHA-256 |
+| --- | ---: | --- |
+
+| `PCRemote-0.4.4-linux-x64-manifest.json` | 52,073 | `380d0cdaa7aba8bdbbff2ef2ed6607da745223ba5b416be7c44b60886718a168` |
+
+| `PCRemote-0.4.4-linux-x64.tar.gz` | 63,691,587 | `0dcb78527bd24932618d15c84afa2354884acf7d9992bf4b0d1272541064d855` |
+
+| `PCRemote-0.4.4-osx-arm64-manifest.json` | 111,504 | `99b28fd9fc91f5db9fdd558d6f2cf38ca1797f66a1b26ecedc48e78863c622a4` |
+
+| `PCRemote-0.4.4-osx-arm64.zip` | 63,841,714 | `ac64ab9aebba150cd7f7ee8e900c40c934bfae45b3bc897dbd953dcae7bd1094` |
+
+| `PCRemote-0.4.4-osx-x64-manifest.json` | 111,502 | `5ffaa5a611c04f8fad4b9c81dd4a155c81a742647cd36d6a957e3f85ff96a265` |
+
+| `PCRemote-0.4.4-osx-x64.zip` | 66,553,163 | `e3072899d9cbfcc85c362459f30bfc1b93354ed40ea62de149508d9cb51cdd2b` |
+
+| `PCRemote-0.4.4-win-x64-setup.exe` | 62,749,013 | `42e3c7e14292273a295dca86249781deeca74d63888390969801adee92f20df3` |
+
+| `PCRemote-0.4.4-win-x64.zip` | 89,804,777 | `2000e55f1f8a071e1d8e4c2110abcb46fe9544be2acc3d681ad8809db00b5789` |
+
+| `SHA256SUMS.txt` | 791 | `29830a89999420bd8e1dac1133d9099163f1bf5d282a3b38b56e106719bd62cf` |
+
+| `update.json` | 1,418 | `df6abbabb9488f20709626d681cbb4fdfbc90271642bf7143da74b43b7a78a1a` |

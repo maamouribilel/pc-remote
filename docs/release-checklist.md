@@ -44,3 +44,17 @@ Automated recording tests cover bounds, expired/single-use approval, Origin/auth
 - [ ] CI jobs have actually been observed, source is clean/committed before final packaging, and every public URL/tag/size/digest is checked after authorized publication.
 
 Follow the numbered [exact platform manual steps](release-readiness.md#exact-pending-acceptance); neither a build nor an isolated/headless test closes them.
+
+
+## 0.4.4 release record — 2026-11-17
+
+- [x] Versions, README/current guides, both agent files and affected GitHub files synchronized; source/tag committed and pushed.
+- [x] Release/default/security/pairing/lifecycle/PC-feature/shared/desktop/adapter/browser/strict-TLS checks and dependency/runtime advisory audits passed.
+- [x] The exact source commit's final hosted workflow passed all eight jobs, including the two capacity-cancelled Mac package jobs on retry.
+- [x] Every final archive member, source revision, version, architecture, license inventory and checksum verified; source/package secret scans passed.
+- [x] Windows final CI installer installed and relaunched; all 648 payload files match; installed Nuvio assets load over certificate-validated HTTPS.
+- [x] Draft release prepared with the eight distributables/manifests, combined checksum file and update.json; stored sizes/digests verified.
+- [ ] Existing offline release key signs update.json; update.json.sig verifies against the committed production public key.
+- [ ] Publish the authorized preview and independently verify every anonymous URL, tag target, size, digest and public update manifest signature.
+
+Exact evidence and remaining manual/platform gates are in [the dated release evidence](release-evidence.md#2026-11-17--044-final-ci-verified-draft-and-windows-installation). The two unchecked publication items prevent calling the release complete.
