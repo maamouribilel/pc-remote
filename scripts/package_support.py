@@ -130,7 +130,7 @@ def guides(target, final=False, rid=None):
 
 
 FORBIDDEN = {'.pfx', '.p12', '.protected', '.mobileconfig', '.pdb', '.key', '.pem', '.log', '.cer', '.crt', '.der', '.keystore', '.jks', '.dmp'}
-PRIVATE_NAMES = {'credentials.json', 'secrets.json', 'devices.json', 'pointer-settings.json', 'media-settings.json', 'launcher-settings.json'}
+PRIVATE_NAMES = {'credentials.json', 'secrets.json', 'devices.json', 'pointer-settings.json', 'media-settings.json', 'launcher-settings.json', 'update-settings.json'}
 SECRET_PATTERNS = [re.compile(rb'-----BEGIN (?:RSA |EC |OPENSSH |DSA |ENCRYPTED )?PRIVATE KEY-----'),
                    re.compile(rb'gh[pousr]_[A-Za-z0-9]{36,}'), re.compile(rb'github_pat_[A-Za-z0-9_]{60,}'),
                    re.compile(rb'AKIA[0-9A-Z]{16}'), re.compile(rb'(?<![A-Za-z0-9_-])sk-(?:proj-)?[A-Za-z0-9_-]{40,}')]

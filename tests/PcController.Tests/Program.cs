@@ -30,6 +30,7 @@ MouseChecks.Run(Check);
 KeyboardChecks.Run(Check);
 MediaChecks.Run(Check);
 PcActionChecks.Run(Check);
+await UpdateChecks.Run(Check);
 if (args.Contains("--pc-native-smoke")) WindowsPcChecks.Native(Check);
 WindowsLifecycleChecks.Local(Check);
 WindowsPcChecks.Launcher(Check);

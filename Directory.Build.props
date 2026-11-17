@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <PcRemoteVersion>0.4.2</PcRemoteVersion>
+    <PcRemoteVersion>0.4.3</PcRemoteVersion>
     <Version>$(PcRemoteVersion)</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

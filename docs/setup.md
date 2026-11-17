@@ -1,6 +1,6 @@
 # Setup and everyday use
 
-PC Remote runs a companion on the computer you control and serves a browser remote to your device. This guide describes the current **0.4.2 preview**. Windows is primary; macOS and Ubuntu are experimental.
+PC Remote runs a companion on the computer you control and serves a browser remote to your device. This guide describes the current **0.4.3 preview**. Windows is primary; macOS and Ubuntu are experimental. From 0.4.3 the companion asks once whether to check GitHub for new versions; see [download help](releases.md#find-out-about-new-versions).
 
 | Computer | Start here |
 | :--- | :--- |

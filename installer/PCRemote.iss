@@ -1,5 +1,5 @@
 #ifndef AppVersion
-  #define AppVersion "0.4.2"
+  #define AppVersion "0.4.3"
 #endif
 [Setup]
 AppId={{DDF99789-80D2-481E-9501-9723169F070E}
@@ -38,8 +38,15 @@ Name: "{group}\Uninstall PC Remote"; Filename: "{uninstallexe}"
 [Run]
 Filename: "{app}\PcController.App.exe"; Parameters: "--firewall-install"; Tasks: firewall; Check: not WizardSilent; Flags: waituntilterminated
 Filename: "{app}\PcController.App.exe"; Description: "Open PC Remote setup"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\PcController.App.exe"; Flags: nowait; Check: UpdateRelaunch
 
 [Code]
+// The companion's Restart to update runs this installer with /VERYSILENT /relaunch=1; reopen it afterwards.
+function UpdateRelaunch(): Boolean;
+begin
+  Result := WizardSilent and (ExpandConstant('{param:relaunch|0}') = '1');
+end;
+
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 var ResultCode: Integer;
 begin

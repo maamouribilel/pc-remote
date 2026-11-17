@@ -920,6 +920,86 @@ Observed local checks:
 
 No new physical-phone, Android/iPad/Firefox, native input/audio/player/login/power, clean-account/reboot/uninstall, macOS Intel or real Ubuntu/GNOME acceptance was performed by this documentation refresh. Air sensor samples in this capture are synthetic; historical iPhone flat-grip direction evidence remains separate. During this work, upstream documentation commit `08ed1c4` added the installed 0.4.2 paired-iPhone check across ten peer-to-peer bursts over twelve minutes, with the user reporting continued control and reconnection after auto-lock. That entry is preserved above and incorporated into current user-facing status. Longer sessions and other Macs remain unverified. Published binaries and tags are unchanged.
 
+## Version 0.4.3 — update notices and Windows Restart to update (2026-10-15)
+
+Feature release of the companions; the phone remote and the protocol (v1) are unchanged. It ships Phase 1 (`e43b188`) and Phase 2 (`61398aa`) of [AUTO_UPDATE_PLAN.md](../AUTO_UPDATE_PLAN.md):
+- **Every companion:** a one-time question, then opt-in update checks that read only the GitHub release list and a release's `update.json`/`update.json.sig`, accept a release only when the manifest verifies against the offline ECDSA P-256 release key embedded from `src/PcController.Host/update-signing-keys.pub`, and show a banner with **View release**, **Skip this version** and **Later**.
+- **Windows installer copies only:** **Download update** checks the installer's exact signed size and SHA-256 and keeps the file locked until the installer starts. **Restart to update** (no controlling phone, pending power action or open pairing approval) pauses control, releases input and runs the installer silently. The installer closes the companion with `--exit` and reopens it through the new `UpdateRelaunch` step.
+- Versions up to 0.4.2 have no update check, so 0.4.3 is installed by hand. It is also the first release to attach its own signed manifest.
+
+**Hosted run before the release commit:** the manual (non-final) dispatch [38801590541](https://github.com/maamouribilel/pc-remote/actions/runs/38801590541) on `61398aa` passed all 8 jobs. The Windows suite ran the update checks, including the Windows-only check that the verified installer can't be changed or deleted while held. The provisional installer compiled with the `UpdateRelaunch` Pascal code. Details are in the plan's execution log.
+
+**Local results on the release source (macOS 27.0 Apple Silicon, pinned .NET 10.0.402 and Node 24.21.0; no companion was running and port 8443 was free, so no installed app was stopped)**
+- `portable.py build` (Release): `--package-info` of the built shell reports `0.4.3` (`0.4.3+9460ccd…` from the uncommitted release tree) with .NET 10.0.13.
+- Shared portable **353**, including 81 update checks (feed, signature, tampering, redirects, limits, stalled bodies, preferences, verified downloads, install stages, installed-copy rules and the `PCRemote.iss` entries). Also Mac adapter **70**, Linux adapter **81** and desktop **100** (8 update-banner checks).
+- `portable.py browser`: Air pointer math **19**, connection and touch **6**, `air.spec.ts` **1**, on the real loopback fixture, run in sequence on 8443. `browser-capabilities`: recording compatibility (1), then the macOS, Linux and unavailable fixtures (2 each).
+- Strict TLS with Python 3.13.16: `tls` and `mac-tls` pass.
+- npm/NuGet audits: no advisories. Bundled runtime advisory feed (`audit-runtime.py`, anonymous): no matching advisories for 10.0.13.
+- `scripts/update-manifest.py selftest`: round trip plus six rejections passed.
+- Gitleaks 8.30.1 over the 283 tracked files reported one `generic-api-key` match: the update tests' `ScriptKey`. That value is the SubjectPublicKeyInfo of the throwaway key used to sign the cross-check fixture; its private key was deleted. The line is now marked `gitleaks:allow`, and a rescan found no leaks. The same public value is already in the pushed history at `e43b188`.
+- Provisional Apple Silicon candidate (`package-macos.py`, then `check-package.py --rid osx-arm64`): 476 inventoried files, checksum and self-contained read-only startup passed (`0.4.3`, .NET 10.0.13). Compared with the published 0.4.2 manifest, the differences are the candidate marker and the guides refreshed after 0.4.2 (`docs/demo.md`, `docs/development.md`, `docs/assets/v0.4.2/*`).
+- `check-release-docs.ps1` (portable PowerShell): passed for v0.4.3 with this entry; the `-BaseRef` comparison runs on the release commit.
+- Not run locally: the Windows suites, the native Linux suites and Windows packaging (the `final` dispatch runs them).
+
+**Not established before publication**
+- The `final` dispatch for the release commit, the final assets, the locally signed `update.json`/`update.json.sig` and public verification: recorded in a publication entry once they happen.
+- **Restart to update on a physical Windows PC:** silent install, `--exit`, relaunch and Defender/SmartScreen behavior for an unsigned installer started from `%LOCALAPPDATA%`. Also untested: update checks behind a proxy, the tray balloon and menu-bar item on real desktops, and a real installed N → N+1 update (0.4.2 copies can't see 0.4.3; a test build of this source can).
+- Every earlier gap remains: Windows installation on a physical PC, the Air pointer beyond the flat grip, a real Ubuntu desktop, macOS Intel hardware, and phone/LAN use beyond the one Mac used for these checks.
+
+### Version 0.4.3 publication and public verification (2026-10-16)
+
+Published as a **pre-release**: [v0.4.3](https://github.com/maamouribilel/pc-remote/releases/tag/v0.4.3). The annotated tag `v0.4.3` (object `23f85a0`, created 05:09 UTC) points to the release commit `b41133bacdb9938cdf25ce2f99cb1c38f6a606f4`. The release was published at 05:11 UTC with the maintainer's approval. Earlier tags and assets were not changed: `v0.4.2` still resolves to `65e9cff` → `8c1bba0` and lists its nine assets.
+
+Hosted runs on the release commit:
+- The `final` dispatch [38805594924](https://github.com/maamouribilel/pc-remote/actions/runs/38805594924) passed every job on the first attempt in eight minutes and supplied the assets:
+  - Shared **353** on macOS and Ubuntu and **351** on Windows (Unix-only file-mode/symlink checks skipped; the Windows-only verified-installer lock check added). Desktop **100** and Air pointer math **19** on every OS.
+  - Mac adapter **69** on hosted macOS and the non-native subset **54** on Windows and Ubuntu. Linux adapter **88** on Ubuntu and **81** elsewhere. On the isolated Ubuntu job: Xvfb/GTK US and French layouts **41** each and portal/MPRIS/logind **31**, plus the disposable encrypted keyring and TLS checks.
+  - Windows default, security, pairing, lifecycle and PC-feature suites: **230**, **264**, **272**, **237** and **259**, each 79 above 0.4.2 because of the update checks.
+  - The Windows browser suite (19, 6, 1), strict TLS, the installer build with the `UpdateRelaunch` step, and the Windows content checks.
+  - The manifest tool self-test on macOS and Ubuntu.
+- The Release documentation workflow passed on the push (38805594558) and on the tag (38854350517).
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `PCRemote-0.4.3-win-x64-setup.exe` | 62,722,940 | `1f6d245e1bc5b7beff6261c2a4f8bc58a2d57c43b0922294bb47a1f8186d9611` |
+| `PCRemote-0.4.3-win-x64.zip` | 89,781,554 | `28666e02e527d13f9987f7d01800e6a6ebbebb7fabf1c7317d72bf65d3e016df` |
+| `PCRemote-0.4.3-osx-arm64.zip` | 63,680,388 | `f8fd00ec0aa215d017690b304b9c5a459541005256f0c88a536d401f1dea4a4c` |
+| `PCRemote-0.4.3-osx-x64.zip` | 66,389,335 | `a608f4481dd46158f6cce30ce8ffae381a46bcad3304e469f714b0a7c7075c43` |
+| `PCRemote-0.4.3-linux-x64.tar.gz` | 63,551,675 | `8d93311b97e2d345b6427989303e824bc75913e82c9ced5641d7418779e0fa8c` |
+| `PCRemote-0.4.3-osx-arm64-manifest.json` | 111,138 | `1426bd0ba7c625449bf9fa300d96768b5c49a611fa1454c5fffd10e77aaf2c22` |
+| `PCRemote-0.4.3-osx-x64-manifest.json` | 111,136 | `d6744f585a2f283aef810c708142b65c8d6e829b42cdcf46346db9e1cc957327` |
+| `PCRemote-0.4.3-linux-x64-manifest.json` | 51,762 | `39110ae97766e2cdcf3158b6aea915f627d40348b51da80c10273e59e739095d` |
+| `SHA256SUMS.txt` | 791 | `2f08df457133fc95286e56ebc640671c936f6dab231f9ef6d3ee6fe893b99c9d` (covers the eight files above) |
+| `update.json` | 1,456 | `fc7c477b102a23fcd9f01a0be039525ebab1a5519edcb4a0daac1c86be50fd65` |
+| `update.json.sig` | 97 | `ea806a7733d68f7ade8e0c7d352c879c4c90f1100cb55fb93fe7bbb1307f976d` |
+
+Local verification of the downloaded workflow artifacts, in a new empty directory with independent `python3 -I` scripts:
+- Every file matches its per-platform CI checksum. The Windows checksum file has CRLF line endings and was compared after stripping the carriage returns. The combined `SHA256SUMS.txt` was built from those files and passes `shasum -c`.
+- Manifests: `candidate: false`, `sourceDirty: false`, revision `b41133b`, version 0.4.3. `scripts/check-package.py --final --output` passed for all three extracted packages (476 files per macOS bundle, 475 for Ubuntu).
+- Both macOS bundles pass `codesign --verify --deep --strict` with an ad-hoc seal and the correct architectures (main binary and 17 dylibs). `--package-info` reports `0.4.3+b41133b…` with .NET 10.0.13, natively on Apple Silicon and under Rosetta for Intel.
+- The Ubuntu archive has 487 entries with owner 0/0, no links and an x86-64 launcher. The Windows ZIP has 648 files, `PcController.App.exe` and `wwwroot`, and no debug symbols. The installer is a PE executable.
+- The Windows assemblies contain `WindowsUpdateInstaller`, its `/relaunch=1` arguments and the **Restart to update** banner text, and `PcController.Host.dll` embeds release key 1.
+- Gitleaks 8.30.1 over the four extracted package trees: no leaks.
+
+`update.json` was created from those verified files with `scripts/update-manifest.py create` (summary: "Adds opt-in update notices to every companion and Restart to update for Windows installer copies.", `security: false`). It was signed on the maintainer's Mac with the offline key in `~/.config/pc-remote-release/` (unencrypted, not yet backed up offline) and checked twice: `scripts/update-manifest.py verify`, and the companion's own `UpdateChecker.Verify`/`ParseManifest` with the embedded production key, which also rejected a one-byte change.
+
+After publication:
+- All eleven public URLs returned HTTP 200 when downloaded anonymously (no token) into a new directory. Every file is byte-identical to the local file, and GitHub's stored size and `sha256:` digest match for each asset; the public `SHA256SUMS.txt` passes `shasum -c`.
+- The tag reference resolves to the annotated tag object `23f85a0` and that object to `b41133b`. Every v0.4.3 release and download link in the README, the download guide, the security policy and both agent files answered HTTP 200.
+- The public `update.json`/`update.json.sig` pass `scripts/update-manifest.py verify` with the committed key.
+- **Live end-to-end with the production update code** (a scratch program using `UpdateChecker.CreateProduction()` against the real GitHub):
+  - A build reporting 0.4.2 is offered **0.4.3** (not a security release, exact release page).
+  - A 0.4.3 build reports **up to date**.
+  - `DownloadAsync("0.4.3", "win-x64", "installer")` fetched the public installer through GitHub's redirect and accepted it against the signed size and SHA-256 (62,722,940 bytes, `1f6d245e…`). The file was deleted without being run.
+
+The verified public Apple Silicon ZIP replaced the installed 0.4.2 in `/Applications` at the maintainer's request (approved in chat after publication):
+- The anonymous download's SHA-256 (`f8fd00ec…`) matched the public `SHA256SUMS.txt`. The seal verified after extraction with `ditto`, and `--package-info` reported `0.4.3+b41133b…` with .NET 10.0.13.
+- The staged bundle was re-signed with the local identity (`scripts/sign-macos-local.py`, 28 s) before the swap; its designated requirement matches the installed 0.4.2's, so the Accessibility entry keeps matching.
+- The 0.4.2 bundle was not running. It was moved to a dated folder in the Trash (not permanently deleted), and the move was recorded under the ignored `.tools/mac-install-0.4.3/`. 0.4.3 launched from `/Applications` at 06:15 local time.
+- The application data directory and the Keychain item were not touched. The per-build **Allow Keychain access after update…** dialog, the new one-time update question and the session-only network approval remain the user's steps.
+
+Not established: a 0.4.3 companion showing the banner on a real desktop (installed on the developer's Mac, but not yet observed), and **Restart to update** on a physical Windows PC (silent install, `--exit`, relaunch, Defender/SmartScreen). A real update needs a test build of this source, or a later signed release. Every gap listed in the 0.4.3 entry above remains.
+
 ## 2026-11-17 — Nuvio Desktop media profile (unreleased after 0.4.2)
 
 Added the allowlisted Nuvio profile to the shared protocol/capabilities, Windows and shared desktop shortcut tables, companion profile pickers and bundled remote. Controls include playback, seek, player volume/mute, fullscreen, next episode, contextual intro/recap skipping, subtitles, audio, sources, episodes and picture in picture. The Mac native focus guard recognizes only Nuvio's official `com.nuvio.media.desktop` bundle. No protocol version/field, arbitrary key/path input, new endpoint, dependency or product version was added. Legacy clients/companions keep their historical capability fallback. [Nuvio setup and upstream sources](nuvio.md) record the official 0.1.37-alpha defaults and limitations.

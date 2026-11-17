@@ -1,6 +1,6 @@
 # Try PC Remote in two minutes
 
-This tour uses your paired browser and the computer screen in front of you. Complete [setup and certificate trust](setup.md#pair-a-browser) first. The animation is a preview of the actual **0.4.2** interface.
+This tour uses your paired browser and the computer screen in front of you. Complete [setup and certificate trust](setup.md#pair-a-browser) first. The animation is a preview of the actual **0.4.2** interface, which 0.4.3 leaves unchanged.
 
 <img src="assets/v0.4.2/demo.gif" alt="Captioned PC Remote demo covering Touch, Air, keyboard, navigation, media and apps" width="900">
 

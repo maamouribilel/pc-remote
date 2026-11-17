@@ -8,10 +8,11 @@ public sealed class MacHostFactory
     public string DirectoryPath { get; }
     public MacInput Input { get; }
     public MacStorage Storage { get; }
+    public static string DefaultDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "PC Remote");
     public MacHostFactory(string? directory = null)
     {
         MacNative.RequireUser(); MacNative.umask(0x3f); // 077; preferences/public exports also stay per-user.
-        DirectoryPath = directory ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "PC Remote");
+        DirectoryPath = directory ?? DefaultDirectory;
         Storage = new MacStorage(DirectoryPath); Input = new MacInput();
     }
     internal MacHostFactory(string directory, MacStorage storage, MacInput input)

@@ -18,6 +18,6 @@ For a new app version, complete every item before publication. For other changes
 - [ ] Release documentation check, security/regression suites, dependency/runtime advisory checks, package/license/hash checks, and source/package secret scans pass.
 - [ ] The exact release commit's hosted CI run passed on Windows, macOS and Linux, and final assets came from that commit (`final` workflow dispatch or `--final` packaging), never from renamed candidates.
 - [ ] Bundled runtime advisories were rechecked on the release day (Patch Tuesday releases can affect the pinned SDK/runtime).
-- [ ] The release plan includes the matching main commit, annotated tag, actual per-platform installer/archives and manifests, combined checksum file, accurate notes/status, and public download/digest verification.
+- [ ] The release plan includes the matching main commit, annotated tag, actual per-platform installer/archives and manifests, combined checksum file, the locally signed `update.json`/`update.json.sig` (from the first release that ships update checks), accurate notes/status, and public download/digest/signature verification.
 
 For multi-platform candidates, link the support matrix and distinguish implementation, provisional package verification, native/manual pending acceptance and public release status. Do not claim CI, recording power, emulation, Xvfb or private portal protocols prove native GNOME/phone/installed acceptance. See `docs/release-readiness.md`.

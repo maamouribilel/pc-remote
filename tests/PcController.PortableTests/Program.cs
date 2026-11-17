@@ -14,6 +14,7 @@ void Check(bool success, string name)
     Console.WriteLine("PASS: " + name); passed++;
 }
 MouseChecks.Run(Check); KeyboardChecks.Run(Check); MediaChecks.Run(Check); PcActionChecks.Run(Check);
+await UpdateChecks.Run(Check);
 await PairingChecks.Run(Check, true);
 await LifecycleChecks.Network(Check);
 await TransportChecks.Run(Check);
